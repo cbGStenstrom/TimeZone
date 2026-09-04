@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Components;
+using TimeKeeper.App.Api.Enums;
 using TimeKeeper.Domain.Models;
 
 namespace TimeKeeper.App.Components;
@@ -14,7 +15,7 @@ public partial class ProjectGridRowComponent :CbComponentBase
     ///  Gets or sets a value indicating whether the component's content can be edited by the user.
     /// </summary>
     [Parameter]
-    public bool IsEditable { get; set; } = false;
+    public bool IsEditable { get; set; }
 
     /// <summary>
     ///  Gets or sets the project data model to be managed/displayed by the component.
@@ -36,63 +37,31 @@ public partial class ProjectGridRowComponent :CbComponentBase
 
     #region events
 
+    /// <summary>
+    ///  Gets or sets the callback invoked when the Add Project action is triggered.
+    /// </summary>
     [Parameter]
-    public EventCallback<int> OnProjectAdded { get; set; }
+    public EventCallback<Project> OnAddProjectClick { get; set; }
 
+    /// <summary>
+    ///  Gets or sets the callback invoked when the project is changed.
+    /// </summary>
     [Parameter]
     public EventCallback<Project> OnProjectChange { get; set; }
 
+    /// <summary>
+    ///  Gets or sets the callback invoked when the Delete Project action is triggered.
+    /// </summary>
     [Parameter]
-    public EventCallback<int> OnProjectDeleted { get; set; }
+    public EventCallback<Project> OnDeleteProjectClick { get; set; }
 
+    /// <summary>
+    ///  Gets or sets the callback invoked when the Save Project action is triggered.
+    /// </summary>
     [Parameter]
-    public EventCallback<Project> OnProjectUpdated { get; set; }
+    public EventCallback<Project> OnSaveProjectClick { get; set; }
 
     #endregion events
-
-    #region data
-
-    void AddProject()
-    {
-    }
-
-    /// <summary>
-    ///  Deletes the current project asynchronously.
-    /// </summary>
-    /// <remarks>
-    ///  This method performs the deletion operation only if a project is currently loaded. If no
-    ///  project is available, the method returns <see langword="null"/> without performing any 
-    ///  action.
-    /// </remarks>
-    /// <returns>
-    ///  A <see cref="Project"/> object representing the deleted project if the operation succeeds; 
-    ///  otherwise, <see langword="null"/> if there is no project to delete.
-    /// </returns>
-    async Task<Project?> DeleteProject()
-    {
-        if (this.ProjectModel == null) return null;
-
-        Project? result = await base.ProjectService!.DeleteProject(this.ProjectModel.Id);
-        return result;
-    }
-
-    /// <summary>
-    ///  Updates the current project using the associated project model.
-    /// </summary>
-    /// <returns>
-    ///  A task that represents the asynchronous operation. The task result is <see langword="true"/> 
-    ///  if the project was updated successfully; otherwise, <see langword="false"/>.
-    /// </returns>
-    async Task<bool> UpdateProject()
-    {
-        ArgumentNullException.ThrowIfNull(base.SessionService?.User);
-        ArgumentNullException.ThrowIfNull(this.ProjectModel);
-
-        bool result = await base.ProjectService!.UpdateProject(this.ProjectModel, base.SessionService.User);
-        return result;
-    }
-
-    #endregion data
 
     #region lifecycle
     #endregion lifecycle
@@ -100,23 +69,49 @@ public partial class ProjectGridRowComponent :CbComponentBase
     #region event handlers
 
     /// <summary>
-    ///  Handles the Cancel button click event by disabling edit mode and updating the component 
-    ///  state.
+    ///  Cancels the current edit operation. For unsaved projects, invokes the deletion callback 
+    ///  when assigned; for existing projects, restores the snapshot, exits edit mode, and refreshes 
+    ///  the component state.
     /// </summary>
     /// <remarks>
-    ///  Call this method in response to a user action that should exit edit mode. After execution,
-    ///  the component will no longer be editable and any UI bound to the edit state will be refreshed.
-    /// </remarks>
-    void btnCancel_OnClick()
+    ///  Throws an exception if <c>ProjectModel</c> is <see langword="null" />.</remarks>
+    /// <returns>
+    ///  A task that represents the asynchronous operation.</returns>
+    async Task btnCancel_OnClick()
     {
-        this.ProjectModel?.RevertToSnapshot();
+        ArgumentNullException.ThrowIfNull(this.ProjectModel);
+
+        // WHAT: If the project is new and unsaved, we invoke the deletion callback to notify that
+        //  it should be removed from the list.
+        // WHY: This is necessary because the project has not been persisted yet, and we want to ensure
+        //  that the UI reflects the removal of the unsaved project.
+        if (this.ProjectModel.IsNew)
+        {
+            if (this.OnDeleteProjectClick.HasDelegate)
+            {
+                await this.OnDeleteProjectClick.InvokeAsync(this.ProjectModel);
+            }
+
+            return;
+        }
+
+        this.ProjectModel.RevertToSnapshot();
         this.IsEditable = false;
+
         base.StateHasChanged();
     }
 
-    void btnDelete_OnClick()
+    /// <summary>
+    ///  Deletes the current project and raises the project-deleted callback when a handler is assigned.
+    /// </summary>
+    /// <remarks>
+    ///  Invokes <c>OnDeleteProjectClick</c> with the current project identifier, or <c>0</c> when the
+    ///     project model is unavailable.</remarks>
+    /// <returns>
+    ///  A task that represents the asynchronous delete and callback invocation operation.</returns>
+    async Task btnDelete_OnClick()
     {
-
+        await this.OnDeleteProjectClick.InvokeAsync(this.ProjectModel);
     }
 
     /// <summary>
@@ -133,44 +128,46 @@ public partial class ProjectGridRowComponent :CbComponentBase
     }
 
     /// <summary>
-    ///  Handles the save operation for the project and displays a confirmation or error message to 
-    ///  the user.
+    ///  Saves the current project when changes are detected, creating a new project or updating an 
+    ///  existing one, notifies the user of the result, and raises the project-updated callback when 
+    ///  applicable.   
     /// </summary>
-    /// <remarks>
-    ///  If the save operation is successful, a success alert is shown and the project is marked as
-    ///  non-editable. If an error occurs, an error alert is displayed with the exception message. 
-    ///  If an OnProjectSaved event handler is assigned, it is invoked after a successful save.
-    /// </remarks>
+    /// <remarks> 
+    ///  Throws when the project model is null. If no changes are detected, shows an informational
+    ///  alert instead of saving. Always exits edit mode and refreshes component state; on failure, 
+    ///  shows the innermost error message.</remarks>
     /// <returns>
-    ///  A task that represents the asynchronous save operation.
-    /// </returns>
+    ///  A task that represents the asynchronous save operation.</returns>
     async Task btnSave_OnClick()
     {
         ArgumentNullException.ThrowIfNull(this.ProjectModel);
 
         try
         {
-            // only update if the model has been changed
-            //
-            if (!this.ProjectModel.IsDirty())
+            // WHAT: Validate the project before proceeding with save operation.
+            if (!(await this.ValidateProject())) return;
+
+            // WHAT: If the project is not new and has no changes, show an informational alert
+            //  instead of saving.
+            if (!this.ProjectModel.IsNew && !this.ProjectModel.IsDirty())
             {
-                await base.DialogSvc!.Alert("No changes were made to the project.");
+                await base.DialogSvc!.Alert("No changes were made to the project.", AlertTitles.Information);
             }
             else
             {
-                await this.UpdateProject();
-                await base.DialogSvc!.Alert("Project saved", "Success");
-
-                if (this.OnProjectUpdated.HasDelegate) await this.OnProjectUpdated.InvokeAsync(this.ProjectModel);
+                await this.OnSaveProjectClick.InvokeAsync(this.ProjectModel);
             }
 
             this.IsEditable = false;
-            base.StateHasChanged();
         }
         catch (Exception ex)
         {
-            while (ex.InnerException != null) { ex = ex.InnerException; }
-            await base.DialogSvc!.Alert(ex.Message, "Error");
+            while (ex.InnerException != null)
+            {
+                ex = ex.InnerException;
+            }
+
+            await base.DialogSvc!.Alert(ex.Message, AlertTitles.Error);
         }
     }
 
@@ -192,6 +189,42 @@ public partial class ProjectGridRowComponent :CbComponentBase
     {
         string result = (this.IsEditable && isEditableCol) ? "cb-column cb-editable" : "cb-column";
         return result;
+    }
+
+    /// <summary>
+    ///  Validates that the current project model exists and includes required project identifier 
+    ///  fields.
+    /// </summary>
+    /// <remarks>
+    ///  Displays a validation alert before returning <see langword="false"/> when a required field 
+    ///  is missing. Throws <see cref="ArgumentNullException"/> when <c>ProjectModel</c> is <see
+    /// langword="null"/>.</remarks>
+    /// <returns>
+    ///  A task that resolves to <see langword="true"/> when the project key and short name are 
+    ///  provided; otherwise, <see langword="false"/>.</returns>
+    async Task<bool> ValidateProject()
+    {
+        ArgumentNullException.ThrowIfNull(this.ProjectModel);
+
+        if (string.IsNullOrWhiteSpace(this.ProjectModel.Key))
+        {
+            await base.DialogSvc.Alert(
+                "Project Acronym is required.",
+                "Validation Error");
+
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(this.ProjectModel.ShortName))
+        {
+            await base.DialogSvc.Alert(
+                "Project Short Name is required.",
+                "Validation Error");
+
+            return false;
+        }
+
+        return true;
     }
 
     #endregion private

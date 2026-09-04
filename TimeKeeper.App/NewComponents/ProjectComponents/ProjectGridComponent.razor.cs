@@ -8,6 +8,12 @@ public partial class ProjectGridComponent : CbComponentBase
 {
     #region enums
 
+    /// <summary>
+    ///  Defines the available columns in a project grid.
+    /// </summary>
+    /// <remarks>
+    ///  Use these values to identify project metadata fields when configuring or rendering grid
+    ///  columns.</remarks>
     public enum ProjectGridColumns
     {
         Acronym,
@@ -30,9 +36,6 @@ public partial class ProjectGridComponent : CbComponentBase
     #endregion constants
 
     #region fields
-
-    bool _dataHasLoaded = false;
-
     #endregion fields
 
     #region parameters
@@ -94,9 +97,24 @@ public partial class ProjectGridComponent : CbComponentBase
     #endregion properties
 
     #region events
-
+    
+    /// <summary>
+    ///  Gets or sets the callback invoked when the add project action is triggered.
+    /// </summary>
     [Parameter]
-    public EventCallback<Project> OnProjectUpdated { get; set; }
+    public EventCallback<Project> OnAddProjectClick { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback invoked when the delete action is selected for a project.
+    /// </summary>
+    [Parameter]
+    public EventCallback<Project> OnDeleteProjectClick { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback invoked when the save action is selected for a project.
+    /// </summary>
+    [Parameter]
+    public EventCallback<Project> OnSaveProjectClick { get; set; }
 
     #endregion events
 
@@ -107,17 +125,11 @@ public partial class ProjectGridComponent : CbComponentBase
 
     protected override async Task OnParametersSetAsync()
     {
-        // Only run the following routine if the data has not been loaded yet.
+        // If data exists in the data variable then sort it and flag it as loaded.
         //
-        if(!this._dataHasLoaded)
-        { 
-            // If data exists in the data variable then sort it and flag it as loaded.
-            //
-            if(this.ProjectData != null && this.ProjectData.Count > 0)
-            {
-                await this.ApplySortToDataSet();
-                this._dataHasLoaded = true;
-            }
+        if(this.ProjectData != null && this.ProjectData.Count > 0)
+        {
+            await this.ApplySortToDataSet();
         }
     }
 
@@ -136,7 +148,37 @@ public partial class ProjectGridComponent : CbComponentBase
     {
         this.SetSortCriteria(ProjectGridColumns.Acronym, e => e.Key ?? "Key");
         await this.ApplySortToDataSet();
-        base.StateHasChanged();
+    }
+
+    /// <summary>
+    ///  Invokes the project-added callback when a delegate is assigned.
+    /// </summary>
+    /// <remarks>
+    ///  If no delegate is assigned to OnAddProjectClick, the operation completes without invoking a
+    ///  callback.</remarks>
+    /// <returns>
+    ///  A task that represents the asynchronous click handling operation.</returns>
+    async Task btnAddProject_OnClick()
+    {
+        ArgumentNullException.ThrowIfNull(base.SessionService?.User);
+
+        string username = base.SessionService.User.Username;
+
+        Project newProject = new Project()
+        {
+            LongName    = "",
+            ShortName   = "",
+            Key         = "",
+            CreatedDate = DateTime.Now,
+            CreatedBy   = username, 
+            UpdatedDate = DateTime.Now,
+            UpdatedBy   = username
+        };
+
+        if (this.OnAddProjectClick.HasDelegate)
+        {
+            await this.OnAddProjectClick.InvokeAsync(newProject);
+        }
     }
 
     /// <summary>
@@ -150,7 +192,6 @@ public partial class ProjectGridComponent : CbComponentBase
     {
         this.SetSortCriteria(ProjectGridColumns.LongName, e => e.LongName ?? "LongName");
         await this.ApplySortToDataSet();
-        base.StateHasChanged();
     }
 
     /// <summary>
@@ -169,7 +210,6 @@ public partial class ProjectGridComponent : CbComponentBase
     {
         this.SetSortCriteria(ProjectGridColumns.ShortName, e => e.ShortName ?? "ShortName");
         await this.ApplySortToDataSet();
-        base.StateHasChanged();
     }
 
     /// <summary>
@@ -184,7 +224,6 @@ public partial class ProjectGridComponent : CbComponentBase
     {
         this.SetSortCriteria(ProjectGridColumns.UpdatedBy, e => e.UpdatedBy ?? "UpdatedBy");
         await this.ApplySortToDataSet();
-        base.StateHasChanged();
     }
 
     /// <summary>
@@ -204,26 +243,53 @@ public partial class ProjectGridComponent : CbComponentBase
     {
         this.SetSortCriteria(ProjectGridColumns.UpdatedDate, e => e.UpdatedDate);
         await this.ApplySortToDataSet();
-        base.StateHasChanged();
     }
 
     /// <summary>
-    ///  Invokes the OnProjectUpdated event callback with the specified project when a project 
+    ///  Handles the project-added event and invokes the add-project callback when it is assigned.
+    /// </summary>
+    /// <param name="project">
+    ///  The project to add.</param>
+    /// <returns>
+    ///  A task that represents the asynchronous operation.</returns>
+    async Task ProjectGridRowComponent_OnAddProjectClick(Project project)
+    {
+        if(this.OnAddProjectClick.HasDelegate)
+        {
+            await this.OnAddProjectClick.InvokeAsync(project);
+        }
+    }
+
+    /// <summary>
+    ///  Raises the project deleted callback for the specified project.
+    /// </summary>
+    /// <param name="project">
+    ///  The deleted project.</param>
+    /// <returns>
+    ///  A task that represents the asynchronous operation.</returns>
+    async Task ProjectGridRowComponent_OnDeleteProjectClick(Project project)
+    {
+        string successMsg = project.IsNew ? "Project canceled" : "Project deleted";
+        await this.OnDeleteProjectClick.InvokeAsync(project);
+        await base.DialogSvc!.Alert(successMsg, AlertTitles.Success);
+    }
+
+    /// <summary>
+    ///  Invokes the OnSaveProjectClick event callback with the specified project when a project 
     ///  update occurs.
     /// </summary>
-    /// <param name="projectModell">
+    /// <param name="projectModel">
     ///  The project model containing the updated project data to be passed to the event callback. 
     ///  Cannot be null.
     /// </param>
     /// <returns>
     ///  A task that represents the asynchronous operation.
     /// </returns>
-    async Task ProjectGridRowComponent_OnProjectUpdated(Project projectModell)
+    async Task ProjectGridRowComponent_OnProjectSaveClick(Project projectModel)
     {
-        if(this.OnProjectUpdated.HasDelegate)
+        if(this.OnSaveProjectClick.HasDelegate)
         {
-            this._dataHasLoaded = false;
-            await this.OnProjectUpdated.InvokeAsync(projectModell);
+            await this.OnSaveProjectClick.InvokeAsync(projectModel);
         }
     }
 
@@ -272,6 +338,9 @@ public partial class ProjectGridComponent : CbComponentBase
     /// </param>
     void SetSortCriteria(ProjectGridColumns selectedColumn, Func<Project, object> sortColumn)
     {
+
+        // WHAT: If the same column is selected, toggle the sort direction; otherwise, set the new
+        //  column and reset to ascending.
         if (this.SelectedColumn == selectedColumn)
         {
             this.SortDirection = (this.SortDirection == SortDirections.Ascending) ?
@@ -284,16 +353,20 @@ public partial class ProjectGridComponent : CbComponentBase
             this.SortDirection = SortDirections.Ascending;
         }
 
-        // set the up/down icon on the selected button
-        //
+        // WHAT: Update the sort icon for the selected column based on the current sort direction. The icon
+        //  visually indicates whether the column is sorted in ascending or descending order.
         string icon = (this.SortDirection == SortDirections.Ascending) ? SortAscendingIcon : SortDescendingIcon;
 
+        // WHAT: Reset all sort icons to empty before setting the icon for the selected column. This
+        //  ensures that only the currently sorted column displays a sort indicator, while all other
+        //  columns have no icon.
         this.btnAcronymIcon = string.Empty;
         this.btnLongNameIcon = string.Empty;
         this.btnShortNameIcon = string.Empty;
         this.btnUpdatedByIcon = string.Empty;
         this.btnUpdatedDateIcon = string.Empty;
-
+        
+        // WHAT: Set the sort icon for the selected column.
         switch (selectedColumn)
         {
             case ProjectGridColumns.Acronym:

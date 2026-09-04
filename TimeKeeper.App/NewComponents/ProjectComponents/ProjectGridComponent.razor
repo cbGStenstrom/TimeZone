@@ -10,9 +10,13 @@
                 Gap="0" RowGap="1rem"
                 Style="height:2.75rem;border-bottom:1px solid rgba(0,0,0,.1);">
         <RadzenColumn Size="1">
-            <RadzenButton Style="width:100%" class="cb-grid-header-button"
-                ButtonStyle="@ButtonStyle.Primary"
-                Variant="@Variant.Flat"></RadzenButton>
+            <RadzenButton Style="width:100%"
+                class="cb-grid-header-button"
+                ButtonStyle="@ButtonStyle.Success"
+                Variant="@Variant.Flat"
+                Icon="add"
+                Click="@btnAddProject_OnClick">
+            </RadzenButton>
         </RadzenColumn>
         <RadzenColumn Size="1">
             <RadzenButton Style="width:100%" 
@@ -65,9 +69,13 @@
     <div class="cb-grid-body">
         @foreach(var projectModel in this.ProjectData)
         {
-            <ProjectGridRowComponent ProjectModel="@projectModel"
-                OnProjectUpdated="@ProjectGridRowComponent_OnProjectUpdated">
-            </ProjectGridRowComponent>
+                <ProjectGridRowComponent 
+                    ProjectModel="@projectModel"
+                    IsEditable="@(projectModel.Id == 0)"
+                    OnAddProjectClick="@ProjectGridRowComponent_OnAddProjectClick"
+                    OnSaveProjectClick="@ProjectGridRowComponent_OnProjectSaveClick"
+                    OnDeleteProjectClick="@ProjectGridRowComponent_OnDeleteProjectClick">
+                </ProjectGridRowComponent>
         }
     </div>
 

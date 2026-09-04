@@ -9,11 +9,13 @@ public partial class Project : ModelBase<Project>
 
     public int Id { get; set; }
 
+    public bool IsNew {  get {  return Id == 0; }  }
+
+    public string? Key { get; set; }
+
     public string LongName { get; set; } = null!;
 
     public string ShortName { get; set; } = null!;
-
-    public string? Key { get; set; }
 
     public DateTime CreatedDate { get; set; }
 
