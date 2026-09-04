@@ -12,8 +12,11 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimeKeeper.Domain", "TimeKeeper.Domain\TimeKeeper.Domain.csproj", "{5A6B37BD-C6DA-469F-B418-44584F6E45F3}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{33F804E1-A761-4395-8EBE-E7B590F0F6BF}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentation", "{4676EC9A-D357-4F39-8E14-49787DA23D75}"
 	ProjectSection(SolutionItems) = preProject
-		..\..\..\OneDrive - CyberBalance, LLC\Documents\TimeZone project\Architecture.md = ..\..\..\OneDrive - CyberBalance, LLC\Documents\TimeZone project\Architecture.md
+		docs\Architecture.md = docs\Architecture.md
+		docs\ProductCharter.md = docs\ProductCharter.md
 	EndProjectSection
 EndProject
 Global
@@ -43,6 +46,9 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{4676EC9A-D357-4F39-8E14-49787DA23D75} = {33F804E1-A761-4395-8EBE-E7B590F0F6BF}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {AD3B2E40-0248-444D-A81B-CF5870B05454}
