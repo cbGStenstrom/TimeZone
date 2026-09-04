@@ -45,18 +45,23 @@ namespace TimeKeeper.Domain.Queries
 
             Models.Laborer? result = null;
 
-            // Hash the password to compare it to the password in the database
-            //
+            // WHAT: This is a bit of a hack, but it is necessary to hash the password before checking
+            //  it against the database.
+            // WHY: The reason is that the password is stored in the database as a hash, and we need
+            //  to hash the password before we can compare it. However, we don't want to hash the
+            //  password if the user doesn't exist, because that would be a waste of resources. So
+            //  we first check if the user exists, and if they do, we hash the password and compare
+            //  it. If they don't exist, we just return null.
             string hashedPassword = PasswordUtilities.HashPassword(request.Username, request.Password);
 
-            var entity = await this._dbCtx.Laborers.FirstOrDefaultAsync(e => e.Username.ToLower() == request.Username.ToLower());
+            Laborer? entity = await this._dbCtx.Laborers.FirstOrDefaultAsync(e => e.Username.ToLower() == request.Username.ToLower(), cancellationToken);
 
             if(entity != null)
             {
                 if(PasswordUtilities.PasswordsMatch(entity.Password, entity.Username, request.Password))
                 {
                     result = (entity != null) ? entity.MapEntityToDomain() : null;
-                    result.TakeSnapshot();
+                    result?.TakeSnapshot();
                 }
             }
 
@@ -68,7 +73,7 @@ namespace TimeKeeper.Domain.Queries
             var entity = await this._dbCtx.Laborers.FirstOrDefaultAsync(e => e.Id == request.LaborerID);
 
             Models.Laborer? result = (entity != null) ? entity.MapEntityToDomain() : null;
-            result.TakeSnapshot();
+            result?.TakeSnapshot();
             return result;
         }
 

@@ -42,7 +42,7 @@ namespace TimeKeeper.Domain.Queries
                 {
                     Models.TimeEntry entryModel = entry.MapEntityToDomain();
                     entryModel.TakeSnapshot();
-                    result.TimeEntries.Add(entryModel);
+                    result?.TimeEntries.Add(entryModel);
                 }
             }
 
