@@ -16,7 +16,12 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentation", "{4676EC9A-D357-4F39-8E14-49787DA23D75}"
 	ProjectSection(SolutionItems) = preProject
 		docs\Architecture.md = docs\Architecture.md
+		docs\Backlog.md = docs\Backlog.md
+		docs\Deployment.md = docs\Deployment.md
+		docs\Installation.md = docs\Installation.md
 		docs\ProductCharter.md = docs\ProductCharter.md
+		docs\ReleaseNotes.md = docs\ReleaseNotes.md
+		docs\UpgradeGuide.md = docs\UpgradeGuide.md
 	EndProjectSection
 EndProject
 Global
