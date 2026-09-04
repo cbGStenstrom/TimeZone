@@ -109,10 +109,10 @@ namespace TimeKeeper.App.Pages
                     }
                 }
                 #pragma warning disable CS0168
-                catch(Exception _)
+                catch(Exception ex)
                 #pragma warning restore CS0168
                 {
-                    UserMessage = "An error occurred while logging in.";
+                    UserMessage = $"An error occurred while logging in.: {ex.Message}";
                     this.IsBusy = false;
                 }
             }
