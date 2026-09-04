@@ -1,0 +1,64 @@
+﻿@page "/login"
+@using TimeKeeper.App.Components.Layout
+@layout SplashScreenLayout
+
+<RadzenPanel AllowCollapse="false" Style="max-width:420px;" class="rz-my-12 rz-mx-auto">
+
+    <HeaderTemplate>
+        <RadzenText>@this.Title</RadzenText>
+    </HeaderTemplate>
+
+	<ChildContent>
+		<RadzenStack Orientation="@Orientation.Vertical" class="rz-mt-2">
+
+            @if(this.ShowCreateUser)
+            {
+                <CreateUserForm @bind-User="@EditableUser"></CreateUserForm>
+                <hr/>
+                @if(!string.IsNullOrEmpty(UserMessage))
+                {
+                    <RadzenText TextStyle="TextStyle.Body1" TextAlign="TextAlign.Center" class="rz-mb-0">@this.UserMessage</RadzenText>
+                    <hr/>
+                }
+                <RadzenRow AlignItems="AlignItems.Center" JustifyContent="JustifyContent.End">
+                    <RadzenStack Orientation="Orientation.Horizontal">
+                        <RadzenButton ButtonStyle="@ButtonStyle.Light" Click="@((args) => { btnCancelCreateUser_OnClick(); })">Cancel</RadzenButton>
+                        <RadzenButton ButtonStyle="@ButtonStyle.Primary" Click="@(async (args) => { await btnSaveUser_OnClick(); })">Save User</RadzenButton>
+                    </RadzenStack>
+                </RadzenRow>
+            }
+            else
+            {
+                <RadzenTextBox @bind-Value="@Username" Placeholder="username"></RadzenTextBox>
+                <RadzenPassword @bind-Value="@Password" Placeholder="passsword"></RadzenPassword>
+                @if (!string.IsNullOrEmpty(UserMessage))
+                {
+                    <hr/>
+                    <RadzenText TextStyle="TextStyle.Body1" TextAlign="TextAlign.Center" class="rz-mb-0">@this.UserMessage</RadzenText>
+                    <hr />
+                }
+                <RadzenRow AlignItems="AlignItems.Center" JustifyContent="JustifyContent.End">
+                    <RadzenStack Orientation="Orientation.Horizontal">
+                        <RadzenButton ButtonStyle="@ButtonStyle.Light" 
+                            Click="@((args) => { btnCreateUser_OnClick(); })">Create New User</RadzenButton>
+						<RadzenButton ButtonStyle="@ButtonStyle.Primary" 
+                            IsBusy="@this.IsBusy"
+                            Click="@(async (args) => { await btnLogin_OnClick(); })">Login</RadzenButton>
+                    </RadzenStack>
+                </RadzenRow>
+            }
+		</RadzenStack>
+    </ChildContent>
+
+@*     <FooterTemplate>
+        @if(!string.IsNullOrEmpty(this.UserMessage))
+        {
+            <RadzenText TextStyle="TextStyle.Body1" TextAlign="TextAlign.Center" class="rz-mt-5 rz-mb-0">@this.UserMessage</RadzenText>
+        }
+    </FooterTemplate> *@
+
+</RadzenPanel>
+
+
+
+

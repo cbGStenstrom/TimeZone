@@ -1,0 +1,98 @@
+﻿@using TimeKeeper.Domain.Utilities
+@inherits ComponentBase
+
+<RadzenStack Orientation="Orientation.Vertical" Gap="1rem">
+
+	@* Metric Tiles *@
+	<RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" JustifyContent="JustifyContent.SpaceEvenly" Style="@GetInlineCssStyle()">
+
+		<RadzenCard class="cb-summary-card cb-info" onclick="@(()=> { this.SummaryCard_OnClick("TOTAL");} )">
+			<div class="cb-title">Total Hours</div>
+			<div class="cb-value">@(TotalHours.ToString("F2"))</div>
+		</RadzenCard>
+
+		<RadzenCard class="cb-summary-card cb-success" onclick="@(() => { this.SummaryCard_OnClick("BILLABLE"); })">
+			<div class="cb-title">Billable Hours</div>
+			<div class="cb-value">@(BillableHours.ToString("F2"))</div>
+		</RadzenCard>
+
+		<RadzenCard class="cb-summary-card cb-warning" onclick="@(async () => { this.SummaryCard_OnClick("NON-BILLABLE"); })"> 
+			<div class="cb-title">Non-Billable Hours</div>
+			<div class="cb-value">@(NonBillableHours.ToString("F2"))</div>
+		</RadzenCard>
+
+		<RadzenCard class="cb-summary-card cb-info" onclick="@(() => { this.SummaryCard_OnClick("CLOSED"); })">
+			<div class="cb-title">Workitems Closed</div>
+			<div class="cb-value">@TotalClosedWorkItems</div>
+		</RadzenCard>
+
+		<RadzenCard class="cb-summary-card cb-info" onclick="@(() => { this.SummaryCard_OnClick("IN_REVIEW"); })">
+			<div class="cb-title">Workitems In Review</div>
+			<div class="cb-value">@TotalInReviewWorkItems</div>
+		</RadzenCard>
+
+	</RadzenStack>
+
+    @* WorkItems List *@
+
+	@if (this.FilteredWorkItemDateRangeSummaries is null || this.FilteredWorkItemDateRangeSummaries.Count <=0)
+	{
+		<p>No work has been recorded for the selected time frame. </p>
+	}
+	else
+	{		
+
+		<RadzenStack 
+			Orientation="@Orientation.Horizontal" 
+			JustifyContent="@JustifyContent.Stretch" 
+			Style="flex-wrap:wrap;">
+
+			<RadzenStack Orientation="Orientation.Vertical" Gap="1rem" Style="@GetInlineCssStyle()">
+
+				<RadzenCard Variant="Variant.Filled" class="cb-grid-rows cb-hover" Style="flex-grow:1; position: relative;">
+
+					@foreach (var summary in this.FilteredWorkItemDateRangeSummaries.OrderBy(e => e.IsBillable).ThenBy(e => e.IsOpen).ThenBy(e => e.WorkItemTitle).ToList())
+					{
+						@* WorkItem lineitem *@
+						<RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween"
+									 class="@this.GetItemCssClass(summary)"
+									 @onclick="@(() => { this.WorkItem_OnClick(summary.WorkItemID); })">
+							<RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap=".5rem">
+								<i class="rzi md-20">@this.GetStatusIcon(summary)</i>
+								<i class="rzi md-20">@($"{((summary.IsBillable) ? "attach_money" : "money_off")}")</i>
+								<span class="cb-item-title">@summary.WorkItemTitle</span>
+							</RadzenStack>
+							<span>@($"{DateTimeUtils.MinutesToHours(summary.TotalMinutesWorked).ToString("F2")} hrs")</span>
+						</RadzenStack>
+
+						<hr />
+					}
+
+					@* Total Hours *@
+					<RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Right" Gap=".5rem" class="cb-item">
+						<span>@this.GetTotalHours()</span>
+					</RadzenStack>
+
+				</RadzenCard>
+
+			</RadzenStack>
+
+			@if (this.SelectedWorkItemId.HasValue)
+			{
+				<RadzenCard Variant="@Variant.Filled" Style="flex-grow:2; position: relative;">
+					<RadzenButton 
+						Icon="close" 
+						Variant="@Variant.Text" 
+						Style="position:absolute; right:2rem;"
+						Click="@btnCloseSummary_OnClick"></RadzenButton>
+					<WorkItemEntriesComponent
+						WorkItemID="@SelectedWorkItemId.Value"
+						EndDate="@DateRangeEnd.GetEndOfDay()"
+						StartDate="@DateRangeStart.GetStartOfDay()" />
+
+				</RadzenCard>
+			}
+		</RadzenStack>
+
+    }
+</RadzenStack>

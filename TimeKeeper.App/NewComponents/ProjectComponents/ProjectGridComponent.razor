@@ -1,0 +1,79 @@
+﻿@inherits CbComponentBase
+@namespace TimeKeeper.App.Components
+
+@if(this.ProjectData != null)
+{
+
+<div class="cb-component-project-grid cb-grid-assembled">
+    @* Grid Header *@
+    <RadzenRow AlignItems="@AlignItems.Center" class="cb-grid-header"
+                Gap="0" RowGap="1rem"
+                Style="height:2.75rem;border-bottom:1px solid rgba(0,0,0,.1);">
+        <RadzenColumn Size="1">
+            <RadzenButton Style="width:100%" class="cb-grid-header-button"
+                ButtonStyle="@ButtonStyle.Primary"
+                Variant="@Variant.Flat"></RadzenButton>
+        </RadzenColumn>
+        <RadzenColumn Size="1">
+            <RadzenButton Style="width:100%" 
+                ButtonStyle="@ButtonStyle.Primary"
+                class="cb-grid-header-button cb-align-left"
+                Click="@btnAcronymColHeader_OnClick"
+                Icon="@this.btnAcronymIcon"
+                Text="Acronym" 
+                Variant="@Variant.Flat"></RadzenButton>
+        </RadzenColumn>
+        <RadzenColumn Size="2">
+            <RadzenButton Style="width:100%" 
+                ButtonStyle="@ButtonStyle.Primary"
+                class="cb-grid-header-button cb-align-left"
+                Click="@btnShortNameColHeader_OnClick"
+                Icon="@this.btnShortNameIcon"
+                Text="Short Name" 
+                Variant="@Variant.Flat"></RadzenButton>
+        </RadzenColumn>
+        <RadzenColumn Size="6">
+            <RadzenButton Style="width:100%" 
+                ButtonStyle="@ButtonStyle.Primary"
+                class="cb-grid-header-button cb-align-left"
+                Click="@btnLongNameColHeader_OnClick"
+                Icon="@this.btnLongNameIcon"
+                Text="Long Name" 
+                Variant="@Variant.Flat"></RadzenButton>
+        </RadzenColumn>
+        <RadzenColumn Size="1">
+            <RadzenButton Style="width:100%"
+                ButtonStyle="@ButtonStyle.Primary"
+                class="cb-grid-header-button cb-align-center"
+                Click="@btnUpdatedByColHeader_OnClick"
+                Icon="@this.btnUpdatedByIcon"
+                Text="Updated By" 
+                Variant="@Variant.Flat"></RadzenButton>
+        </RadzenColumn>
+        <RadzenColumn Size="1">
+            <RadzenButton Style="width:100%"
+                ButtonStyle="@ButtonStyle.Primary"
+                class="cb-grid-header-button cb-align-left"
+                Click="@btnUpdatedDateColHeader_OnClick"
+                Icon="@this.btnUpdatedDateIcon"
+                Text="Updated Date" 
+                Variant="@Variant.Flat"></RadzenButton>
+        </RadzenColumn>
+    </RadzenRow>
+
+    @* Grid Body *@
+    <div class="cb-grid-body">
+        @foreach(var projectModel in this.ProjectData)
+        {
+            <ProjectGridRowComponent ProjectModel="@projectModel"
+                OnProjectUpdated="@ProjectGridRowComponent_OnProjectUpdated">
+            </ProjectGridRowComponent>
+        }
+    </div>
+
+</div>
+}
+else
+{
+    <h3>Loading Project Data ... </h3>
+}

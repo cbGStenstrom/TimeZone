@@ -1,0 +1,62 @@
+﻿@page "/Dashboard"
+@inherits CbPageBase
+@layout AppLayout
+
+<RadzenLayout Style="height:100%;">
+	<RadzenHeader Style="height:3.7rem;">
+		<RadzenStack 
+			Orientation="@Orientation.Vertical" 
+			Gap="0rem" 
+			class="cb-pad-inline-start-1rem cb-pad-block-start-6px">
+			<h5 class="cb-margin-block-1px">Dashboard</h5>
+			<span style="font-size:.85rem;">@DateLabel</span>
+		</RadzenStack>
+	</RadzenHeader>
+	<RadzenBody>
+
+
+		<RadzenStack Orientation="Orientation.Horizontal" Gap="2rem">
+
+			<RadzenStack Orientation="Orientation.Vertical" Gap="1rem" Style="width:100%">
+
+				@* Filter *@
+				<RadzenCard>
+					<RadzenStack Orientation="Orientation.Horizontal" Gap="1rem">
+				
+						<RadzenDropDown 
+							@bind-Value=@SelectedDateRangeOption 
+							Data=@DateRangeOptions
+							TextProperty="Value"
+							ValueProperty="Key"
+							TValue="string"
+							Change="DateRangeOption_OnChange">
+						</RadzenDropDown>
+
+						<RadzenDatePicker 
+							AllowClear="false"
+							@bind-Value="@SelectedDate"
+							ShowTime="false"
+							Change="DatePicker_OnChange"
+							ShowButton="true"
+							DateFormat="MMM dd, yyyy">
+						</RadzenDatePicker>
+
+					</RadzenStack>
+				</RadzenCard>
+
+				<WorkSummaryComponent 
+					OnWorkItemClick="WorkSummary_OnItemClick"
+					@bind-DateRangeEnd="@DateRangeEnd"
+					@bind-DateRangeStart="@DateRangeStart">
+				</WorkSummaryComponent>
+
+			</RadzenStack>
+
+		</RadzenStack>
+
+    </RadzenBody>
+	<RadzenFooter>
+		<div>Let's also add a list of <b>all </b>Items in review, nt just the selcted date range.</div>
+		<div>Add a History feature. When the user clicks on a WorkItem be able to see all the TimeEntries associated with that WorkItem.</div>
+	</RadzenFooter>
+</RadzenLayout>

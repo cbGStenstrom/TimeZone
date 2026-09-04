@@ -1,0 +1,32 @@
+﻿@inherits CbComponentBase
+
+<RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center">
+
+	<RadzenDropDown 
+		Style="width:100%"
+		Data="@this.ProjectList"
+		@bind-Value=@SelectedProjectId
+		TextProperty="@nameof(Project.ShortName)"
+		ValueProperty="@nameof(Project.Id)" Name="Filter"
+		Change="FilterProjectId_OnChange">
+	</RadzenDropDown>
+
+	<RadzenDropDown 
+		Data="@(Enum.GetValues(typeof(IsOpenOptions)).Cast<Enum>())"
+		@bind-Value="@this.FilterIsOpen"
+		Change="FilterIsOpen_OnChange">
+	</RadzenDropDown>
+
+	<RadzenDropDown 
+		Data="@(Enum.GetValues(typeof(IsBillableOptions)).Cast<Enum>())"
+		@bind-Value="@this.FilterIsBillable"
+		Change="FilterIsBillable_OnChange">
+	</RadzenDropDown>
+
+	<RadzenButton 
+		Variant="@Variant.Outlined" 
+		Click="ClearFilter_OnClick" 
+		ButtonStyle="@ButtonStyle.Secondary"
+		Style="width:10rem"> Clear Filter </RadzenButton>
+
+</RadzenStack>

@@ -1,0 +1,40 @@
+﻿@using TimeKeeper.App.Components.Dialogs
+@inherits CbComponentBase
+
+
+<RadzenStack 
+    Orientation="@this.StatusOrientation"
+    class="cb-time-entry-status-component"
+    AlignItems="@this.StatusAlignItems"
+    JustifyContent="@JustifyContent.Start">
+
+    @if (this.ActiveTimeEntry != null)
+    {
+        <div class="cb-button" @onclick="@(async () => { await btnEndWork_OnClick(); })">Edit Work</div>
+
+        @if (this.ShowSeparators)
+        {
+            <div class="cb-vert-separator"></div>
+        }
+
+        <RadzenStack Orientation="@Orientation.Horizontal" Gap=".25rem" AlignItems="@AlignItems.Center" class="cb-label-message">
+            <label>Workitem:</label>
+            <span class="cb-message">@this.ActiveTimeEntry?.WorkItem?.Title</span>
+        </RadzenStack>
+
+        <RadzenStack Orientation="@Orientation.Horizontal" Gap=".25rem" AlignItems="@AlignItems.Center" class="cb-label-message">
+            <label>Start Time:</label>
+            <span class="cb-message">@this.ActiveTimeEntry?.StartWork?.ToString("g")</span>
+        </RadzenStack>
+    }
+    else
+    {
+        <div class="cb-button" @onclick="@(async () => { await btnStartWork_OnClick(); })">Start Work</div>
+    }
+
+    <TimeEntryEditorDialog 
+        @ref="dlgTimeEntryEditor"
+        OnSaveCallback="@Dialog_OnTimeEntryEnded">
+    </TimeEntryEditorDialog>
+
+</RadzenStack>

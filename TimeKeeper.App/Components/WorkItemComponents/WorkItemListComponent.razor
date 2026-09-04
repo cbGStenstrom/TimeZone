@@ -1,0 +1,39 @@
+﻿@inherits CbComponentBase
+@namespace TimeKeeper.App.Components
+
+
+<RadzenStack Orientation="@Orientation.Vertical">
+
+    <WorkItemLookupFilter 
+        @ref="@this.WorkItemLookupFilterComponent"
+        OnFilterChange="LookupFilter_OnChange">
+    </WorkItemLookupFilter>
+
+    <RadzenDropDown id="ddlWorkItem"
+        AllowFiltering="true"
+        AllowClear="true"
+        @bind-Value="@this.SelectedWorkItemId"
+        ClearSearchAfterSelection="true"
+        Data="@WorkItemList"
+        FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+        TextProperty="@nameof(WorkItem.Title)"
+        ValueProperty="@nameof(WorkItem.Id)"
+        Change="@ddlWorkItem_OnChange">
+    </RadzenDropDown>
+
+    <RadzenRow JustifyContent="@JustifyContent.End" Visible="@OpenInDialog">
+
+        <RadzenButton Text="OK" 
+            Click="@btnClose_OnClick">
+        </RadzenButton>
+       
+        <RadzenButton Text="Cancel" 
+            Variant="@Variant.Outlined" 
+            ButtonStyle="@ButtonStyle.Base" 
+            Shade="@Shade.Dark"
+            Click="@((args) => base.DialogSvc!.Close(true))">
+        </RadzenButton>
+
+    </RadzenRow>
+
+</RadzenStack>

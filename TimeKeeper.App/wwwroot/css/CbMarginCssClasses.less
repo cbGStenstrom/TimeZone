@@ -1,0 +1,94 @@
+﻿
+.generate-fractional-margin(@maj, @fracCount, @multiplier, @uom) when (@fracCount > 0) {
+
+    @label: @{maj}\.@{fracCount}@{uom};
+    @value: @maj + (@fracCount * (.1 * @multiplier));
+
+    .cb-margin-@{label} {
+        margin: @value;
+    }
+
+    .cb-margin-block-@{label} {
+        margin-block: @value;
+    }
+
+    .cb-margin-block-start-@{label} {
+        margin-block-start: @value;
+    }
+
+    .cb-margin-block-@{label} {
+        margin-block-end: @value;
+    }
+
+    .cb-margin-inline-@{label} {
+        margin-inline: @value;
+    }
+
+    .cb-margin-inline-start-@{label} {
+        margin-inline-start: @value;
+    }
+
+    .cb-margin-inline-@{label} {
+        margin-inline-end: @value;
+    }
+    // recurse
+    .generate-fractional-margin(@maj, @fracCount - 1, @multiplier, @uom);
+}
+
+.generate-margin(@count, @multiplier, @uom, @fracCount) when (@count > 0) {
+
+    @label: @{count}@{uom}; // initialize the variable
+
+    .set-fractionals(@fracCount) when (@fracCount > 0) {
+        .generate-fractional-margin(@count, @fracCount, @multiplier, @uom);
+    }
+
+    .cb-margin-@{label} {
+        margin: (@count * @multiplier);
+    }
+
+
+    .cb-margin-block-@{label} {
+        margin-block: (@count * @multiplier);
+    }
+
+    .cb-margin-block-start-@{label} {
+        margin-block-start: (@count * @multiplier);
+    }
+
+    .cb-margin-block-end-@{label} {
+        margin-block-end: (@count * @multiplier);
+    }
+
+    .cb-margin-inline-@{label} {
+        margin-inline: (@count * @multiplier);
+    }
+
+    .cb-margin-inline-start-@{label} {
+        margin-inline-start: (@count * @multiplier);
+    }
+
+    .cb-margin-inline-end-@{label} {
+        margin-inline-end: (@count * @multiplier);
+    }
+    // Set fractional Margin
+    .set-fractionals(@fracCount);
+    // recurse
+    .generate-margin(@count - 1, @multiplier, @uom, @fracCount);
+}
+
+/*#region % Margin */
+.generate-margin(100, 1%, perc, 0);
+/*#endregion % Margin */
+
+/*#region REM Margin */
+.generate-margin(10, 1rem, rem, 9);
+/*#endregion REM Margin */
+
+/*#region EM Margin */
+.generate-margin(10, 1em, em, 9);
+/*#endregion EM Margin */
+
+/*#region PX Margin */
+.generate-margin(100, 1px, px, 0);
+/*#endregion PC Margin */

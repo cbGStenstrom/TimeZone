@@ -1,0 +1,94 @@
+﻿
+.generate-fractional-line-height(@maj, @fracCount, @multiplier, @uom) when (@fracCount > 0) {
+
+    @label: @{maj}\.@{fracCount}@{uom};
+    @value: @maj + (@fracCount * (.1 * @multiplier));
+
+    .cb-typo-line-height-@{label} {
+        line-height: @value;
+    }
+    // recurse
+    .generate-fractional-line-height(@maj, @fracCount - 1, @multiplier, @uom);
+}
+
+.generate-line-height(@count, @multiplier, @uom, @fracCount) when (@count > 0) {
+
+    @label: @{count}@{uom}; // initialize the variable
+
+    .set-fractionals(@fracCount) when (@fracCount > 0) {
+        .generate-fractional-line-height(@count, @fracCount, @multiplier, @uom);
+    }
+
+    // Set fractional LineHeight
+    .set-fractionals(@fracCount);
+
+    .cb-typo-line-height-@{label} {
+        line-height: (@count * @multiplier);
+    }
+    // recurse
+    .generate-line-height(@count - 1, @multiplier, @uom, @fracCount);
+}
+
+/*#region REM LineHeight */
+.generate-line-height(10, 1rem, rem, 9);
+/*#endregion REM LineHeight */
+
+/*#region EM LineHeight */
+.generate-line-height(10, 1em, em, 9);
+/*#endregion EM LineHeight */
+
+/*#region PX LineHeight */
+.generate-line-height(100, 1px, px, 0);
+/*#endregion PC LineHeight */
+
+
+.generate-fractional-fontsize(@maj, @fracCount, @multiplier, @uom) when (@fracCount > 0) {
+
+    @label: @{maj}\.@{fracCount}@{uom};
+    @value: @maj + (@fracCount * (.1 * @multiplier));
+
+    .material-symbols-outlined.md-@{label} {
+        font-size: @value;
+    }
+    // recurse
+    .generate-fractional-fontsize(@maj, @fracCount - 1, @multiplier, @uom);
+}
+
+.generate-material-outlined-fontsize(@count, @multiplier, @uom, @fracCount) when (@count > 0) {
+
+    @label: @{count}@{uom}; // initialize the variable
+
+    .set-fractional-fontsizes(@fracCount) when (@fracCount > 0) {
+        .generate-fractional-fontsize(@count, @fracCount, @multiplier, @uom);
+    }
+
+    // Set fractional LineHeight
+    .set-fractional-fontsizes(@fracCount);
+
+    &.md-@{count} {
+        font-size: (@count * @multiplier);
+    }
+
+    // recurse
+    .generate-material-outlined-fontsize(@count - 1, @multiplier, @uom, @fracCount);
+}
+
+/*#region Material Symbols font-size PX */
+.material-symbols-outlined {
+    .generate-material-outlined-fontsize(100, 1px, px, 0);
+}
+/*#endregion Material Symbols font-size PX */
+
+/*#region Material Symbols font-size REM */
+/*.generate-material-outlined-fontsize(10, 1rem, rem, 9);*/
+/*#endregion Material Symbols font-size REM */
+
+/*#region Material Symbols font-size EM */
+/*.generate-material-outlined-fontsize(10, 1em, em, 9);*/
+/*#endregion Material Symbols font-size EM */
+
+.cb-font-button {
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-weight: 500;
+}

@@ -1,0 +1,34 @@
+﻿
+@if (this.ProjectData != null)
+{
+	<RadzenStack Orientation="Orientation.Vertical">
+
+		<RadzenRow AlignItems="AlignItems.Center">
+			<RadzenColumn Size="2">
+				<RadzenLabel Text="Key (acronym)"></RadzenLabel>
+			</RadzenColumn>
+			<RadzenColumn Size="10">
+				<RadzenTextBox Style="width:100%;" @bind-Value="@ProjectData.Key" MaxLength="20"></RadzenTextBox>
+			</RadzenColumn>
+		</RadzenRow>
+
+		<RadzenRow AlignItems="AlignItems.Center">
+			<RadzenColumn Size="2">
+				<RadzenLabel Text="Short Name"></RadzenLabel>
+			</RadzenColumn>
+			<RadzenColumn Size="10">
+				<RadzenTextBox Style="width:100%;" @bind-Value="@ProjectData.ShortName" MaxLength="120"></RadzenTextBox>
+			</RadzenColumn>
+		</RadzenRow>
+
+		<RadzenRow AlignItems="AlignItems.Center">
+			<RadzenColumn Size="2">
+				<RadzenLabel Text="Long Name"></RadzenLabel>
+			</RadzenColumn>
+			<RadzenColumn Size="10">
+				<RadzenTextBox Style="width:100%;" @bind-Value="@ProjectData.LongName" MaxLength="250"></RadzenTextBox>
+			</RadzenColumn>
+		</RadzenRow>
+
+	</RadzenStack>
+}

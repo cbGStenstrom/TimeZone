@@ -1,0 +1,40 @@
+﻿@namespace TimeKeeper.App.Components.Layout
+@inherits LayoutComponentBase
+
+<RadzenLayout>
+@*     <RadzenHeader>
+        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="0">
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0">
+				<RadzenSidebarToggle Click="@(() => sidebarExpanded = !sidebarExpanded)" /> 
+				<RadzenLabel Text="Time Keeper" />
+            </RadzenStack>
+            <RadzenAppearanceToggle/>
+        </RadzenStack>
+    </RadzenHeader> *@
+    @* <RadzenSidebar Position="@SidebarPosition.Left" Responsive="false" Style="width: max-content"> *@
+    <RadzenSidebar FullHeight="true" Position="@SidebarPosition.Left" Responsive="false" Style="width: max-content">
+        Time Keeper
+        <RadzenPanelMenu DisplayStyle="@(sidebarExpanded? MenuItemDisplayStyle.IconAndText: MenuItemDisplayStyle.Icon)" ShowArrow="false"> 
+            <RadzenPanelMenuItem Text="Home" Icon="home" Click="@((args) => { this.btnHome_OnClick(); })" />
+            <RadzenPanelMenuItem Text="Dashboard" Icon="dashboard" Click="@((args) => { this.btnDashboard_OnClick(); })" />
+            <RadzenPanelMenuItem Text="Projects" Icon="cases" Click="@((args) => { this.lnkProjects_OnClick(); })" />
+            <RadzenPanelMenuItem Text="Workitems" Icon="assignment" Click="@((args) => { this.lnkWorkItems_OnClick(); })" />
+            <RadzenPanelMenuItem Text="Time Entries" Icon="schedule" Click="@((args) => { this.lnkTimeEntries_OnClick(); })" />
+            <RadzenPanelMenuItem Text="Log Out" Icon="logout" Click="@((args) => { this.lnkLogOut_OnClick(); })" />
+            <RadzenPanelMenuItem Text="Todo List" Icon="checklist" Click="@((args) => { this.lnkLogOut_OnClick(); })" />
+            <RadzenPanelMenuItem Text="Toggle" Icon="logout" Click="@(() => sidebarExpanded = !sidebarExpanded)" />
+        </RadzenPanelMenu>
+    </RadzenSidebar>
+    <RadzenBody Style="padding:0;">
+			@Body
+    </RadzenBody>
+    <RadzenFooter>
+        Footer
+    </RadzenFooter>
+</RadzenLayout>
+
+<div id="blazor-error-ui" data-nosnippet>
+    An unhandled error has occurred.
+    <a href="." class="reload">Reload</a>
+    <span class="dismiss">🗙</span>
+</div>

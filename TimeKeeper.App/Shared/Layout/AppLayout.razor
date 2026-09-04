@@ -1,0 +1,52 @@
+﻿@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@inherits LayoutComponentBase
+<RadzenDialog />
+<RadzenLayout Style="display:grid;height:100vh;">
+
+    <RadzenSidebar 
+        FullHeight="true" 
+        Position="@SidebarPosition.Left" 
+        Responsive="false" 
+        Style="width:max-content;"
+        class="cb-sidepanel-main-nav">
+        <RadzenPanelMenu 
+            DisplayStyle="@(LeftSidebarExpanded? MenuItemDisplayStyle.IconAndText: MenuItemDisplayStyle.Icon)"
+            Style="@(LeftSidebarExpanded? "width: 250px;" : "width: max-content;")"
+            ShowArrow="false">
+            <RadzenPanelMenuItem 
+                Text="Timekeeper" 
+                Icon="calendar_clock" 
+                Click="@(() => LeftSidebarExpanded = !LeftSidebarExpanded)"
+                IconColor="var(--rz-base-50)"
+                class="cb-brand">
+            </RadzenPanelMenuItem>
+
+            <RadzenPanelMenuItem Text="Home"            Icon="@GoogleIcons.Home"        class="cb-font-button" Click="@((args) => { this.btnHome_OnClick(); })"/>
+            <RadzenPanelMenuItem Text="Dashboard"       Icon="@GoogleIcons.Dashboard" class="cb-font-button" Click="@((args) => { this.btnDashboard_OnClick(); })" />
+            <RadzenPanelMenuItem Text="Project Mgr"     Icon="@GoogleIcons.Cases" class="cb-font-button" Click="@((args) => { this.lnkProjectMgr_OnClick(); })" />
+            <RadzenPanelMenuItem Text="Workitem Mgr"    Icon="@GoogleIcons.Assignment" class="cb-font-button" Click="@((args) => { this.lnkWorkItems_OnClick(); })" />
+            <RadzenPanelMenuItem Text="Workitem Mgr (new)" Icon="@GoogleIcons.Assignment"  class="cb-font-button" Click="@((args) => { this.lnkWorkItems_OnClick(true); })" />
+            <RadzenPanelMenuItem Text="Time Entries"    Icon="@GoogleIcons.Schedule"    class="cb-font-button" Click="@((args) => { this.lnkTimeEntries_OnClick(); })" />
+            <RadzenPanelMenuItem Text="Log Out"         Icon="@GoogleIcons.Logout"      class="cb-font-button" Click="@((args) => { this.lnkLogOut_OnClick(); })" />
+            <RadzenPanelMenuItem Text="Test Page"       Icon="@GoogleIcons.Logout"      class="cb-font-button" Click="@((args) => { this.lnkTestPage_OnClick(); })" />
+
+        </RadzenPanelMenu>
+    </RadzenSidebar>
+    
+    <RadzenBody Style="padding:0;">
+        <CascadingValue Value="this" Name="Layout">
+            <CascadingValue Value="this.ActiveTimeEntry" Name="ActiveTimeEntry">
+                @Body
+            </CascadingValue>
+        </CascadingValue>
+    </RadzenBody>
+    
+    <RadzenFooter>
+        <TimeEntryStatusComponent Gap=".5rem"
+            @bind-ActiveTimeEntry="@this.ActiveTimeEntry" 
+            StatusOrientation="@Orientation.Horizontal" 
+            OnTimeEntryChanged="@TimeEntryStatusComponent_OnTimeEntryChanged">
+        </TimeEntryStatusComponent>
+    </RadzenFooter>
+
+</RadzenLayout>

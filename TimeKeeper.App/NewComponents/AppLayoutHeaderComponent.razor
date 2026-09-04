@@ -1,0 +1,19 @@
+﻿@inherits CbComponentBase
+@namespace TimeKeeper.App.Components
+@* 
+ Creates the header at the top of each page. May contain the page name and or whatever additional 
+ information is required.
+*@
+
+<RadzenHeader Style="height:3.7rem;">
+	<RadzenStack 
+		Orientation="@Orientation.Horizontal"
+		AlignItems="@AlignItems.Center"
+		Gap=".5rem" 
+		Style="height:100%;"
+		class="cb-pad-inline-start-1rem">
+
+		@ChildContent
+
+	</RadzenStack>
+</RadzenHeader>

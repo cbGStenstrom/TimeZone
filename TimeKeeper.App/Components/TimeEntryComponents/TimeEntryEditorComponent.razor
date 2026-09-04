@@ -1,0 +1,120 @@
+﻿@inherits CbComponentBase
+@namespace TimeKeeper.App.Components
+
+<RadzenStack Orientation="@Orientation.Vertical">
+
+    @if (this.LoadedTimeEntry != null)
+    {
+        <RadzenStack Orientation="Orientation.Horizontal" Gap=".5rem" AlignItems="AlignItems.Center">
+
+            @if(this.LoadedTimeEntry.WorkItem != null)
+            {
+                <RadzenButton 
+                    Icon="edit_note" 
+                    Variant="@Variant.Text" 
+                    Click="OnSelectWorkItemClick">
+                </RadzenButton>
+                <h4 style="margin-bottom: 0;">@(this.LoadedTimeEntry.WorkItem?.Title ?? "Select a Workitem")</h4>
+            }
+            else
+            {
+                <RadzenButton 
+                    Text="Select A Workitem" 
+                    Variant="@Variant.Outlined" 
+                    Click="OnSelectWorkItemClick">
+                </RadzenButton>
+            }
+        </RadzenStack>
+
+        <RadzenStack 
+            Orientation="@Orientation.Horizontal" 
+            AlignItems="@AlignItems.Center" 
+            JustifyContent="@JustifyContent.Start" 
+            Gap="2rem"
+            Visible="@(this.LoadedTimeEntry.WorkItem != null)">
+
+            <div>
+                <RadzenDatePicker id="dtStartWork"
+                    @bind-Value="@this.LoadedTimeEntry.StartWork"
+                    ShowTime="true"
+                    HourFormat="12"
+                    DateFormat="h:mm:tt (MMM dd, yyyy)"
+                    Name="EndTimePicker" 
+                    Style="width:100%;"
+                    Change="@OnStartWorkChange"
+                    Visible="@this.DisplayStartDate">
+                </RadzenDatePicker>
+            </div>
+
+            @if(this.DisplayStartDate && this.DisplayEndDate)
+            {
+                <span>to</span>
+            }
+
+            <div>
+                <RadzenDatePicker id="dtEndWork"
+                    @bind-Value="@this.LoadedTimeEntry.EndWork"
+                    ShowTime="true"
+                    HourFormat="12"
+                    DateFormat="h:mm:tt (MMM dd, yyyy)"
+                    Name="EndTimePicker"
+                    Style="width:100%;"
+                    Change="@OnEndWorkChange"
+                    Visible="@this.DisplayEndDate">
+                </RadzenDatePicker>
+            </div>
+
+        </RadzenStack>
+
+        <RadzenHtmlEditor id="txAccomplishment"
+            @bind-Value="@this.LoadedTimeEntry.Accomplishment" 
+            Style="height:20rem"
+            Change="@OnAccomplishmentChange">
+        </RadzenHtmlEditor> 
+    }
+
+    @* Show the button bar if the Component is being used within a dialog, otherwise hide it 
+       (since the parent component will likely have its own buttons for saving/canceling/etc) *@
+    <RadzenRow JustifyContent="@JustifyContent.End" Visible="@ShowDialogButtons" Gap="1rem">
+
+        <RadzenSplitButton id="btnSave1" Text="Save"
+            ButtonStyle="@ButtonStyle.Primary"
+            Shade="@Shade.Dark"
+            Variant="@Variant.Filled"
+            Click="@OnSaveClick"
+            Disabled="@(!this.TimeEntryIsValid())"
+            Visible="@(!this.IsNewTimeEntry)">
+            <ChildContent>
+                <RadzenSplitButtonItem Text="Stop Work" Value="stopwork" />
+                <RadzenSplitButtonItem Text="Submit for Review" Value="submit" />
+            </ChildContent>
+        </RadzenSplitButton>
+
+        <RadzenButton Text="Save"
+            ButtonStyle="@ButtonStyle.Primary"
+            Shade="@Shade.Dark"
+            Variant="@Variant.Filled"
+            Click="@OnSaveNewClick"
+            Disabled="@(!this.TimeEntryIsValid())"
+            Visible="@this.IsNewTimeEntry">
+        </RadzenButton>
+       
+        <RadzenButton Text="Discard Time Entry" 
+            Variant="@Variant.Outlined" 
+            ButtonStyle="@ButtonStyle.Base" 
+            Shade="@Shade.Dark"
+            Click="@OnDiscardTimeEntryClick">
+        </RadzenButton>
+
+        <div class="cb-vert-separator" style="height:2rem;"></div>
+
+        <RadzenButton Text="Cancel" 
+            Variant="@Variant.Outlined" 
+            ButtonStyle="@ButtonStyle.Base" 
+            Shade="@Shade.Dark"
+            Click="@((args) => base.DialogSvc.Close(true))">
+        </RadzenButton>
+
+    </RadzenRow>
+
+</RadzenStack>

@@ -1,0 +1,62 @@
+﻿@inherits CbComponentBase
+
+
+@if(this.ActiveTimeEntry != null)
+{
+    <RadzenStack Orientation="@Orientation.Vertical">
+        <h3>@this.ActiveTimeEntry.WorkItem?.Title</h3>
+        
+        <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" Gap="2rem">
+
+            <div>
+                <RadzenDatePicker @bind-Value="@this.ActiveTimeEntry.StartWork"
+                                  ShowTime="true"
+                                  HourFormat="12"
+                                  DateFormat="h:mm:tt (MMM dd, yyyy)"
+                                  Name="EndTimePicker"
+                                  Style="width:100%;"></RadzenDatePicker>
+            </div>
+
+            <span>to</span>
+
+            <div>
+                <RadzenDatePicker @bind-Value="@this.ActiveTimeEntry.EndWork"
+                                  ShowTime="true"
+                                  HourFormat="12"
+                                  DateFormat="h:mm:tt (MMM dd, yyyy)"
+                                  Name="EndTimePicker"
+                                  Style="width:100%;"></RadzenDatePicker>
+            </div>
+
+        </RadzenStack>
+
+        <p>Hours Worked: @this.ActiveTimeEntry.HoursWorked</p>
+
+        <RadzenHtmlEditor @bind-Value="@this.ActiveTimeEntry.Accomplishment" Style="height:20rem"></RadzenHtmlEditor>
+
+        
+        <RadzenStack Orientation="@Orientation.Horizontal" Gap="1rem" JustifyContent="@JustifyContent.End" AlignItems="@AlignItems.Center">
+
+            <RadzenSplitButton id="btnEndWork" 
+                               Style="width:10rem;"
+                               Variant="@Variant.Filled"
+                               Text="End Work"
+                               Click="@btnEndWork_OnClick">
+                <ChildContent>
+                    <RadzenSplitButtonItem Text="Pause" Value="0" />
+                    <RadzenSplitButtonItem Text="Submit PR" Value="1" />
+                </ChildContent>
+            </RadzenSplitButton>
+
+            <div class="cb-vert-separator" style="height:2rem;"></div>
+
+            <RadzenButton Text="Cancel" ButtonStyle="@ButtonStyle.Dark" Variant="@Variant.Outlined" Click="btnCancel_OnClick"></RadzenButton>
+        </RadzenStack>
+        
+        
+    </RadzenStack>
+}
+else
+{
+    <p>No active time entry to end.</p>
+}

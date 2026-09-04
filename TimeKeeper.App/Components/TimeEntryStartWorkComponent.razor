@@ -1,0 +1,27 @@
+﻿@inherits CbComponentBase
+
+
+<RadzenStack Orientation="@Orientation.Vertical">
+
+    <WorkItemLookupFilter 
+        @ref="@this.WorkItemLookupFilterComponent"
+        OnFilterChange="LookupFilter_OnChange">
+    </WorkItemLookupFilter>
+
+    <RadzenDropDown id="ddlWorkItem"
+        AllowFiltering="true"
+        AllowClear="true"
+        @bind-Value="@this.SelectedWorkItemId"
+        ClearSearchAfterSelection="true"
+        Data="@WorkItemList"
+        FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+        TextProperty="@nameof(WorkItem.Title)"
+        ValueProperty="@nameof(WorkItem.Id)">
+    </RadzenDropDown>
+
+    <RadzenStack Orientation="@Orientation.Horizontal" JustifyContent="@JustifyContent.End" Gap="1rem">
+        <RadzenButton Id="btnStartNow" Variant="@Variant.Text" Text="Start"  Click="@btnStartNow_OnClick"></RadzenButton>
+        <RadzenButton Id="btnCancel"   Variant="@Variant.Text" Text="Cancel" Click="@btnCancel_OnClick"></RadzenButton>
+    </RadzenStack>
+
+</RadzenStack>

@@ -1,0 +1,51 @@
+﻿
+@import url("../../Themes/TimekeeperCustom_Palette.min.css");
+
+.cb-sidepanel-main-nav {
+    background-color: var(--cb-sidepanel-main-navigation-panel-bg) !important;
+    border-inline-end: unset !important;
+
+    .rz-panel-menu {
+        background-color: var(--cb-sidepanel-main-navigation-item-bg) !important;
+
+        .cb-brand {
+            font-weight: 700;
+            background-color: rgba(0,0,0,.5);
+            color: var(--rz-base-50);
+            font-size: 1.5rem;
+
+            .rz-navigation-item-link {
+                line-height: 2rem;
+
+                i.rzi {
+                    font-size: 1.75rem;
+                }
+            }
+        }
+
+        .rz-navigation-item {
+            border-block-end: var(--cb-sidepanel-main-navigation-item-bottom-border);
+
+            .rz-navigation-item-wrapper {
+
+                &:hover {
+                    background-color: var(--cb-sidepanel-main-navigation-item-bg-hover);
+                    color: var(--cb-sidepanel-main-navigation-item-color);
+                }
+
+                .rz-navigation-item-link {
+
+                    &:active {
+                        background-color: var(--cb-sidepanel-main-navigation-item-bg-active);
+                        color: var(--cb-sidepanel-main-navigation-item-color);
+                    }
+                }
+
+                .rzi,
+                .rz-navigation-item-text {
+                    color: var(--cb-sidepanel-main-navigation-item-color);
+                }
+            }
+        }
+    }
+}

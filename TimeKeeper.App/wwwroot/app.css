@@ -1,0 +1,17 @@
+@import "css/CbMarginCssClasses.min.css";
+@import "css/CbPaddingCssClasses.min.css";
+@import "css/CbSpacingCssClasses.min.css";
+@import "css/CbTypographyCssClasses.min.css";
+@import "css/RadzenOverrides.min.css";
+@import "css/ComponentStyles.min.css";
+@import "css/SummaryCardsCss.min.css";
+
+@import "css/Components/Navigation/SidepanelMainNavComponent.min.css";
+@import "css/Components/TimeEntryStatusComponent.min.css";
+
+@import "styles/components/ProjectGridComponent.min.css";
+@import "styles/constructs/Grid_Assembled.min.css";
+
+.cb-vert-separator {
+    border-left: 1px solid rgba(0,0,0,.2);
+}

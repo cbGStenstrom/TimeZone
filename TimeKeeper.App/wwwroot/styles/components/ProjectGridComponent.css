@@ -1,0 +1,6 @@
+﻿.cb-component-project-grid .cb-component-grid-row .cb-column {
+  padding-left: 0.5rem;
+}
+.cb-component-project-grid .cb-component-grid-row .cb-column.cb-editable {
+  padding-left: 0 !important;
+}

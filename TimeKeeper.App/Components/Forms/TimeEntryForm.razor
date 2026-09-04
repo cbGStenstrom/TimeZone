@@ -1,0 +1,78 @@
+﻿
+
+<RadzenStack Orientation="Orientation.Vertical" Gap="0">
+
+	@if (this.SelectedTimeEntry != null)
+	{
+		<RadzenStack Orientation="Orientation.Horizontal" Gap="1rem">
+
+			<RadzenStack Orientation="Orientation.Vertical" Gap="1rem" style="width:40%;">
+
+				<RadzenRow AlignItems="AlignItems.Center">
+					<RadzenColumn Size="3">
+						<RadzenLabel Text="Start"></RadzenLabel>
+					</RadzenColumn>
+					<RadzenColumn Size="9">
+						<RadzenDatePicker @bind-Value="@this.SelectedTimeEntry.StartWork" 
+							Style="width:100%;" 
+							ShowTime="true"></RadzenDatePicker>
+					</RadzenColumn>
+				</RadzenRow>
+
+				<RadzenRow AlignItems="AlignItems.Center">
+					<RadzenColumn Size="3">
+						<RadzenLabel Text="End"></RadzenLabel>
+					</RadzenColumn>
+					<RadzenColumn Size="9">
+						<RadzenDatePicker @bind-Value="@this.SelectedTimeEntry.EndWork" 
+							Style="width:100%;" 
+							ShowTime="true"></RadzenDatePicker>
+					</RadzenColumn>
+				</RadzenRow>
+
+			</RadzenStack>
+
+			<RadzenStack Orientation="Orientation.Vertical" Gap="1rem" style="width:60%;">
+
+				<RadzenRow AlignItems="AlignItems.Start">
+					<RadzenColumn Size="12">
+						<RadzenTextArea @bind-Value="@this.SelectedTimeEntry.Accomplishment" 
+						Style="width:100%;height:6rem;" 
+						Placeholder="Accomplishment"></RadzenTextArea>
+					</RadzenColumn>
+				</RadzenRow>
+
+			</RadzenStack>
+
+		</RadzenStack>
+
+		<RadzenRow JustifyContent="JustifyContent.End">
+			<RadzenButton Text="Add" Click="@btnAdd_OnClick"></RadzenButton>
+		</RadzenRow>
+
+		<hr/>
+	}
+
+	@if (this.WorkItem != null && this.WorkItem.TimeEntries != null)
+	{
+		<RadzenStack Orientation="Orientation.Vertical">
+			<RadzenStack Orientation="Orientation.Horizontal" Gap="1rem;" Style="margin-bottom:.5rem;">
+				<RadzenText Style="width:6rem;text-align:center;font-weight:600;">Date</RadzenText>
+				<RadzenText Style="width:8rem;text-align:center;font-weight:600;">Hours Worked</RadzenText>
+				<RadzenText Style="width:6rem;text-align:center;font-weight:600;">Start</RadzenText>
+				<RadzenText Style="width:6rem;text-align:center;font-weight:600;">End</RadzenText>
+			</RadzenStack>
+			@foreach(var item in this.WorkItem.TimeEntries)
+			{
+				<RadzenStack Orientation="Orientation.Horizontal" Gap="1rem;">
+					<RadzenText Style="width:6rem;text-align:center;">@item.StartWork.Value.ToString("d")</RadzenText>
+					<RadzenText Style="width:8rem;text-align:center;">@($"{item.HoursWorked}hrs")</RadzenText>
+					<RadzenText Style="width:6rem;text-align:center;">@item.StartWork.Value.ToString("t")</RadzenText>
+					<RadzenText Style="width:6rem;text-align:center;">@item.EndWork.Value.ToString("t")</RadzenText>
+				</RadzenStack>
+			}
+		</RadzenStack>
+	}
+
+</RadzenStack>
+

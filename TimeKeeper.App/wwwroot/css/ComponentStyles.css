@@ -1,0 +1,41 @@
+﻿.cb-color-green {
+  color: #038a0e;
+}
+.rz-material-dark .cb-color-green {
+  color: #98fb98 !important;
+}
+.cb-opacity-4 {
+  opacity: 0.4;
+}
+.rz-data-grid.rz-selectable .rz-data-grid-data .rz-grid-table tr.rz-data-row:hover {
+  cursor: pointer;
+}
+.cb-grid-rows .cb-item {
+  align-items: center;
+  display: flex;
+  gap: 0.5rem;
+  justify-content: start;
+  padding: 0.5rem 1rem;
+}
+.cb-grid-rows .cb-item .cb-item-title {
+  width: 35rem;
+  display: inline-block;
+}
+.cb-grid-rows.cb-hover .cb-item:hover {
+  background-color: #f7f7f7;
+  cursor: pointer;
+}
+.cb-grid-rows hr {
+  margin: 0;
+}
+.cb-work-item-accomplishments .cb-title {
+  font-weight: bold;
+}
+.cb-work-item-accomplishments .cb-timestamp {
+  font-style: italic;
+  font-size: 0.8rem;
+  margin: 1rem 0 0.2rem;
+}
+.cb-work-item-accomplishments hr {
+  margin: 0.5rem 0;
+}

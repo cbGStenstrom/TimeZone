@@ -1,0 +1,87 @@
+﻿@inherits CbComponentBase
+
+@if (this.TimeEntryItem != null)
+{
+	<RadzenRow AlignItems="AlignItems.Center" Gap="1em" >
+		<RadzenColumn size="3">
+			@if (this.IsEditable)
+			{
+				<RadzenDropDown Data="@this.OpenWorkItems" @bind-Value="@this.TimeEntryItem.WorkItemId"
+						TextProperty="@nameof(Domain.Models.WorkItem.Title)"
+						ValueProperty="@nameof(Domain.Models.WorkItem.Id)"
+						Style="width:100%;">
+				</RadzenDropDown>
+			}
+			else
+			{
+				<RadzenTextBox Value="@this.GetWorkItemTitle(this.TimeEntryItem.WorkItemId)" Style="width:100%;" Disabled="@(!this.IsEditable)"></RadzenTextBox>
+			}
+		</RadzenColumn>
+		<RadzenColumn size="3">
+			@if (this.IsEditable)
+			{
+				<RadzenTextBox Style="width:100%;" @bind-Value="@this.TimeEntryItem.Accomplishment" Disabled="@IsDisabled"></RadzenTextBox>
+			}
+			else
+			{
+				<RadzenTextBox Value="@this.TimeEntryItem.Accomplishment" Style="width:100%;" Disabled="@(!this.IsEditable)"></RadzenTextBox>
+			}
+		</RadzenColumn>
+		<RadzenColumn size="2">
+			@if(this.IsEditable)
+			{
+			<RadzenDatePicker @bind-Value="@this.TimeEntryItem.StartWork"
+				 Disabled="@IsDisabled"
+				 ShowTime="true" 
+				 HourFormat="12" 
+				 DateFormat="h:mm:tt (MMM dd, yyyy)" 
+				 Name="StartTimePicker" 
+				 Style="width:100%;"></RadzenDatePicker>
+			}
+			else
+			{
+				<RadzenTextBox Value="@(this.GetDateFormattedForDisplay(this.TimeEntryItem.StartWork))" Style="width:100%;" Disabled="@(!this.IsEditable)"></RadzenTextBox>
+			}
+		</RadzenColumn>
+		<RadzenColumn size="2">
+			@if(this.IsEditable)
+			{
+			<RadzenDatePicker @bind-Value="@this.TimeEntryItem.EndWork"
+				 Disabled="@IsDisabled"
+				 ShowTime="true" 
+				 HourFormat="12" 
+				 DateFormat="h:mm:tt (MMM dd, yyyy)" 
+				 Name="EndTimePicker" 
+				Style="width:100%;"></RadzenDatePicker>
+			}
+			else
+			{
+				<RadzenTextBox Value="@(this.GetDateFormattedForDisplay(this.TimeEntryItem.EndWork))" Style="width:100%;" Disabled="@(!this.IsEditable)"></RadzenTextBox>
+			}
+		</RadzenColumn>
+		<RadzenColumn size="1">
+			<RadzenText TextAlign="TextAlign.Right" Text="@(String.Format("{0:0.00} hrs", this.TimeEntryItem?.HoursWorked))"></RadzenText>
+		</RadzenColumn>
+		<RadzenColumn size="1">
+			@if (!this.IsEditable)
+			{
+				<RadzenStack Orientation="Orientation.Horizontal" Gap=".75rem" JustifyContent="JustifyContent.Center">
+					<RadzenButton icon="edit" ButtonStyle="ButtonStyle.Base" Click="@btnEdit_OnClick"></RadzenButton>
+					<RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Base" Click="@btnDelete_OnClick"></RadzenButton>
+				</RadzenStack>
+			}
+			else
+			{
+				<RadzenStack Orientation="Orientation.Horizontal" Gap=".75rem" JustifyContent="JustifyContent.Center">
+					<RadzenButton icon="save" ButtonStyle="ButtonStyle.Primary" Click="@btnSave_OnClick"></RadzenButton>
+					<RadzenButton Icon="replay" ButtonStyle="ButtonStyle.Base" Click="@btnCancel_OnClick"></RadzenButton>
+				</RadzenStack>
+			}
+		</RadzenColumn>
+	</RadzenRow>
+
+	
+    <TimeEntryEditorDialog @ref="dlgTimeEntryEditor"
+        OnSaveCallback="@Dialog_OnTimeEntrySaved">
+    </TimeEntryEditorDialog>
+}

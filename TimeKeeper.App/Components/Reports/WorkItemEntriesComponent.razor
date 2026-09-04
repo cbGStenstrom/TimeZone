@@ -1,0 +1,11 @@
+﻿<RadzenStack Orientation="@Orientation.Vertical">
+    <h5 class="cb-margin-block-start-8px">@(this.GetWorkItemTitle())</h5>
+    <p class="cb-hr" />
+    @foreach(var entry in this.TimeEntries)
+    {
+        <WorkItemEntriesItemComponent 
+            Model="@entry">
+        </WorkItemEntriesItemComponent>
+    }
+</RadzenStack>
+

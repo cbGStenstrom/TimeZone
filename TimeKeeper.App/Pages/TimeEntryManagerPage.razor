@@ -1,0 +1,76 @@
+﻿@inherits CbPageBase
+@page "/TimeEntryManager"
+@using TimeKeeper.App.Components.Dialogs
+@layout AppLayout
+
+<div class="cb-pad-1rem cb-time-entry-manager">
+
+<h2>Time Entry Manager</h2>
+<hr/>
+
+<RadzenRow AlignItems="AlignItems.Start">
+	<RadzenButton 
+		Text="New Time Entry"
+		Icon="add"
+		Click="@btnAddTimeEntry_OnClick">
+	</RadzenButton>
+</RadzenRow>
+
+<hr/>
+
+<RadzenRow AlignItems="AlignItems.Center" Gap="1em">
+	<RadzenColumn size="3" Style="padding-left: .5rem;">
+		WorkItem
+	</RadzenColumn>
+	<RadzenColumn size="3" Style="padding-left: .5rem;">
+		Accomplishment
+	</RadzenColumn>
+	<RadzenColumn size="2" Style="text-align: center;">
+		Start
+	</RadzenColumn>
+	<RadzenColumn size="2" Style="text-align: center;">
+		End
+	</RadzenColumn>
+</RadzenRow>
+
+<hr style="margin:.5rem 0;" />
+
+<TimeEntryFilter OnFilterClick="@Filter_OnClick" @ref="@this.Filter"></TimeEntryFilter>
+
+<hr style="margin:.5rem 0;" />
+
+@* Time Entry Rows  *@
+@foreach(var entry in this.TimeEntries.OrderByDescending(e => e.StartWork))
+{
+	<TimeEntryRow TimeEntryItem="@entry" WorkItems="@this.WorkItems" 
+				  OnTimeEntrySaved="@Row_OnTimeEntrySaved"
+				  OnSaveButtonClick="@Row_OnSaveButtonClick" 
+				  OnDeleteButtonClick="@Row_OnDeleteButtonClick"></TimeEntryRow>
+	<hr style="margin:.5rem 0;" />	
+}
+
+
+@* Total Hours row *@
+<RadzenRow AlignItems="AlignItems.Center" Gap="1em">
+	<RadzenColumn size="3" Style="padding-left: .5rem;">
+		
+	</RadzenColumn>
+	<RadzenColumn size="3" Style="padding-left: .5rem;">
+		
+	</RadzenColumn>
+	<RadzenColumn size="2" Style="text-align: center;">
+		
+	</RadzenColumn>
+	<RadzenColumn size="2" Style="text-align: center;">
+
+	</RadzenColumn>
+	<RadzenColumn size="1" Style="text-align: center;">
+		<RadzenText TextAlign="TextAlign.Right" Text="@(String.Format("Total: {0:0.00} hrs", this.CalculateTotalHours()))"></RadzenText>
+	</RadzenColumn>
+</RadzenRow>
+
+<TimeEntryEditorDialog @ref="dlgTimeEntryEditor"
+    OnSaveCallback="@Dialog_OnTimeEntryAdded">
+</TimeEntryEditorDialog>
+
+</div>

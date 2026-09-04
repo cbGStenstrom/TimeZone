@@ -1,0 +1,54 @@
+﻿@inherits CbComponentBase
+
+
+@if (this.Model != null)
+{
+    <div class="cb-margin-block-end-1rem">
+        <div style="display:flex;align-items:center;gap:1rem;">
+            <div>
+                <i class="rzi md-20 cb-margin-inline-start-1rem" @onclick="@(() => { this.IsInEditMode = !IsInEditMode; })">edit</i>
+            </div>
+            <div>
+                <div style="font-size:.9rem;font-weight: 600;">@this.GetDateRangeDisplay(this.Model)</div>
+                <div style="font-size:.9rem;font-weight: 400;">@this.GetHoursWorkedDisplay(this.Model)</div>
+            </div>
+        </div>
+        @if (!this.IsInEditMode)
+        {
+            <div style="font-size:.85rem;width:39rem;color:rgba(0,0,0,.5);" class="cb-margin-block-start-1rem cb-pad-inline-start-3.5rem">
+                @((MarkupString)(this.Model.Accomplishment ?? string.Empty))
+            </div>
+        }
+        else
+        {
+
+            <RadzenStack Orientation="@Orientation.Vertical" Gap=".5rem" class="cb-margin-block-start-1rem">
+                <RadzenHtmlEditor @bind-Value="@this.Model.Accomplishment">
+                    <RadzenHtmlEditorUndo />
+                    <RadzenHtmlEditorRedo />
+                    <RadzenHtmlEditorSeparator />
+                    <RadzenHtmlEditorBold />
+                    <RadzenHtmlEditorItalic />
+                    <RadzenHtmlEditorUnderline />
+                    <RadzenHtmlEditorStrikeThrough />
+                    <RadzenHtmlEditorSeparator />
+                    <RadzenHtmlEditorColor />
+                    <RadzenHtmlEditorBackground />
+                    <RadzenHtmlEditorRemoveFormat />
+                </RadzenHtmlEditor>
+                <RadzenStack Orientation="@Orientation.Horizontal" Gap=".5rem;" JustifyContent="@JustifyContent.End">
+                    <RadzenButton 
+                        Text="Cancel"
+                        ButtonStyle="@ButtonStyle.Base"
+                        Click="@btnCancelEdit_OnClick">
+                    </RadzenButton>
+                    <RadzenButton 
+                        Text="Save"
+                        ButtonStyle="@ButtonStyle.Primary"
+                        Click="btnSave_OnClick">
+                    </RadzenButton>
+                </RadzenStack>
+            </RadzenStack>
+        }
+    </div>
+}

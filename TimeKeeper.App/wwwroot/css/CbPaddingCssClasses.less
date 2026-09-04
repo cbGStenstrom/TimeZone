@@ -1,0 +1,97 @@
+﻿
+.generate-fractional-padding(@maj, @fracCount, @multiplier, @uom) when (@fracCount > 0) {
+
+       @label: @{maj}\.@{fracCount}@{uom}; 
+       @value: @maj + (@fracCount * (.1 * @multiplier)); 
+
+       .cb-pad-@{label} {
+           padding: @value;
+       }
+
+       .cb-pad-block-@{label} {
+           padding-block: @value;
+       }
+
+       .cb-pad-block-start-@{label} {
+           padding-block-start: @value;
+       }
+
+       .cb-pad-block-@{label} {
+           padding-block-end: @value;
+       }
+
+       .cb-pad-inline-@{label} {
+           padding-inline: @value;
+       }
+
+       .cb-pad-inline-start-@{label} {
+           padding-inline-start: @value;
+       }
+
+       .cb-pad-inline-@{label} {
+           padding-inline-end: @value;
+       }
+
+    // recurse
+    .generate-fractional-padding(@maj, @fracCount - 1, @multiplier, @uom);
+}
+
+.generate-padding(@count, @multiplier, @uom, @fracCount) when (@count > 0) {
+
+    @label: @{count}@{uom}; // initialize the variable
+
+    .set-fractionals(@fracCount) when (@fracCount > 0) {
+        .generate-fractional-padding(@count, @fracCount, @multiplier, @uom);
+    }
+
+    .cb-pad-@{label} {
+        padding: (@count * @multiplier);
+    }
+
+    
+    .cb-pad-block-@{label} {
+        padding-block: (@count * @multiplier);
+    }
+
+    .cb-pad-block-start-@{label} {
+        padding-block-start: (@count * @multiplier);
+    }
+
+    .cb-pad-block-end-@{label} {
+        padding-block-end: (@count * @multiplier);
+    }
+
+    .cb-pad-inline-@{label} {
+        padding-inline: (@count * @multiplier);
+    }
+
+    .cb-pad-inline-start-@{label} {
+        padding-inline-start: (@count * @multiplier);
+    }
+
+    .cb-pad-inline-end-@{label} {
+        padding-inline-end: (@count * @multiplier);
+    }
+
+    // Set fractional padding 
+    .set-fractionals(@fracCount);
+    
+    // recurse
+    .generate-padding(@count - 1, @multiplier, @uom, @fracCount);
+}
+
+/*#region Pct Padding */
+.generate-padding(100, 1%, perc, 0);
+/*#endregion Pct Padding */
+
+/*#region REM Padding */
+.generate-padding(10, 1rem, rem, 9);
+/*#endregion REM Padding */
+
+/*#region EM Padding */
+.generate-padding(10, 1em, em, 9);
+/*#endregion EM Padding */
+
+/*#region PX Padding */
+.generate-padding(100, 1px, px, 0);
+/*#endregion PC Padding */

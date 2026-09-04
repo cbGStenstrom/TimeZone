@@ -1,0 +1,74 @@
+﻿
+
+@if (this.User != null)
+{
+	<RadzenStack Orientation="Orientation.Vertical">
+
+		<RadzenRow AlignItems="AlignItems.Center">
+			<RadzenColumn Size="4">
+				<RadzenLabel Text="First Name"></RadzenLabel>
+			</RadzenColumn>
+			<RadzenColumn Size="8">
+				<RadzenTextBox Style="width:100%;" @bind-Value="@this.User.FirstName"></RadzenTextBox>
+			</RadzenColumn>
+		</RadzenRow>
+
+		<RadzenRow AlignItems="AlignItems.Center">
+			<RadzenColumn Size="4">
+				<RadzenLabel Text="Middle Name"></RadzenLabel>
+			</RadzenColumn>
+			<RadzenColumn Size="8">
+				<RadzenTextBox Style="width:100%;" @bind-Value="@this.User.MiddleName"></RadzenTextBox>
+			</RadzenColumn>
+		</RadzenRow>
+
+		<RadzenRow AlignItems="AlignItems.Center">
+			<RadzenColumn Size="4">
+				<RadzenLabel Text="Last Name"></RadzenLabel>
+			</RadzenColumn>
+			<RadzenColumn Size="8">
+				<RadzenTextBox Style="width:100%;" @bind-Value="@this.User.LastName"></RadzenTextBox>
+			</RadzenColumn>
+		</RadzenRow>
+
+		<RadzenRow AlignItems="AlignItems.Center">
+			<RadzenColumn Size="4">
+				<RadzenLabel Text="Email"></RadzenLabel>
+			</RadzenColumn>
+			<RadzenColumn Size="8">
+				<RadzenTextBox Style="width:100%;" @bind-Value="@this.User.Email"></RadzenTextBox>
+			</RadzenColumn>
+		</RadzenRow>
+	
+		<hr/>
+
+		<RadzenRow AlignItems="AlignItems.Center">
+			<RadzenColumn Size="4">
+				<RadzenLabel Text="UserName"></RadzenLabel>
+			</RadzenColumn>
+			<RadzenColumn Size="8">
+				<RadzenTextBox Style="width:100%;" @bind-Value="@this.User.Username"></RadzenTextBox>
+			</RadzenColumn>
+		</RadzenRow>
+
+		<RadzenRow AlignItems="AlignItems.Center">
+			<RadzenColumn Size="4">
+				<RadzenLabel Text="Password"></RadzenLabel>
+			</RadzenColumn>
+			<RadzenColumn Size="8">
+				<RadzenPassword Style="width:100%;" @bind-Value="@this.User.Password"></RadzenPassword>
+			</RadzenColumn>
+		</RadzenRow>
+
+		<RadzenRow AlignItems="AlignItems.Center">
+			<RadzenColumn Size="4">
+				<RadzenLabel Text="Confirm Password"></RadzenLabel>
+			</RadzenColumn>
+			<RadzenColumn Size="8">
+				<RadzenPassword Style="width:100%;" @bind-Value="@this.User.PasswordConfirm"></RadzenPassword>
+			</RadzenColumn>
+		</RadzenRow>
+
+	</RadzenStack>
+}
+

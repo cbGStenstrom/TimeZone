@@ -1,0 +1,80 @@
+﻿@inherits CbPageBase
+@page "/ProjectManagement"
+@layout AppLayout
+
+<div class="cb-pad-1rem cb-project-manager">
+<h2>Project Manager</h2>
+<hr />
+
+<RadzenRow>
+	<RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Start" Gap="1rem" Style="width:900px;">
+		<RadzenButton Text="New Project" Style="white-space:nowrap;min-width:12rem;" Click="btnNewProject_OnClick"></RadzenButton>
+		<RadzenDropDown Data="@this.ProjectList" @bind-Value="@SelectedProjectID" class="rz-my-2"
+						Style="width:100%;"
+						Placeholder="Select Product to Edit"
+						AllowClear=true
+						Change="@((args) => { ddlProjects_OnChange(); })"
+						ValueProperty="@nameof(Domain.Models.Project.Id)">
+						<Template>
+							<div>@($"[{(context as Domain.Models.Project)?.Key}] {(context as Domain.Models.Project)?.LongName}")</div>
+						</Template>
+		</RadzenDropDown>
+	</RadzenStack>
+</RadzenRow>
+
+@if (SelectedProjectID.HasValue)
+{
+	<hr />
+
+	<RadzenPanel AllowCollapse="false" Style="width:900px;margin-top:1.75rem">
+		<ProjectForm ProjectData="@SelectedProject"></ProjectForm>
+	</RadzenPanel>
+
+	<RadzenPanel AllowCollapse="false" Style="width:900px;" class="rz-mt-8">
+
+	<RadzenRow AlignItems="AlignItems.Center" class="rz-mb-4">
+		<RadzenColumn Size="2">
+			<RadzenLabel Text="Last Updated On"></RadzenLabel>
+		</RadzenColumn>
+		<RadzenColumn Size="10">
+			<RadzenLabel Text="@SelectedProject.UpdatedDate.ToString("MMM dd, yyyy")"></RadzenLabel>
+		</RadzenColumn>
+	</RadzenRow>
+
+	<RadzenRow AlignItems="AlignItems.Center" class="rz-my-4">
+		<RadzenColumn Size="2">
+			<RadzenLabel Text="Last Updated By"></RadzenLabel>
+		</RadzenColumn>
+		<RadzenColumn Size="10">
+			<RadzenLabel Text="@SelectedProject.UpdatedBy"></RadzenLabel>
+		</RadzenColumn>
+	</RadzenRow>
+
+	<RadzenRow AlignItems="AlignItems.Center" class="rz-my-4">
+		<RadzenColumn Size="2">
+			<RadzenLabel Text="Created Date"></RadzenLabel>
+		</RadzenColumn>
+		<RadzenColumn Size="10">
+			<RadzenLabel Text="@SelectedProject.CreatedDate.ToString("MMM dd, yyyy")"></RadzenLabel>
+		</RadzenColumn>
+	</RadzenRow>
+
+	<RadzenRow AlignItems="AlignItems.Center" class="rz-mt-4">
+		<RadzenColumn Size="2">
+			<RadzenLabel Text="Created By"></RadzenLabel>
+		</RadzenColumn>
+		<RadzenColumn Size="10">
+			<RadzenLabel Text="@SelectedProject.CreatedBy"></RadzenLabel>
+		</RadzenColumn>
+	</RadzenRow>
+
+</RadzenPanel>
+
+	<RadzenRow Style="width:900px;" class="rz-mt-4" AlignItems="AlignItems.Center" Gap=".5rem" JustifyContent="JustifyContent.End">
+		<RadzenButton Style="width:fit-content;" Disabled="@SaveDisabled" Click="@btnCancelProject_OnClick" ButtonStyle="ButtonStyle.Base">Cancel</RadzenButton>
+		<RadzenButton Style="width:fit-content;" Disabled="@DeleteDisabled" Click="@btnDeleteProject_OnClick" ButtonStyle="ButtonStyle.Base">Delete</RadzenButton>
+		<RadzenButton Style="width:fit-content;" Disabled="@SaveDisabled" Click="@btnSaveProject_OnClick" ButtonStyle="ButtonStyle.Primary">Save</RadzenButton>
+	</RadzenRow>
+}
+
+	</div>

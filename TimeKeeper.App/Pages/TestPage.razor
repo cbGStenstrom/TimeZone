@@ -1,0 +1,42 @@
+﻿@inherits CbPageBase
+@page "/TestPage"
+@layout AppLayout
+
+
+
+
+<RadzenButton Text="Click Me" Click="@btnLoad_WorkItem"></RadzenButton>
+<RadzenNumeric @bind-Value="@SelectedWorkItemId"></RadzenNumeric>
+
+
+<RadzenButton Text="Open Time Entry Editor" Click="btnOpenEditor_OnClick"></RadzenButton>
+
+@* 
+<WorkItemListComponent 
+    @bind-SelectedWorkItem="@this.SelectedWorkItem">
+</WorkItemListComponent> *@
+
+
+@if(this.SelectedWorkItem != null)
+{
+    <div>
+        <h3>Selected Work Item:</h3>
+        <p>Id: @this.SelectedWorkItem.Id</p>
+        <p>Title: @this.SelectedWorkItem.Title</p>
+        <p>Description: @this.SelectedWorkItem.Description</p>
+        <p>Open: @this.SelectedWorkItem.IsOpen</p>
+        <p>In Review: @this.SelectedWorkItem.IsInReview</p>
+    </div>
+
+
+    <RadzenAccordion Multiple="true">
+        <Items>
+            @foreach (var timeEntry in this.SelectedWorkItem.TimeEntries)
+            {
+                <RadzenAccordionItem Text="@($"{timeEntry.StartWork?.ToString("g")} to {timeEntry.EndWork?.ToString("g")} - ({timeEntry.HoursWorked}hrs)")">
+                    <TimeEntryComponent SelectedTimeEntry="@timeEntry" />
+                </RadzenAccordionItem>
+            }
+        </Items>
+    </RadzenAccordion>
+}

@@ -1,0 +1,62 @@
+﻿@inherits CbComponentBase
+@namespace TimeKeeper.App.Components
+@* 
+ Creates a row that can be, when accompaied by others assemgled into a grid. This row is tied to a 
+ Project model instance and has built in edit capability.
+*@
+
+@if(this.ProjectModel != null)
+{
+    <RadzenRow AlignItems="@AlignItems.Center" class="cb-component-grid-row" 
+        Gap="1rem" RowGap="1rem"
+        Style="height:2.75rem;border-bottom:1px solid rgba(0,0,0,.1);">
+        <RadzenColumn Size="1">
+            @if(this.IsEditable)
+            {
+                <RadzenButton Icon="undo" ButtonStyle="@ButtonStyle.Primary" Variant="@Variant.Text" Click="btnCancel_OnClick"></RadzenButton>
+                <RadzenButton Icon="save" ButtonStyle="@ButtonStyle.Primary" Variant="@Variant.Text" Click="btnSave_OnClick"></RadzenButton>
+            }
+            else
+            {
+                <RadzenButton Icon="edit" ButtonStyle="@ButtonStyle.Primary" Variant="@Variant.Text" Click="btnEdit_OnClick"></RadzenButton>
+                <RadzenButton Icon="delete" ButtonStyle="@ButtonStyle.Danger" Variant="@Variant.Text" Click="btnDelete_OnClick"></RadzenButton>
+            }
+        </RadzenColumn>
+        <RadzenColumn Size="1" class="@this.GetColumnCssClass()">
+            @if (this.IsEditable)
+            {
+                <RadzenTextBox @bind-Value="@this.ProjectModel.Key" Style="width:100%;"></RadzenTextBox>
+            }
+            else
+            {
+                @(this.ProjectModel.Key ?? "N/A")
+            }
+        </RadzenColumn>
+        <RadzenColumn Size="2" class="@this.GetColumnCssClass()">
+            @if (this.IsEditable)
+            {
+                <RadzenTextBox @bind-Value="@this.ProjectModel.ShortName" Style="width:100%;"></RadzenTextBox>
+            }
+            else
+            {
+                @(this.ProjectModel.ShortName ?? "N/A")
+            }
+        </RadzenColumn>
+        <RadzenColumn Size="6" class="@this.GetColumnCssClass()">
+            @if (this.IsEditable)
+            {
+                <RadzenTextBox @bind-Value="@this.ProjectModel.LongName" Style="width:100%;"></RadzenTextBox>
+            }
+            else
+            {
+                @(this.ProjectModel.LongName ?? "N/A")
+            }
+        </RadzenColumn>
+        <RadzenColumn Size="1" class="@this.GetColumnCssClass(false)">
+            @(this.ProjectModel.UpdatedBy ?? string.Empty)
+        </RadzenColumn>
+        <RadzenColumn Size="1" class="@this.GetColumnCssClass(false)">
+            @(string.Format("{0:d}", this.ProjectModel.UpdatedDate))
+        </RadzenColumn>
+    </RadzenRow>
+}

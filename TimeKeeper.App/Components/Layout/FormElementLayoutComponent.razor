@@ -1,0 +1,27 @@
+﻿@inherits ComponentBase
+
+@if(this.IsVisible)
+{
+	<div class="@this.wrapperCssClass" style="@this.wrapperInlineStyle" id="@this.ID">
+
+		@if(!String.IsNullOrEmpty(this.Label) || this.LabelTemplate != null)
+		{
+			<label class="k-color-primary k-font-weight-bold @this.labelCssClass" style="@this.labelInlineStyle">
+				@if(this.LabelTemplate != null)
+				{
+					@this.LabelTemplate
+				}
+				else
+				{
+					@this.Label
+				}
+			</label>
+		}
+		<div class="@this.controlWrapperCssClass">
+			@if (this.ControlTemplate != null)
+			{
+				@this.ControlTemplate
+			}
+		</div>
+	</div>
+}

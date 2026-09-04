@@ -1,0 +1,92 @@
+﻿@using TimeKeeper.App.Shared.Layout
+@using TimeKeeper.Domain.Models
+
+@inherits CbPageBase
+@page "/"
+@layout AppLayout
+<PageTitle>Home</PageTitle>
+
+<RadzenLayout Style="height:100%;" class="cb-home">
+	
+    <RadzenHeader Style="height:3.7rem;">
+		<RadzenStack 
+			Orientation="@Orientation.Horizontal"
+            AlignItems="@AlignItems.Center"
+			Gap="0rem" 
+            Style="height:100%;"
+			class="cb-pad-inline-start-1rem">
+			<h5 class="cb-margin-block-1px">@($"Hello {this.User?.FirstName}!!")</h5>
+		</RadzenStack>
+	</RadzenHeader>
+
+	<RadzenBody>
+
+        @if (this.SelectedTimeEntry != null)
+        {
+            <RadzenCard Variant="Variant.Filled" class="rz-px-0 rz-py-0" Style="min-width:40rem; width:30%;" Visible="false">
+                <RadzenCard Variant="Variant.Flat" class="rz-background-color-primary-light rz-p-4" Style="border-radius: var(--rz-card-border-radius) var(--rz-card-border-radius) 0 0;">
+                    <RadzenText TextStyle="TextStyle.H6" Style="color:#FFF;">What I am Working On ... </RadzenText>
+                </RadzenCard>
+                <RadzenStack Orientation="Orientation.Vertical" class="rz-p-4" Gap="1rem">
+
+                    <WorkItemLookupFilter 
+                        @ref="@this.WorkItemLookupFilterComponent"
+                        OnFilterChange="LookupFilter_OnChange">
+                    </WorkItemLookupFilter>
+
+                    <RadzenDropDown 
+                        Data="@WorkItemList"
+                        AllowFiltering="true"
+                        AllowClear="true"
+                        ClearSearchAfterSelection="true"
+                        FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                        @bind-Value="@this.SelectedTimeEntry.WorkItemId"
+                        TextProperty="@nameof(WorkItem.Title)"
+                        ValueProperty="@nameof(WorkItem.Id)">
+                    </RadzenDropDown>
+
+                    @if (this.SelectedTimeEntry.Id != default(int))
+                    {
+                        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap=".5rem">
+                            <label>Work Started: </label>
+                            <RadzenText Text="@(GetFormattedDate(this.SelectedTimeEntry.StartWork))"></RadzenText>
+                        </RadzenStack>
+                    }
+
+                    <RadzenHtmlEditor @bind-Value="@this.SelectedTimeEntry.Accomplishment" Style="height:20rem"></RadzenHtmlEditor>
+
+                    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Right">
+                        <RadzenDropDown Data="@this.Actions"
+                                        @bind-Value="@this.SelectedActionKey"
+                                        TextProperty="Value"
+                                        ValueProperty="Key"
+                                        Visible="@(this.SelectedTimeEntry.Id != default(int))">
+                        </RadzenDropDown>
+                        <RadzenButton Variant="Variant.Flat"
+                                      ButtonStyle="ButtonStyle.Primary"
+                                      Click="@btnSubmit_OnClick"
+                                      Visible="@(this.SelectedTimeEntry.Id != default(int))">
+                            Submit
+                        </RadzenButton>
+
+                        @* 				
+                        <RadzenButton Variant="Variant.Flat" ButtonStyle="ButtonStyle.Base" Click="@btnContinue_OnClick" Visible="@(this.SelectedTimeEntry.Id != default(int))"> Continue Later</RadzenButton>
+				        <RadzenButton Variant="Variant.Flat" ButtonStyle="ButtonStyle.Primary" Click="@btnCloseItem_OnClick" Visible="@(this.SelectedTimeEntry.Id != default(int))">Close Work Item</RadzenButton> 
+                        *@
+                        <RadzenButton Variant="Variant.Flat" ButtonStyle="ButtonStyle.Primary" Click="@btnStartTime_OnClick" Visible="@(this.SelectedTimeEntry.Id == default(int))">Start Time</RadzenButton>
+                    </RadzenStack>
+
+                </RadzenStack>
+            </RadzenCard>
+        }
+
+        <TimeEntryStatusComponent Gap=".5rem"
+            @bind-ActiveTimeEntry="@base.ActiveTimeEntry"
+            StatusOrientation="@Orientation.Vertical"
+            OnTimeEntryChanged="@TimeEntryComponent_OnTimeEntryChanged">
+        </TimeEntryStatusComponent>
+
+
+	</RadzenBody>
+
+</RadzenLayout>

@@ -1,0 +1,21 @@
+﻿@inherits CbPageBase
+@page "/ProjectManager"
+@layout AppLayout
+<PageTitle>Home</PageTitle>
+
+<RadzenLayout Style="height:100%;" class="cb-page-project-manager">
+
+	<AppLayoutHeaderComponent>
+        <h5 class="cb-margin-block-1px">Project Manager</h5>
+	</AppLayoutHeaderComponent>
+
+    <RadzenBody>
+
+        <ProjectGridComponent 
+            ProjectData="@this.ProjectListData"
+            OnProjectUpdated="ProjectGridComponent_OnProjectUpdated">
+        </ProjectGridComponent>
+
+    </RadzenBody>
+
+</RadzenLayout>

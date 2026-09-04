@@ -1,0 +1,40 @@
+﻿.cb-summary-card {
+  height: 10rem;
+  width: 12rem;
+  position: relative;
+}
+.cb-summary-card.cb-danger {
+  background-color: darkred;
+  color: lightblue;
+}
+.cb-summary-card.cb-info {
+  background-color: royalblue;
+  color: lightblue;
+}
+.cb-summary-card.cb-success {
+  background-color: seagreen;
+  color: palegreen;
+}
+.cb-summary-card.cb-warning {
+  background-color: goldenrod;
+  color: lightgoldenrodyellow;
+}
+.cb-summary-card:hover {
+  opacity: 0.75;
+  cursor: pointer;
+}
+.cb-summary-card .cb-title {
+  font-size: 0.7rem;
+  text-align: center;
+  text-transform: uppercase;
+  width: 100%;
+}
+.cb-summary-card .cb-value {
+  font-size: 3rem;
+  display: flex;
+  width: 100%;
+  justify-content: center;
+  position: absolute;
+  left: 0;
+  bottom: 2rem;
+}

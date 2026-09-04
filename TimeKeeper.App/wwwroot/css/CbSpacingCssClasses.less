@@ -1,0 +1,48 @@
+﻿
+.generate-fractional-widths(@maj, @fracCount, @multiplier, @uom) when (@fracCount > 0) {
+
+    @label: @{maj}\.@{fracCount}@{uom};
+    @value: @maj + (@fracCount * (.1 * @multiplier));
+
+    .cb-width-@{label} {
+        width: @value;
+    }
+
+    // recurse
+    .generate-fractional-widths(@maj, @fracCount - 1, @multiplier, @uom);
+}
+
+.generate-widths(@count, @multiplier, @uom, @fracCount) when (@count > 0) {
+
+    @label: @{count}@{uom}; // initialize the variable
+
+    .set-fractionals(@fracCount) when (@fracCount > 0) {
+        .generate-fractional-widths(@count, @fracCount, @multiplier, @uom);
+    }
+
+    .cb-width-@{label} {
+        width: (@count * @multiplier);
+    }
+
+    // Set fractional Margin
+    .set-fractionals(@fracCount);
+    
+    // recurse
+    .generate-widths(@count - 1, @multiplier, @uom, @fracCount);
+}
+
+/*#region % widths */
+.generate-widths(100, 1%, perc, 0);
+/*#endregion % widths */
+
+/*#region REM widths */
+.generate-widths(100, 1rem, rem, 9);
+/*#endregion REM widths */
+
+/*#region EM widths */
+.generate-widths(100, 1em, em, 9);
+/*#endregion EM widths */
+
+/*#region PX widths */
+.generate-widths(1000, 1px, px, 0);
+/*#endregion PC widths */

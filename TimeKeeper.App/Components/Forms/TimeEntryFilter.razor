@@ -1,0 +1,35 @@
+﻿<RadzenRow AlignItems="AlignItems.Center" Gap="1em" Style="background-color: #E0E0E0; padding:.5em .25em;">
+	<RadzenColumn size="3" Style="padding-left: .5rem;">
+@* 		<RadzenDropDown Data="@WorkItemData"
+			TValue="@WorkItem"
+			AllowFiltering="true"
+			FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+			FilterOperator="StringFilterOperator.Contains"
+			@bind-SearchText="@WorkItemSearchTerm"
+			@bind-Value="@SelectedWorkItem"
+			ValueProperty="@nameof(WorkItem.Id)"
+			TextProperty="@nameof(WorkItem.Title)"
+			Style="width:100%;">
+		</RadzenDropDown> *@
+	</RadzenColumn>
+	<RadzenColumn size="3" Style="padding-left: .5rem;">
+		
+	</RadzenColumn>
+	<RadzenColumn size="2" Style="text-align: center;">
+		<RadzenDatePicker @bind-Value="@this.StartDate"
+			ShowTime="false"
+			DateFormat="MMM dd, yyyy"
+			Name="EndTimePicker"
+			Style="width:100%;"></RadzenDatePicker>
+	</RadzenColumn>
+	<RadzenColumn size="2" Style="text-align: center;">
+		<RadzenDatePicker @bind-Value="@this.EndDate"
+			ShowTime="false"
+			DateFormat="MMM dd, yyyy"
+			Name="EndTimePicker"
+			Style="width:100%;"></RadzenDatePicker>
+	</RadzenColumn>
+	<RadzenColumn size="2" Style="text-align:right;">
+		<RadzenButton Text="Apply Filter" Click="@btnFilter_OnClick"></RadzenButton>
+	</RadzenColumn>
+</RadzenRow>

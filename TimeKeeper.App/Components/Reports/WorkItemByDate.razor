@@ -1,0 +1,46 @@
+﻿
+<RadzenStack Orientation="Orientation.Vertical" Gap="1rem" Style="width:45%">
+
+	<RadzenCard Variant="Variant.Filled">
+		<RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Start" Gap=".5rem;">
+			<div class="cb-label">Choose Date:</div>
+			<RadzenDatePicker 
+				AllowClear="false" 
+				@bind-Value="@SelectedDate" 
+				ShowTime="false" 
+				Change="DatePicker_OnChange" 
+				ShowButton="true"
+				DateFormat="MMM dd, yyyy">
+			</RadzenDatePicker>
+		</RadzenStack>
+	</RadzenCard>
+
+	<RadzenCard Variant="Variant.Filled" class="cb-grid-rows cb-hover">
+		@{
+			foreach(var item in this.HoursByWorkItem)
+			{
+
+				<div class="cb-item" @onclick="@(() => { this.Item_OnClick(item.Value.WorkItem); })">
+					<span class="cb-item-title">@item.Value.WorkItem.Title</span>
+					<span>@($"{String.Format("{0:0.00}", item.Value.TotalHours)} hrs")</span>
+				</div>
+				<hr/>
+			}
+
+			<div class="cb-item">
+				<span class="cb-item-title rz-pr-12" style="text-align:right;">Total Hours: </span>
+				<span>@($"{String.Format("{0:0.00}", this.CalculateTotalHours())} hrs")</span>
+			</div>
+		}
+	</RadzenCard>
+
+	@if (this.SelectedWorkItem != null)
+	{
+		<RadzenCard Variant="Variant.Filled">
+			<div class="cb-work-item-accomplishments">
+			<div class="cb-title">@this.SelectedWorkItem?.Title</div>
+				@((MarkupString)this.Accomplishments)
+			</div>
+		</RadzenCard>
+	}
+</RadzenStack>

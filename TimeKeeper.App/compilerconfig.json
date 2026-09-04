@@ -1,0 +1,86 @@
+﻿[
+  {
+    "outputFile": "Components/Reports/WorkItemByDate.razor.css",
+    "inputFile": "Components/Reports/WorkItemByDate.razor.less"
+  },
+  {
+    "outputFile": "wwwroot/css/ComponentStyles.css",
+    "inputFile": "wwwroot/css/ComponentStyles.less"
+  },
+  {
+    "outputFile": "wwwroot/css/SummaryCardsCss.css",
+    "inputFile": "wwwroot/css/SummaryCardsCss.less"
+  },
+  {
+    "outputFile": "wwwroot/css/CbPaddingCssClasses.css",
+    "inputFile": "wwwroot/css/CbPaddingCssClasses.less"
+  },
+  {
+    "outputFile": "wwwroot/css/CbMarginCssClasses.css",
+    "inputFile": "wwwroot/css/CbMarginCssClasses.less"
+  },
+  {
+    "outputFile": "wwwroot/css/RadzenOverrides.css",
+    "inputFile": "wwwroot/css/RadzenOverrides.less"
+  },
+  {
+    "outputFile": "wwwroot/css/CbTypographyCssClasses.css",
+    "inputFile": "wwwroot/css/CbTypographyCssClasses.less"
+  },
+  {
+    "outputFile": "wwwroot/css/CbSpacingCssClasses.css",
+    "inputFile": "wwwroot/css/CbSpacingCssClasses.less"
+  },
+  {
+    "outputFile": "wwwroot/css/NewFolder/Custom_Theme.css",
+    "inputFile": "wwwroot/css/NewFolder/Custom_Theme.less"
+  },
+  {
+    "outputFile": "wwwroot/css/Themes/Custom_Theme.css",
+    "inputFile": "wwwroot/css/Themes/Custom_Theme.less"
+  },
+  {
+    "outputFile": "wwwroot/css/Themes/Palette.css",
+    "inputFile": "wwwroot/css/Themes/Palette.less"
+  },
+  {
+    "outputFile": "wwwroot/css/Themes/Material_Palette.css",
+    "inputFile": "wwwroot/css/Themes/Material_Palette.less"
+  },
+  {
+    "outputFile": "wwwroot/css/Themes/Material_Theme.css",
+    "inputFile": "wwwroot/css/Themes/Material_Theme.less"
+  },
+  {
+    "outputFile": "wwwroot/css/Components/Navigation/SidepanelMainNav.css",
+    "inputFile": "wwwroot/css/Components/Navigation/SidepanelMainNav.less"
+  },
+  {
+    "outputFile": "wwwroot/css/Components/Navigation/SidepanelMainNavComponent.css",
+    "inputFile": "wwwroot/css/Components/Navigation/SidepanelMainNavComponent.less"
+  },
+  {
+    "outputFile": "wwwroot/css/Themes/TimekeeperCustom_Palette.css",
+    "inputFile": "wwwroot/css/Themes/TimekeeperCustom_Palette.less"
+  },
+  {
+    "outputFile": "wwwroot/css/Components/TimeEntryStatusComponent.css",
+    "inputFile": "wwwroot/css/Components/TimeEntryStatusComponent.less"
+  },
+  {
+    "outputFile": "wwwroot/styles/components/ProjectGridRowComponent.razor.css",
+    "inputFile": "wwwroot/styles/components/ProjectGridRowComponent.razor.less"
+  },
+  {
+    "outputFile": "wwwroot/styles/components/ProjectGridRowComponent.css",
+    "inputFile": "wwwroot/styles/components/ProjectGridRowComponent.less"
+  },
+  {
+    "outputFile": "wwwroot/styles/constructs/Grid_Assembled.css",
+    "inputFile": "wwwroot/styles/constructs/Grid_Assembled.less"
+  },
+  {
+    "outputFile": "wwwroot/styles/components/ProjectGridComponent.css",
+    "inputFile": "wwwroot/styles/components/ProjectGridComponent.less"
+  }
+]

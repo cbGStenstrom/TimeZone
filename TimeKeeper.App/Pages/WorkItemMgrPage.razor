@@ -1,0 +1,61 @@
+﻿@inherits CbPageBase
+@page "/WorkItemManager1"
+@layout AppLayout
+
+<div class="cb-workitem-manager">
+
+    @* Header *@
+	<AppLayoutHeaderComponent>
+		<h5 class="cb-margin-block-1px">Work Item Manager</h5>
+	</AppLayoutHeaderComponent>
+
+	@* Toolbar *@
+    <RadzenRow AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem" Style="padding:1rem 1rem 0;">
+
+        <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" AlignItems="@AlignItems.Center">
+            <RadzenIcon Icon="assignment" Style="font-size:2rem;"></RadzenIcon>
+            <RadzenButton Variant="Variant.Flat">New Work Item</RadzenButton>
+
+            <a href="/WorkItemHistory">History</a>
+        </RadzenStack>
+
+        <RadzenStack Orientation="Orientation.Horizontal" Gap=".5rem" AlignItems="AlignItems.Center" JustifyContent="@JustifyContent.End">
+@*             <RadzenButton Disabled=@SaveIsDisabled Variant="Variant.Flat"
+                          ButtonStyle="ButtonStyle.Base"
+                          Click="btnCancelSave_OnClick">Cancel</RadzenButton>
+            <RadzenButton Disabled=@SaveIsDisabled Variant="Variant.Flat"
+                          ButtonStyle="ButtonStyle.Primary"
+                          Click="btnSave_OnClick">Save</RadzenButton> *@
+        </RadzenStack>
+
+    </RadzenRow>
+
+    @* Filter *@
+    <RadzenRow AlignItems="@AlignItems.Center" Gap="1rem" Style="padding:1rem;">
+
+        <RadzenIcon Icon="search" Style="font-size:2rem;"></RadzenIcon>
+        
+        <RadzenTextBox Placeholder="Search Term" Change="OnSearchTermChange" @bind-Value="@this._searchTerm">
+        </RadzenTextBox>
+
+        <WorkItemLookupFilter 
+            OnFilterModelChange="OnWorkItemFilterChange"
+            OnFilterClear="@OnWorkItemFilterClear">
+        </WorkItemLookupFilter>
+
+    </RadzenRow>
+
+    @* Grid  *@
+    <RadzenBody>
+        <RadzenDataGrid Data="@this.FilteredQuery">
+            <Columns>
+                <RadzenDataGridColumn TItem="WorkItem" Property="Title" Title="Title"></RadzenDataGridColumn>
+            </Columns>
+        </RadzenDataGrid>
+    </RadzenBody>
+
+
+</div>
+
+
+
