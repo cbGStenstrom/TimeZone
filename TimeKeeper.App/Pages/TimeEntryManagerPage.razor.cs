@@ -14,17 +14,17 @@ namespace TimeKeeper.App.Pages
     {
         #region injected services
 
-        [Inject]
-        public SessionService? SessionService { get; set; }
+        //[Inject]
+        //public SessionService? SessionService { get; set; }
 
-        [Inject]
-        public ITimeEntryService? TimeEntrySvc { get; set; }
+        //[Inject]
+        //public ITimeEntryService? TimeEntrySvc { get; set; }
 
         [Inject]
         public ILaborerService? UserSvc { get; set; }
 
-        [Inject]
-        public IWorkItemService? WorkItemSvc { get; set; }
+        //[Inject]
+        //public IWorkItemService? WorkItemSvc { get; set; }
 
         #endregion injected services
 
