@@ -132,7 +132,7 @@ namespace TimeKeeper.App.Pages
         }
 
         /// <summary>
-        ///  Handles the event, raised by the NEw Time Entry dialog box when the Save button is clicked.
+        ///  Handles the event, raised by the NEw Time Entry dialog box when the btnSave_OnClick button is clicked.
         /// </summary>
         /// <param name="timeEntry">
         ///  The time entry to add and persist. Cannot be null.
@@ -175,7 +175,7 @@ namespace TimeKeeper.App.Pages
         }
 
         /// <summary>
-        /// Handles the event raised when the Save button on a TimeEntry row has been clicked
+        /// Handles the event raised when the btnSave_OnClick button on a TimeEntry row has been clicked
         /// </summary>
         void Row_OnSaveButtonClick()
         {

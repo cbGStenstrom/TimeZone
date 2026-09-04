@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Components;
+using Radzen;
 using System.Linq.Expressions;
+using TimeKeeper.App.Components.Dialogs;
 using TimeKeeper.App.Components.Pages;
 using TimeKeeper.Domain.Models;
 
@@ -51,59 +53,126 @@ namespace TimeKeeper.App.Pages
 
         #region event handlers
 
-        private void OnSearchTermChange(string searchTerm)
+        async Task btnDeleteWorkItem_OnClick(WorkItem workItem)
         {
-            // placeholder
+            bool? confirmed =
+                await DialogSvc!.Confirm(
+                    $"Delete '{workItem.Title}'?",
+                    "Delete Work Item",
+                    new ConfirmOptions()
+                    {
+                        OkButtonText = "Delete",
+                        CancelButtonText = "Cancel"
+                    });
+
+            if (confirmed != true)
+            {
+                return;
+            }
+
+            await WorkItemSvc!.DeleteWorkItem(workItem.Id);
+
+            await InitializeDataSource();
         }
 
-        private void OnWorkItemFilterChange(List<Expression<Func<Domain.Models.WorkItem, bool>>>? filter)
+
+        async Task btnEditWorkItem_OnClick(WorkItem workItem)
+        {
+            WorkItem? result = await this.OpenWorkItemInEditor(workItem);
+
+            if (result != null)
+            {
+                await InitializeDataSource();
+            }
+        }
+
+
+        async Task btnNewWorkItem_OnClick()
+        {
+            WorkItem? savedWorkItem = await this.OpenWorkItemInEditor(new WorkItem());
+
+            if (savedWorkItem != null)
+            {
+                await this.InitializeDataSource();
+            }
+        }
+
+        async Task GridRow_OnDoubleClick(DataGridRowMouseEventArgs<WorkItem> rowArgs)
+        {
+            ArgumentNullException.ThrowIfNull(rowArgs?.Data);
+
+            WorkItem workItem = rowArgs.Data;
+            WorkItem? savedWorkItem = await this.OpenWorkItemInEditor(workItem);
+
+            if (savedWorkItem != null)
+            {
+                await this.InitializeDataSource();
+            }
+        }
+
+        void OnWorkItemFilterChange(List<Expression<Func<Domain.Models.WorkItem, bool>>>? filter)
         {
             this._filter.Clear();
 
-            if(filter != null && this.FilteredQuery.Any())
+            if (filter is not null)
             {
                 this._filter.AddRange(filter);
             }
         }
 
-        private void OnWorkItemFilterClear()
+        void OnWorkItemFilterClear()
         {
             this._filter.Clear();
             this._searchTerm = null;
+        }
+
+        async Task txSearchTerm_OnInput(ChangeEventArgs args)
+        {
+            this._searchTerm = args.Value?.ToString();
         }
 
         #endregion event handlers
 
         #region methods
 
-        private IQueryable<WorkItem> GetFilteredQuery()
+        IQueryable <WorkItem> GetFilteredQuery()
         {
-            // If a search term is defined then add it to the filter.
-            //
-            if(!string.IsNullOrWhiteSpace(this._searchTerm))
-            {
-                this._filter.Add(e => e.Title.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase));
-            }
+            IQueryable<WorkItem> query = this.QueryableWorkItems;
 
-            // If the filter has not been defined eithe by the filter component in OnWOrkItemFilterChange
-            // and/or by the addition of a search term, then just return the Full list of workitems.
-            //
-            if(this._filter.Count == 0)
-            {
-                return this.QueryableWorkItems;
-            }
-
-            // Otherwise add anything in the filter to the query
-            //
-            var query = this.QueryableWorkItems;
-
-            foreach (var filterItem in this._filter)
+            foreach (Expression<Func<WorkItem, bool>> filterItem in this._filter)
             {
                 query = query.Where(filterItem);
             }
 
-            return query;
+            if (!string.IsNullOrWhiteSpace(this._searchTerm))
+            {
+                string searchTerm = this._searchTerm;
 
+                query = query.Where(workItem =>
+                    workItem.Title.Contains(
+                        searchTerm,
+                        StringComparison.OrdinalIgnoreCase));
+            }
+
+            return query;
+        }
+
+        async Task<WorkItem?> OpenWorkItemInEditor(WorkItem workItem)
+        {
+            string dialogTitle = workItem.IsNew ? "New Work Item" : $"Edit Work Item: {workItem.Title}";
+
+            Dictionary<string, object> parameters = new() { { "WorkItem", workItem } };
+
+            DialogOptions dlgOptions = new DialogOptions()
+            {
+                Width = "900px",
+                Resizable = true,
+                Draggable = true
+            };
+
+            WorkItem? savedWorkItem = await DialogSvc!.OpenAsync<WorkItemEditorDialog>(dialogTitle, parameters, dlgOptions);
+
+            return savedWorkItem;
         }
 
         #endregion methods

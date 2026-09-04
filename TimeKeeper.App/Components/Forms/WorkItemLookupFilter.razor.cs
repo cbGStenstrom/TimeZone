@@ -80,6 +80,7 @@ public partial class WorkItemLookupFilter : CbComponentBase
     protected async override Task OnInitializedAsync()
     {
         await this.PopulateProjectList();
+        await this.OnFilterModelChange.InvokeAsync(this.GetModelFilter());
     }
 
     #endregion lifecycle
@@ -187,6 +188,10 @@ public partial class WorkItemLookupFilter : CbComponentBase
         {
             filter.Add(e => !e.IsOpen);
         }
+        else if (this.FilterIsOpen == IsOpenOptions.InReview)
+        {
+            filter.Add(e => e.IsInReview);
+        }
     }
 
     private void ApplyIsOpenFilter(ref List<Expression<Func<Domain.Models.WorkItem, bool>>> filter)
@@ -198,6 +203,10 @@ public partial class WorkItemLookupFilter : CbComponentBase
         else if (this.FilterIsOpen == IsOpenOptions.Closed)
         {
             filter.Add(e => !e.IsOpen);
+        }
+        else if (this.FilterIsOpen == IsOpenOptions.InReview)
+        {
+            filter.Add(e => e.IsInReview);
         }
     }
 

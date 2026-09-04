@@ -1,5 +1,5 @@
 ﻿@inherits CbPageBase
-@page "/WorkItemManager1"
+@page "/WorkItemManager"
 @layout AppLayout
 
 <div class="cb-workitem-manager">
@@ -13,19 +13,14 @@
     <RadzenRow AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem" Style="padding:1rem 1rem 0;">
 
         <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" AlignItems="@AlignItems.Center">
-            <RadzenIcon Icon="assignment" Style="font-size:2rem;"></RadzenIcon>
-            <RadzenButton Variant="Variant.Flat">New Work Item</RadzenButton>
+            <RadzenButton 
+                Variant="Variant.Flat" 
+                Text="New Work Item"
+                Icon="add"
+                Click="@btnNewWorkItem_OnClick">
+            </RadzenButton>
 
             <a href="/WorkItemHistory">History</a>
-        </RadzenStack>
-
-        <RadzenStack Orientation="Orientation.Horizontal" Gap=".5rem" AlignItems="AlignItems.Center" JustifyContent="@JustifyContent.End">
-@*             <RadzenButton Disabled=@SaveIsDisabled Variant="Variant.Flat"
-                          ButtonStyle="ButtonStyle.Base"
-                          Click="btnCancelSave_OnClick">Cancel</RadzenButton>
-            <RadzenButton Disabled=@SaveIsDisabled Variant="Variant.Flat"
-                          ButtonStyle="ButtonStyle.Primary"
-                          Click="btnSave_OnClick">Save</RadzenButton> *@
         </RadzenStack>
 
     </RadzenRow>
@@ -33,10 +28,11 @@
     @* Filter *@
     <RadzenRow AlignItems="@AlignItems.Center" Gap="1rem" Style="padding:1rem;">
 
-        <RadzenIcon Icon="search" Style="font-size:2rem;"></RadzenIcon>
-        
-        <RadzenTextBox Placeholder="Search Term" Change="OnSearchTermChange" @bind-Value="@this._searchTerm">
-        </RadzenTextBox>
+        <input type="text"
+            class="rz-textbox"
+            placeholder="Search Term"
+            value="@_searchTerm"
+            @oninput="txSearchTerm_OnInput" />
 
         <WorkItemLookupFilter 
             OnFilterModelChange="OnWorkItemFilterChange"
@@ -46,14 +42,117 @@
     </RadzenRow>
 
     @* Grid  *@
-    <RadzenBody>
-        <RadzenDataGrid Data="@this.FilteredQuery">
-            <Columns>
-                <RadzenDataGridColumn TItem="WorkItem" Property="Title" Title="Title"></RadzenDataGridColumn>
-            </Columns>
-        </RadzenDataGrid>
-    </RadzenBody>
+    <RadzenDataGrid TItem="WorkItem"
+        Data="@FilteredQuery"
+        RowDoubleClick="@GridRow_OnDoubleClick"
+        AllowSorting="true"
+        AllowPaging="false"
+        AllowFiltering="false"
+        Density="Density.Compact">
 
+        <Columns>
+
+            @* Actions *@
+            <RadzenDataGridColumn TItem="WorkItem"
+                Width="90px"
+                Sortable="false"
+                Filterable="false"
+                TextAlign="TextAlign.Center">
+
+                <Template Context="workItem">
+
+                    <RadzenButton Icon="edit"
+                        Variant="Variant.Text"
+                        ButtonStyle="ButtonStyle.Primary"
+                        Size="ButtonSize.Small"
+                        Click="@(() => btnEditWorkItem_OnClick(workItem))" />
+
+                    <RadzenButton Icon="delete"
+                        Variant="Variant.Text"
+                        ButtonStyle="ButtonStyle.Danger"
+                        Size="ButtonSize.Small"
+                        Click="@(() => btnDeleteWorkItem_OnClick(workItem))" />
+
+                </Template>
+
+            </RadzenDataGridColumn>
+
+            @* Title *@
+            <RadzenDataGridColumn TItem="WorkItem"
+                Property="Title"
+                Title="Title">
+            </RadzenDataGridColumn>
+
+            @* Open *@
+            <RadzenDataGridColumn TItem="WorkItem"
+                Property="IsOpen"
+                Width="100px"
+                Title="Open">
+
+                <Template Context="workItem">
+
+                    <RadzenIcon Icon="check_circle"
+                        Style="color:green;"
+                        Visible="@workItem.IsOpen" />
+
+                    <RadzenIcon Icon="cancel"
+                        Style="color:red;"
+                        Visible="@(!workItem.IsOpen)" />
+
+                </Template>
+
+            </RadzenDataGridColumn>
+
+            @* Review *@
+            <RadzenDataGridColumn TItem="WorkItem"
+                Property="IsInReview"
+                Width="100px"
+                Title="Review">
+
+                <Template Context="workItem">
+
+                    <RadzenIcon Icon="check_circle"
+                        Style="color:orange;"
+                        Visible="@workItem.IsInReview" />
+
+                </Template>
+
+            </RadzenDataGridColumn>
+
+            @* Billable *@
+            <RadzenDataGridColumn TItem="WorkItem"
+                Property="IsBillable"
+                Width="100px"
+                Title="Billable">
+
+                <Template Context="workItem">
+
+                    <RadzenIcon Icon="attach_money"
+                        Style="color:green;"
+                        Visible="@workItem.IsBillable" />
+
+                </Template>
+
+            </RadzenDataGridColumn>
+
+            @* Type *@
+            <RadzenDataGridColumn TItem="WorkItem"
+                Property="WorkItemType"
+                Title="Type">
+            </RadzenDataGridColumn>
+
+            @* Project *@
+            <RadzenDataGridColumn TItem="WorkItem"
+                Title="Project">
+                <Template Context="workItem">
+                    @(workItem.Project?.Key ?? "N/A")
+                </Template>
+
+            </RadzenDataGridColumn>
+
+        </Columns>
+
+    </RadzenDataGrid>
 
 </div>
 

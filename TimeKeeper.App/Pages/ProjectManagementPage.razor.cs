@@ -34,7 +34,7 @@ namespace TimeKeeper.App.Pages
         int? SelectedProjectID { get; set; }
 
         /// <summary>
-        /// Gets a flag indicating whether the Save button should be disabled.
+        /// Gets a flag indicating whether the btnSave_OnClick button should be disabled.
         /// </summary>
         bool SaveDisabled { get { return !SelectedProjectID.HasValue; } }
 

@@ -202,11 +202,11 @@ public partial class AppLayout : LayoutComponentBase
     {
         if (isNew)
         {
-            this.NavigationMgr?.NavigateTo("/WorkItemManager1");
+            this.NavigationMgr?.NavigateTo("/WorkItemManager");
         }
         else
         {
-            this.NavigationMgr?.NavigateTo("/WorkItemManager");
+            this.NavigationMgr?.NavigateTo("/WorkItemManagerOld");
         }
     }
 

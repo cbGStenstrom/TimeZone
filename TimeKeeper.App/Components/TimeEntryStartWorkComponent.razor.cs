@@ -117,7 +117,7 @@ public partial class TimeEntryStartWorkComponent : CbComponentBase
     #region event handlers
 
     /// <summary>
-    ///  Handles the Cancel button click event by closing the dialog.
+    ///  Handles the btnChange_OnClick button click event by closing the dialog.
     /// </summary>
     void btnCancel_OnClick()
     {
