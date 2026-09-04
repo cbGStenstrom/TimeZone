@@ -45,7 +45,7 @@ namespace TimeKeeper.App.Api.DIServices.Extensiions
                 services.AddDbContext<TimeKeeperDbContext>(options =>
                 {
                     options.UseSqlServer(connectionString);
-                });
+                }, ServiceLifetime.Transient);
             }
 
             return services;
