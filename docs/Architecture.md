@@ -127,6 +127,14 @@ Presentation Layer
 - EF entities
 - Business rules
 
+## DbContext Lifetime
+
+In `DIServiceExtensions`, the application currently uses:
+
+```csharp
+ServiceLifetime.Transient
+```
+
 ---
 
 ## TimeKeeper.Domain

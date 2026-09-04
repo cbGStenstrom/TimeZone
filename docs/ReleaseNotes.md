@@ -471,3 +471,18 @@ Before every release:
 | Date | Description |
 |--------|-------------|
 | 2026-09-03 | Initial Release Notes document created |
+
+### Deployment Milestone
+
+Successfully deployed and validated TimeZone under IIS using SQL Server.
+
+Validated Features:
+
+- Login
+- Dashboard
+- Category Management
+- Activity Management
+- Time Tracking
+- Reporting
+
+Visual Studio is no longer required for application operation.

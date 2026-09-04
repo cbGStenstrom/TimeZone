@@ -31,7 +31,11 @@ namespace TimeKeeper.App
                 .AddTimeKeeperDbServices(builder.Configuration);
 
             builder.Services.AddRadzenComponents();
-
+            builder.Services.Configure<Microsoft.AspNetCore.Components.Server.CircuitOptions>(
+                options =>
+                {
+                    options.DetailedErrors = true;
+                });
 
             var app = builder.Build();
 
