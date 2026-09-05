@@ -85,6 +85,25 @@ namespace TimeKeeper.Domain.Services
             return result;
         }
 
+        /// <summary>
+        ///  Asynchronously gets the number of time entries associated with a work item. 
+        /// </summary>
+        /// <param name="workItemId">
+        ///  The identifier of the work item.</param>
+        /// <returns>
+        ///  A task that represents the asynchronous operation. The task result contains the number 
+        ///  of matching time entries.</returns>
+        public async Task<int> GetTimeEntryCountForWorkItem(int workItemId)
+        {
+            IEnumerable<Models.TimeEntry> records =
+                await this.GetFilteredTimeEntries(
+                    [
+                        e => e.WorkItemId == workItemId
+                    ]);
+
+            return records.Count();
+        }
+
         #endregion Queries
 
         #region Commands

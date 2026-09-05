@@ -37,6 +37,8 @@ namespace TimeKeeper.Domain.Services.Interfaces
         Task<Models.TimeEntry?> GetActiveTimeEntry();
 
         Task<IEnumerable<Models.TimeEntry>> GetFilteredTimeEntries(List<Expression<Func<DataAccess.Entities.TimeEntry, bool>>>? filter = null);
+        
+        Task<int> GetTimeEntryCountForWorkItem(int workItemId);
 
         Task<Models.TimeEntry> GetTimeEntryById(int timeEntryId);
 

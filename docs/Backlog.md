@@ -476,6 +476,159 @@ Move from SessionService authentication to ASP.NET authentication.
 - Authorization Policies
 
 ---
+## FEAT-012 - Work Item Archiving
+
+### Priority
+
+Medium
+
+### Status
+
+Not Started
+
+### Description
+
+Introduce the ability to archive Work Items rather than permanently deleting them.
+
+Work Items that contain one or more associated Time Entries should not be eligible for deletion. Instead, they should be archived and excluded from normal user workflows while remaining available for reporting and historical review.
+
+### Business Justification
+
+Time Entries represent historical work records and should never be lost due to the deletion of a related Work Item.
+
+Archiving preserves:
+
+- Historical reporting
+- Time tracking accuracy
+- Productivity metrics
+- Work history
+- Trend analysis
+
+### Proposed Database Changes
+
+Add:
+
+```sql
+ALTER TABLE WorkItems
+ADD IsArchived BIT NOT NULL
+    CONSTRAINT DF_WorkItems_IsArchived
+    DEFAULT 0;
+```
+
+### User Interface Changes
+
+Add:
+
+```text
+Archive Work Item
+Restore Work Item
+```
+
+actions.
+
+### Filter Enhancements
+
+Expand Work Item Status filtering:
+
+```text
+Open
+In Review
+Closed
+Archived
+All
+```
+
+### Acceptance Criteria
+
+- Users can archive Work Items.
+- Users can restore archived Work Items.
+- Archived Work Items are hidden from default searches.
+- Archived Work Items remain available for reporting.
+- Archived Work Items retain all associated Time Entries.
+- Archive status is persisted.
+
+### Future Enhancements
+
+- Archived Date
+- Archived By
+- Bulk Archive
+- Auto Archive Completed Work Items
+
+---
+## FEAT-013 - Work Item Deletion Safeguards
+
+### Priority
+
+High
+
+### Status
+
+Not Started
+
+### Description
+
+Prevent deletion of Work Items that contain one or more associated Time Entries.
+
+A Work Item that has historical effort recorded against it should be preserved to protect reporting accuracy and historical data integrity.
+
+### Business Justification
+
+Deleting a Work Item that has associated Time Entries would:
+
+- Remove historical context
+- Impact reporting
+- Potentially orphan effort records
+- Degrade data integrity
+
+### Business Rules
+
+#### Work Item Has No Time Entries
+
+Allowed:
+
+```text
+Delete Work Item
+```
+
+#### Work Item Has One Or More Time Entries
+
+Not Allowed:
+
+```text
+Delete Work Item
+```
+
+User receives:
+
+```text
+This Work Item cannot be deleted because it contains associated Time Entries.
+
+Consider archiving the Work Item instead.
+```
+
+### Technical Requirements
+
+Before deletion:
+
+1. Query associated TimeEntries.
+2. Determine TimeEntry count.
+3. If count > 0:
+   - Cancel delete operation.
+   - Display validation message.
+4. If count = 0:
+   - Allow delete operation.
+
+### Acceptance Criteria
+
+- Delete verifies TimeEntry count.
+- Work Items with Time Entries cannot be deleted.
+- Work Items without Time Entries can be deleted.
+- Clear validation message is displayed.
+- Existing delete confirmation dialog remains functional.
+
+### Related Features
+
+- FEAT-012 Work Item Archiving
 
 # Future Ideas
 
