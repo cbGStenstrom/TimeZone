@@ -142,7 +142,7 @@ namespace TimeKeeper.App.Components.Forms
         #region event handlers
 
         /// <summary>
-        /// Handles the event raised when the user clicks on the Cancel button.
+        /// Handles the event raised when the user clicks on the btnChange_OnClick button.
         /// </summary>
         void btnCancel_OnClick()
         {
@@ -173,7 +173,7 @@ namespace TimeKeeper.App.Components.Forms
         }
 
         /// <summary>
-        /// Handles the event raised when the user clicks on the Save button.
+        /// Handles the event raised when the user clicks on the btnSave_OnClick button.
         /// </summary>
         async void btnSave_OnClick()
         {

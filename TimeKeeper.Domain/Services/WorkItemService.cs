@@ -1,19 +1,26 @@
-﻿using System.Collections.Generic;
+﻿using MediatR;
 using System.Linq.Expressions;
-using MediatR;
 using TimeKeeper.Domain.Commands;
 using TimeKeeper.Domain.Models.DTOs;
 using TimeKeeper.Domain.Queries;
 using TimeKeeper.Domain.Services.Interfaces;
-using TimeKeeper.Domain.Utilities.Mappers;
 
 namespace TimeKeeper.Domain.Services;
 
+/// <summary>
+///  Provides application-level operations for creating, retrieving, updating, summarizing, and 
+///  deleting work items.
+/// </summary>
+/// <remarks> 
+///  Coordinates work item commands and queries through an <c>IMediator</c> and prevents deletion 
+///  when related time entries exist to preserve historical records.</remarks>
 public class WorkItemService : IWorkItemService
 {
     #region fields
 
     IMediator? _mediator = null;
+
+    ITimeEntryService? _timeEntryService = null;
 
     #endregion fields
 
@@ -28,6 +35,7 @@ public class WorkItemService : IWorkItemService
     public WorkItemService(WorkItemServiceOptions options)
     {
         this._mediator = options.Mediator;
+        this._timeEntryService = options.TimeEntrySvc;
     }
 
     #endregion ctor
@@ -49,13 +57,30 @@ public class WorkItemService : IWorkItemService
     }
 
     /// <summary>
-    /// Permanently Deletes the workitem associated with the <paramref name="workitemID"/> 
-    /// argument.
+    ///  Deletes a work item when no time entries are associated with it.
     /// </summary>
-    /// <param name="workitemID"></param>
-    /// <returns></returns>
+    /// <remarks>
+    ///  Use archival or closure workflows for work items that contain historical time records.</remarks>
+    /// <param name="workitemID">
+    ///  The unique identifier of the work item to delete.</param>
+    /// <returns>
+    ///  The deleted work item if the operation succeeds; otherwise, <see langword="null"/>.</returns>
+    /// <exception cref="InvalidOperationException">
+    ///  Thrown when the work item has one or more associated time entries and cannot be deleted to 
+    ///  preserve historical records.</exception>
     public async Task<Models.WorkItem?> DeleteWorkItem(int workitemID)
     {
+        int entryCount = await this._timeEntryService!.GetTimeEntryCountForWorkItem(workitemID);
+        if(entryCount > 0)
+        {
+            string errMsg = $"This WorkItem with ID {workitemID} contains {entryCount} time entr" +
+                            $"{(entryCount == 1 ? "y" : "ies")} and cannot be deleted." +
+                            $"Historical work records must be preserved."+
+                            $"Consider archiving or closing the WorkItem instead.";
+
+            throw new InvalidOperationException(errMsg);
+        }
+
         Models.WorkItem? result = (this._mediator != null) ? await this._mediator.Send(new DeleteWorkItem(workitemID)) : null;
         return result;
     }
@@ -126,4 +151,11 @@ public class WorkItemService : IWorkItemService
     #endregion public
 }
 
-public record WorkItemServiceOptions(IMediator Mediator);
+/// <summary>
+///  Represents configuration dependencies required by a work item service.
+/// </summary>
+/// <param name="Mediator">
+///  Mediator used to dispatch requests and notifications.</param>
+/// <param name="TimeEntrySvc">
+///  Time entry service used for time entry operations.</param>
+public record WorkItemServiceOptions(IMediator Mediator, ITimeEntryService TimeEntrySvc);

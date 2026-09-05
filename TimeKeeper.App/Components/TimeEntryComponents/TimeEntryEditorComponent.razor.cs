@@ -433,7 +433,7 @@ public partial class TimeEntryEditorComponent : CbComponentBase
         //    var notificationMessage = new NotificationMessage()
         //    {
         //        Severity = NotificationSeverity.Error,
-        //        Summary = "Time Entry Save Failed",
+        //        Summary = "Time Entry btnSave_OnClick Failed",
         //        Duration = 5000,
         //        CloseOnClick = true
         //    };
@@ -509,7 +509,7 @@ public partial class TimeEntryEditorComponent : CbComponentBase
     /// </returns>
     private async Task OnSaveClick(RadzenSplitButtonItem item)
     {
-        // If item argument is null then it defaults to a "Save"
+        // If item argument is null then it defaults to a "btnSave_OnClick"
         // 
         string action = item == null ? "save" : item.Value.ToLower();
 
@@ -520,7 +520,7 @@ public partial class TimeEntryEditorComponent : CbComponentBase
         TimeEntry loadedTimeEntry = (action == "stopwork") ? this.FinalizeTimeEntry() : 
                                                              this.EnsureTimeEntryIsLoaded("");
 
-        // Save the TimeEntry record
+        // btnSave_OnClick the TimeEntry record
         //
         await this.SaveTimeEntry(loadedTimeEntry);
 
@@ -541,7 +541,7 @@ public partial class TimeEntryEditorComponent : CbComponentBase
         //
         if(this.ShowDialogButtons) base.DialogSvc.Close();
 
-        // Notify subscribers that the Save button was clicked.
+        // Notify subscribers that the btnSave_OnClick button was clicked.
         //
         await this.OnSaveClicked.InvokeAsync();
     }
@@ -557,7 +557,7 @@ public partial class TimeEntryEditorComponent : CbComponentBase
     {
         TimeEntry loadedTimeEntry = this.EnsureTimeEntryIsLoaded("");
 
-        // Save the TimeEntry record
+        // btnSave_OnClick the TimeEntry record
         //
         await this.SaveTimeEntry(loadedTimeEntry);
 
@@ -565,7 +565,7 @@ public partial class TimeEntryEditorComponent : CbComponentBase
         //
         if (this.ShowDialogButtons) base.DialogSvc.Close();
 
-        // Notify subscribers that the Save button was clicked.
+        // Notify subscribers that the btnSave_OnClick button was clicked.
         //
         await this.OnSaveClicked.InvokeAsync();
     }

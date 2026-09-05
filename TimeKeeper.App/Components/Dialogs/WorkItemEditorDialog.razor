@@ -1,0 +1,23 @@
+﻿@inherits CbComponentBase
+@using TimeKeeper.Domain.Models
+
+<RadzenStack Orientation="Orientation.Vertical"
+    Gap="1rem">
+
+    <WorkItemForm WorkItem="@WorkItem"
+        OnWorkItemChanged="@WorkItemForm_OnChanged">
+    </WorkItemForm>
+
+    <RadzenRow JustifyContent="JustifyContent.End">
+
+        <RadzenButton Text="Cancel"
+            ButtonStyle="ButtonStyle.Light"
+            Click="@btnCancel_OnClick" />
+
+        <RadzenButton Text="Save"
+            ButtonStyle="ButtonStyle.Primary"
+            Click="@btnSave_OnClick" />
+
+    </RadzenRow>
+
+</RadzenStack>

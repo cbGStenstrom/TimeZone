@@ -19,6 +19,7 @@
   <ItemGroup>
     <Folder Include="Api\Extensions\" />
     <Folder Include="Api\Utilities\" />
+    <Folder Include="NewComponents\WorkItemComponents\" />
     <Folder Include="wwwroot\css\Pages\" />
     <Folder Include="wwwroot\images\" />
   </ItemGroup>

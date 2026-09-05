@@ -78,21 +78,28 @@ namespace TimeKeeper.App.Components.Forms
 
         #region public
 
-        /// <summary>
-        /// Validates the form, ensuring that the required WorkItemType field has been set. If
-        /// invalid, sets a flag causing the validation message to be displayed.
-        /// </summary>
-        /// <returns>True if the form is valid; otherwise false.</returns>
         public bool Validate()
         {
-            bool isValid = this.WorkItem?.WorkItemType != null;
+            bool isValid = true;
 
-            this.ShowValidation = !isValid;
-            base.StateHasChanged();
+            if (WorkItem?.ProjectId == null)
+            {
+                isValid = false;
+            }
+
+            if (WorkItem?.WorkItemType == null)
+            {
+                isValid = false;
+            }
+
+            if (string.IsNullOrWhiteSpace(WorkItem?.Title))
+            {
+                isValid = false;
+            }
 
             return isValid;
         }
-
+        
         #endregion public
     }
 }

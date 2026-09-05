@@ -85,10 +85,10 @@ namespace TimeKeeper.App.Components
         #region event handlers
 
         /// <summary>
-        ///  Handles the Cancel button click event by closing the dialog.
+        ///  Handles the btnChange_OnClick button click event by closing the dialog.
         /// </summary>
         /// <remarks>
-        ///  This method is typically invoked when the user clicks the Cancel button in a dialog.
+        ///  This method is typically invoked when the user clicks the btnChange_OnClick button in a dialog.
         ///  After execution, the dialog is closed and no further action is taken.
         /// </remarks>
         void btnCancel_OnClick()

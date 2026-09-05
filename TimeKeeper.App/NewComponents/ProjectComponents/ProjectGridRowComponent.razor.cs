@@ -56,7 +56,7 @@ public partial class ProjectGridRowComponent :CbComponentBase
     public EventCallback<Project> OnDeleteProjectClick { get; set; }
 
     /// <summary>
-    ///  Gets or sets the callback invoked when the Save Project action is triggered.
+    ///  Gets or sets the callback invoked when the btnSave_OnClick Project action is triggered.
     /// </summary>
     [Parameter]
     public EventCallback<Project> OnSaveProjectClick { get; set; }
