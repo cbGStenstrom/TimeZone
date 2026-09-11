@@ -102,10 +102,9 @@ namespace TimeKeeper.App.Components.Forms
                 isValid = false;
             }
 
-            if (string.IsNullOrWhiteSpace(WorkItem?.Title))
-            {
-                isValid = false;
-            }
+            this.ShowValidation = !isValid;
+
+            StateHasChanged();
 
             return isValid;
         }

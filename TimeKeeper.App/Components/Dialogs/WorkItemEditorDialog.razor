@@ -4,7 +4,9 @@
 <RadzenStack Orientation="Orientation.Vertical"
     Gap="1rem">
 
-    <WorkItemForm WorkItem="@WorkItem"
+    <WorkItemForm 
+        @ref="@this.WorkItemFormRef"
+        WorkItem="@WorkItem"
         OnWorkItemChanged="@WorkItemForm_OnChanged">
     </WorkItemForm>
 

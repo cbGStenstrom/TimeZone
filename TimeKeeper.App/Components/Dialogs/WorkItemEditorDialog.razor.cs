@@ -48,7 +48,7 @@ public partial class WorkItemEditorDialog : CbComponentBase
     {
         ArgumentNullException.ThrowIfNull(WorkItem);
 
-        if (WorkItemFormRef?.Validate() == false)
+        if (WorkItemFormRef == null || WorkItemFormRef.Validate() == false)
         {
             return;
         }

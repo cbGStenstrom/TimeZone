@@ -20,6 +20,13 @@
 						<div>@($"[{(context as Domain.Models.Project)?.Key}] {(context as Domain.Models.Project)?.LongName}")</div>
 					</Template>
 				</RadzenDropDown>
+
+				@if (this.WorkItem.ProjectId == 0 && this.ShowValidation)
+				{
+					<RadzenText TextStyle="TextStyle.Caption" Style="color:var(--rz-danger);">
+						Project is required.
+					</RadzenText>
+				}
 			</RadzenColumn>
 		</RadzenRow>
 
@@ -44,9 +51,7 @@
 			</RadzenColumn>
 		</RadzenRow>
 
-        @* Activity Numbe *@
-
-        @* Title *@
+        @* Activity Number *@
         <RadzenRow AlignItems="AlignItems.Center">
             <RadzenColumn Size="2">
                 <RadzenLabel Text="Activity Number"></RadzenLabel>
@@ -57,9 +62,15 @@
 					Change="@Form_OnChange"
 					MaxLength="50">
 				</RadzenTextBox>
+
+				@if (string.IsNullOrWhiteSpace(this.WorkItem.ActivityNumber) && this.ShowValidation)
+				{
+					<RadzenText TextStyle="TextStyle.Caption"Style="color:var(--rz-danger);">
+						Activity Number is required.
+					</RadzenText>
+				}
             </RadzenColumn>
         </RadzenRow>
-
 
 		@* Title *@
 		<RadzenRow AlignItems="AlignItems.Center">
@@ -67,7 +78,18 @@
 				<RadzenLabel Text="Title"></RadzenLabel>
 			</RadzenColumn>
 			<RadzenColumn Size="10">
-				<RadzenTextBox Style="width:100%;" @bind-Value="@this.WorkItem.Title" Change="@Form_OnChange" MaxLength="250"></RadzenTextBox>
+				<RadzenTextBox Style="width:100%;" 
+					@bind-Value="@this.WorkItem.Title" 
+					Change="@Form_OnChange" 
+					MaxLength="250">
+				</RadzenTextBox>
+
+				@if (string.IsNullOrWhiteSpace(this.WorkItem.Title) && this.ShowValidation)
+				{
+					<RadzenText TextStyle="TextStyle.Caption" Style="color:var(--rz-danger);">
+						Title is required.
+					</RadzenText>
+				}
 			</RadzenColumn>
 		</RadzenRow>
 
