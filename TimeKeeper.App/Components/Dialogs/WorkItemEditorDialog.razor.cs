@@ -77,6 +77,8 @@ public partial class WorkItemEditorDialog : CbComponentBase
 
     void btnCancel_OnClick()
     {
+        // WHAT: Rollback any changes first.
+        this.WorkItemFormRef?.Rollback();
         DialogSvc!.Close(null);
     }
 

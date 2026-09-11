@@ -114,6 +114,7 @@ public partial class WorkItem : ModelBase<WorkItem>
     {
         if (base._snapshot != null)
         {
+            this.ActivityNumber = base._snapshot.ActivityNumber;
             this.CreatedBy = base._snapshot.CreatedBy;
             this.CreatedDate = base._snapshot.CreatedDate;
             this.UpdatedDate = base._snapshot.UpdatedDate;

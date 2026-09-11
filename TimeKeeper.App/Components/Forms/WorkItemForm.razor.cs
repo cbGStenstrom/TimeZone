@@ -78,6 +78,11 @@ namespace TimeKeeper.App.Components.Forms
 
         #region public
 
+        public void Rollback()
+        {
+            this.WorkItem?.RevertToSnapshot();
+        }
+
         public bool Validate()
         {
             bool isValid = true;
