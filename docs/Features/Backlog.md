@@ -1,3 +1,27 @@
+# Current Sprint
+
+## In Progress
+
+- FEAT-001 Activity Number Support
+
+## Next
+
+- FEAT-012 Start Work from WorkItem Grid
+- FEAT-013 Daily Standup
+
+## Completed
+
+- TZ-001 Configuration Cleanup
+- TZ-002 IIS Deployment
+- BUG-001 Add Project
+- BUG-002 Complete New WorkItem Manager
+
+
+---
+---
+
+
+
 # FEAT-001 - Activity Number Support
 
 **State:** open

@@ -24,38 +24,34 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentat
 		docs\UpgradeGuide.md = docs\UpgradeGuide.md
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Backlog", "Backlog", "{E4C183CF-4AFB-4E65-B378-6DFA099099E8}"
-	ProjectSection(SolutionItems) = preProject
-		Backlog.md = Backlog.md
-		Bugs.md = Bugs.md
-	EndProjectSection
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Bugs", "Bugs", "{DD4D3809-C6C7-4624-8ABB-EF55D373D075}"
 	ProjectSection(SolutionItems) = preProject
-		BUG-002.md = BUG-002.md
+		docs\Bugs\BUG-002.md = docs\Bugs\BUG-002.md
+		docs\Bugs\Bugs.md = docs\Bugs\Bugs.md
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Features", "Features", "{56F56921-90E9-4FBA-B2E3-7B46A1591CBE}"
 	ProjectSection(SolutionItems) = preProject
-		FEAT-001.md = FEAT-001.md
-		FEAT-002.md = FEAT-002.md
-		FEAT-003.md = FEAT-003.md
-		FEAT-004.md = FEAT-004.md
-		FEAT-005.md = FEAT-005.md
-		FEAT-006.md = FEAT-006.md
-		FEAT-007.md = FEAT-007.md
-		FEAT-008.md = FEAT-008.md
-		FEAT-009.md = FEAT-009.md
-		FEAT-010.md = FEAT-010.md
-		FEAT-011.md = FEAT-011.md
-		FEAT-012.md = FEAT-012.md
-		FEAT-013.md = FEAT-013.md
-		FEAT-100.md = FEAT-100.md
-		FEAT-101.md = FEAT-101.md
-		FEAT-102.md = FEAT-102.md
-		FEAT-103.md = FEAT-103.md
-		FEAT-104.md = FEAT-104.md
-		FEAT-200.md = FEAT-200.md
+		docs\Features\Backlog.md = docs\Features\Backlog.md
+		docs\Features\FEAT-001.md = docs\Features\FEAT-001.md
+		docs\Features\FEAT-002.md = docs\Features\FEAT-002.md
+		docs\Features\FEAT-003.md = docs\Features\FEAT-003.md
+		docs\Features\FEAT-004.md = docs\Features\FEAT-004.md
+		docs\Features\FEAT-005.md = docs\Features\FEAT-005.md
+		docs\Features\FEAT-006.md = docs\Features\FEAT-006.md
+		docs\Features\FEAT-007.md = docs\Features\FEAT-007.md
+		docs\Features\FEAT-008.md = docs\Features\FEAT-008.md
+		docs\Features\FEAT-009.md = docs\Features\FEAT-009.md
+		docs\Features\FEAT-010.md = docs\Features\FEAT-010.md
+		docs\Features\FEAT-011.md = docs\Features\FEAT-011.md
+		docs\Features\FEAT-012.md = docs\Features\FEAT-012.md
+		docs\Features\FEAT-013.md = docs\Features\FEAT-013.md
+		docs\Features\FEAT-100.md = docs\Features\FEAT-100.md
+		docs\Features\FEAT-101.md = docs\Features\FEAT-101.md
+		docs\Features\FEAT-102.md = docs\Features\FEAT-102.md
+		docs\Features\FEAT-103.md = docs\Features\FEAT-103.md
+		docs\Features\FEAT-104.md = docs\Features\FEAT-104.md
+		docs\Features\FEAT-200.md = docs\Features\FEAT-200.md
 	EndProjectSection
 EndProject
 Global
@@ -88,9 +84,8 @@ Global
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{4676EC9A-D357-4F39-8E14-49787DA23D75} = {33F804E1-A761-4395-8EBE-E7B590F0F6BF}
-		{E4C183CF-4AFB-4E65-B378-6DFA099099E8} = {4676EC9A-D357-4F39-8E14-49787DA23D75}
-		{DD4D3809-C6C7-4624-8ABB-EF55D373D075} = {E4C183CF-4AFB-4E65-B378-6DFA099099E8}
-		{56F56921-90E9-4FBA-B2E3-7B46A1591CBE} = {E4C183CF-4AFB-4E65-B378-6DFA099099E8}
+		{DD4D3809-C6C7-4624-8ABB-EF55D373D075} = {4676EC9A-D357-4F39-8E14-49787DA23D75}
+		{56F56921-90E9-4FBA-B2E3-7B46A1591CBE} = {4676EC9A-D357-4F39-8E14-49787DA23D75}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {AD3B2E40-0248-444D-A81B-CF5870B05454}
