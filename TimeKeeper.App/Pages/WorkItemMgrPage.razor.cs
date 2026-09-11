@@ -245,7 +245,11 @@ namespace TimeKeeper.App.Pages
                 query = query.Where(workItem =>
                     workItem.Title.Contains(
                         searchTerm,
-                        StringComparison.OrdinalIgnoreCase));
+                        StringComparison.OrdinalIgnoreCase) ||
+                    workItem.ActivityNumber.Contains(
+                        searchTerm,
+                        StringComparison.OrdinalIgnoreCase)
+                );
             }
 
             return query;

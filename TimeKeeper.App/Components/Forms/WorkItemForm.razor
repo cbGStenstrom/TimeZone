@@ -44,6 +44,23 @@
 			</RadzenColumn>
 		</RadzenRow>
 
+        @* Activity Numbe *@
+
+        @* Title *@
+        <RadzenRow AlignItems="AlignItems.Center">
+            <RadzenColumn Size="2">
+                <RadzenLabel Text="Activity Number"></RadzenLabel>
+            </RadzenColumn>
+            <RadzenColumn Size="10">
+				<RadzenTextBox Style="width:100%;"
+					@bind-Value="@this.WorkItem.ActivityNumber"
+					Change="@Form_OnChange"
+					MaxLength="50">
+				</RadzenTextBox>
+            </RadzenColumn>
+        </RadzenRow>
+
+
 		@* Title *@
 		<RadzenRow AlignItems="AlignItems.Center">
 			<RadzenColumn Size="2">

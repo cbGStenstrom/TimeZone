@@ -77,6 +77,20 @@
 
             </RadzenDataGridColumn>
 
+            @* Type *@
+            <RadzenDataGridColumn TItem="WorkItem"
+                Property="WorkItemType"
+                Title="Type">
+            </RadzenDataGridColumn>
+
+            @* Activity *@
+            <RadzenDataGridColumn TItem="WorkItem"
+                Title="Activity">
+                <Template Context="workItem">
+                    @workItem.DisplayIdentifier
+                </Template>
+            </RadzenDataGridColumn>
+
             @* Title *@
             <RadzenDataGridColumn TItem="WorkItem"
                 Property="Title"
@@ -133,12 +147,6 @@
 
                 </Template>
 
-            </RadzenDataGridColumn>
-
-            @* Type *@
-            <RadzenDataGridColumn TItem="WorkItem"
-                Property="WorkItemType"
-                Title="Type">
             </RadzenDataGridColumn>
 
             @* Project *@

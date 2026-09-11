@@ -92,6 +92,16 @@ namespace TimeKeeper.App.Components.Forms
                 isValid = false;
             }
 
+            if (string.IsNullOrWhiteSpace(WorkItem?.ActivityNumber))
+            {
+                isValid = false;
+            }
+
+            if (string.IsNullOrWhiteSpace(WorkItem?.Title))
+            {
+                isValid = false;
+            }
+
             if (string.IsNullOrWhiteSpace(WorkItem?.Title))
             {
                 isValid = false;

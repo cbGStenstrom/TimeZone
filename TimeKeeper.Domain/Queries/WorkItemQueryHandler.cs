@@ -69,7 +69,7 @@ namespace TimeKeeper.Domain.Queries
                 }
             }
 
-            List<WorkItem> entities = await query.ToListAsync();
+            List<WorkItem> entities = await query.Include(e => e.Project).ToListAsync();
 
             List<Models.WorkItem> results = new List<Models.WorkItem>();
             foreach(WorkItem entity in entities)
