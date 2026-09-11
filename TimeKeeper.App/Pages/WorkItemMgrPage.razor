@@ -90,7 +90,8 @@
             <RadzenDataGridColumn 
                 TItem="WorkItem"
                 Title="Activity Number"
-                Width="120px">
+                Width="160px"
+                Property="DisplayIdentifier">
                 <Template Context="workItem">
                     @workItem.DisplayIdentifier
                 </Template>
@@ -162,7 +163,8 @@
             <RadzenDataGridColumn 
                 TItem="WorkItem"
                 Title="Project"
-                Width="100px">
+                Width="100px"
+                Property="Project.Key">
                 <Template Context="workItem">
                     @(workItem.Project?.Key ?? "N/A")
                 </Template>
