@@ -24,13 +24,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentat
 		docs\UpgradeGuide.md = docs\UpgradeGuide.md
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Bugs", "Bugs", "{DD4D3809-C6C7-4624-8ABB-EF55D373D075}"
-	ProjectSection(SolutionItems) = preProject
-		docs\Bugs\BUG-002.md = docs\Bugs\BUG-002.md
-		docs\Bugs\Bugs.md = docs\Bugs\Bugs.md
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Features", "Features", "{56F56921-90E9-4FBA-B2E3-7B46A1591CBE}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "features", "features", "{DD4D3809-C6C7-4624-8ABB-EF55D373D075}"
 	ProjectSection(SolutionItems) = preProject
 		docs\Features\Backlog.md = docs\Features\Backlog.md
 		docs\Features\FEAT-001.md = docs\Features\FEAT-001.md
@@ -54,9 +48,15 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Features", "Features", "{56
 		docs\Features\FEAT-200.md = docs\Features\FEAT-200.md
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TechDebt", "TechDebt", "{FE31E48C-F809-44CD-898C-FF14FF7456FD}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tech-debt", "tech-debt", "{56F56921-90E9-4FBA-B2E3-7B46A1591CBE}"
 	ProjectSection(SolutionItems) = preProject
 		docs\TechDebt\TECH-002.md = docs\TechDebt\TECH-002.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "bugs", "bugs", "{FE31E48C-F809-44CD-898C-FF14FF7456FD}"
+	ProjectSection(SolutionItems) = preProject
+		docs\Bugs\BUG-002.md = docs\Bugs\BUG-002.md
+		docs\Bugs\Bugs.md = docs\Bugs\Bugs.md
 	EndProjectSection
 EndProject
 Global
