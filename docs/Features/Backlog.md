@@ -2,11 +2,10 @@
 
 ## In Progress
 
-- FEAT-001 Activity Number Support
+- FEAT-012 Start Work from WorkItem Grid
 
 ## Next
 
-- FEAT-012 Start Work from WorkItem Grid
 - FEAT-013 Daily Standup
 
 ## Completed
@@ -15,6 +14,7 @@
 - TZ-002 IIS Deployment
 - BUG-001 Add Project
 - BUG-002 Complete New WorkItem Manager
+- FEAT-001 Activity Number Support
 
 
 ---
@@ -24,7 +24,7 @@
 
 # FEAT-001 - Activity Number Support
 
-**State:** open
+**State:** closed
 
 **Created by:** @cbGStenstrom
 
@@ -288,12 +288,29 @@ Move from SessionService authentication to ASP.NET authentication.
 
 ----
 
+
+
 User should be able to click on a button on an item in the grid on the **WorkItem Manager** and be able to "Start Work" on it. When doing so it should validate that there is not another workitem already being worked on and prompt the user what to do. 
 
 - "Discard" the current workitem 
 - "Close" the current work item
 - "Cancel" and leave the current workitem active.
 
+Currently the workflow to start work on a workitem from the WorkItem Manager is 
+
+1. The user visits WorkItem Manger
+2. User filters the grid to find a Work Item. 
+3. The user then clicks on the "START WORK" button in the footer.
+4. The Start Time Entry dialog box opens and the user has to select the Workitem from the dialog box.
+5. If there is a WorkItem currently being worked, the "START WORK" button would not be visible, instead an "EDIT WORK" button would be visible.
+
+The new workflow would look like ...
+
+1. The user visits WorkItem Manger
+2. User filters the grid to find a Work Item. ​‌
+3. The user clicks on the WorkItem record ​‌
+4. The Start Time Entry dialog box opens, the selected WorkItem is pre-selected as the WorkItem to start working on.​‌
+5. When the user clicks on the WorkItem to start working on it, it is possible that another workitem is already being worked. We will need to detect this scenario, and prompt the user to determine how he/she wants to handle the currently active workitem. ​
 
 ----
 ----
@@ -389,3 +406,23 @@ Cross-user reporting for Administrators.
 
 ----
 ----
+
+# TECH-002 Consolidate all Start/Edit workflows into TimeEntryEditorComponent.
+
+**State:** open
+
+**Created by:** @cbGStenstrom
+
+**Created at:** 2026-09-12 06:29:05.000 UTC
+
+---
+
+
+TECH-002
+
+- Retire TimeEntryStartWorkComponent- 
+- Retire TimeEntryEndWorkComponent- 
+- Consolidate all Start/Edit workflows into TimeEntryEditorComponent.
+
+---
+---

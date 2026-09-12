@@ -1,6 +1,6 @@
 # FEAT-001 - Activity Number Support
 
-**State:** open
+**State:** Completed
 
 **Created by:** @cbGStenstrom
 

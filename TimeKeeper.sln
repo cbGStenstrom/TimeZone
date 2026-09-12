@@ -54,6 +54,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Features", "Features", "{56
 		docs\Features\FEAT-200.md = docs\Features\FEAT-200.md
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TechDebt", "TechDebt", "{FE31E48C-F809-44CD-898C-FF14FF7456FD}"
+	ProjectSection(SolutionItems) = preProject
+		docs\TechDebt\TECH-002.md = docs\TechDebt\TECH-002.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -86,6 +91,7 @@ Global
 		{4676EC9A-D357-4F39-8E14-49787DA23D75} = {33F804E1-A761-4395-8EBE-E7B590F0F6BF}
 		{DD4D3809-C6C7-4624-8ABB-EF55D373D075} = {4676EC9A-D357-4F39-8E14-49787DA23D75}
 		{56F56921-90E9-4FBA-B2E3-7B46A1591CBE} = {4676EC9A-D357-4F39-8E14-49787DA23D75}
+		{FE31E48C-F809-44CD-898C-FF14FF7456FD} = {4676EC9A-D357-4F39-8E14-49787DA23D75}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {AD3B2E40-0248-444D-A81B-CF5870B05454}
