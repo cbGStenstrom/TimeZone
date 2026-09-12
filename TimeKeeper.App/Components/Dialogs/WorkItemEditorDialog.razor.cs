@@ -48,7 +48,7 @@ public partial class WorkItemEditorDialog : CbComponentBase
     {
         ArgumentNullException.ThrowIfNull(WorkItem);
 
-        if (WorkItemFormRef?.Validate() == false)
+        if (WorkItemFormRef == null || WorkItemFormRef.Validate() == false)
         {
             return;
         }
@@ -77,6 +77,8 @@ public partial class WorkItemEditorDialog : CbComponentBase
 
     void btnCancel_OnClick()
     {
+        // WHAT: Rollback any changes first.
+        this.WorkItemFormRef?.Rollback();
         DialogSvc!.Close(null);
     }
 

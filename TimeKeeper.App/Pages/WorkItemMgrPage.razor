@@ -48,6 +48,7 @@
         AllowSorting="true"
         AllowPaging="false"
         AllowFiltering="false"
+        AllowColumnResize="true"
         Density="Density.Compact">
 
         <Columns>
@@ -57,6 +58,7 @@
                 Width="90px"
                 Sortable="false"
                 Filterable="false"
+                Resizable="false"
                 TextAlign="TextAlign.Center">
 
                 <Template Context="workItem">
@@ -77,8 +79,27 @@
 
             </RadzenDataGridColumn>
 
-            @* Title *@
+            @* Type *@
             <RadzenDataGridColumn TItem="WorkItem"
+                Property="WorkItemType"
+                Title="Type"
+                Width="100px">
+            </RadzenDataGridColumn>
+
+            @* Activity *@
+            <RadzenDataGridColumn 
+                TItem="WorkItem"
+                Title="Activity Number"
+                Width="160px"
+                Property="DisplayIdentifier">
+                <Template Context="workItem">
+                    @workItem.DisplayIdentifier
+                </Template>
+            </RadzenDataGridColumn>
+
+            @* Title *@
+            <RadzenDataGridColumn 
+                TItem="WorkItem"
                 Property="Title"
                 Title="Title">
             </RadzenDataGridColumn>
@@ -87,7 +108,8 @@
             <RadzenDataGridColumn TItem="WorkItem"
                 Property="IsOpen"
                 Width="100px"
-                Title="Open">
+                Title="Open"
+                TextAlign="@TextAlign.Center">
 
                 <Template Context="workItem">
 
@@ -107,7 +129,8 @@
             <RadzenDataGridColumn TItem="WorkItem"
                 Property="IsInReview"
                 Width="100px"
-                Title="Review">
+                Title="Review"
+                TextAlign="@TextAlign.Center">
 
                 <Template Context="workItem">
 
@@ -123,7 +146,8 @@
             <RadzenDataGridColumn TItem="WorkItem"
                 Property="IsBillable"
                 Width="100px"
-                Title="Billable">
+                Title="Billable"
+                TextAlign="@TextAlign.Center">
 
                 <Template Context="workItem">
 
@@ -135,15 +159,12 @@
 
             </RadzenDataGridColumn>
 
-            @* Type *@
-            <RadzenDataGridColumn TItem="WorkItem"
-                Property="WorkItemType"
-                Title="Type">
-            </RadzenDataGridColumn>
-
             @* Project *@
-            <RadzenDataGridColumn TItem="WorkItem"
-                Title="Project">
+            <RadzenDataGridColumn 
+                TItem="WorkItem"
+                Title="Project"
+                Width="100px"
+                Property="Project.Key">
                 <Template Context="workItem">
                     @(workItem.Project?.Key ?? "N/A")
                 </Template>

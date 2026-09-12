@@ -1,0 +1,27 @@
+# Bug/bug 002 workitem manager completion
+
+**State:** closed
+
+**Created by:** @cbGStenstrom
+
+**Created at:** 2026-09-05 01:03:40.000 UTC
+
+----
+
+BUG-002  Prevent deletion of Work Items with Time Entries
+
+- WorkItemMgrPage and WorkItemService now block deletion of Work Items if related Time Entries exist, showing a validation message.
+- Added GetTimeEntryCountForWorkItem to ITimeEntryService and TimeEntryService.
+- WorkItemService now depends on ITimeEntryService.
+- Added extensive XML docs. Updated Backlog.md with FEAT-012 and FEAT-013 specs.
+
+Refactor Work Item Manager page and add editor dialog
+
+- Replaced old WorkItemManagerPage with new WorkItemMgrPage using RadzenDataGrid, improved filtering, and modernized code structure.
+- Added WorkItemEditorDialog for editing/creating work items with validation.
+- Updated navigation, improved code comments, enhanced WorkItemForm validation, and extended WorkItemLookupFilter.
+- Updated .csproj to include new components folder.
+
+----
+----
+

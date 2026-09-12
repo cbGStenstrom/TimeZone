@@ -9,6 +9,24 @@ namespace TimeKeeper.Domain.Models;
 public partial class WorkItem : ModelBase<WorkItem>
 {
     #region properties
+    
+    public string? ActivityNumber { get; set; }
+
+    /// <summary>
+    /// Gets the display identifier.
+    /// </summary>
+    public string DisplayIdentifier
+    {
+        get
+        {
+            string projectKey =
+                Project?.Key ?? string.Empty;
+
+            return string.IsNullOrWhiteSpace(ActivityNumber)
+                ? projectKey
+                : $"{projectKey}-{ActivityNumber}";
+        }
+    }
 
     public bool IsBillable { get; set; }
 
@@ -96,6 +114,7 @@ public partial class WorkItem : ModelBase<WorkItem>
     {
         if (base._snapshot != null)
         {
+            this.ActivityNumber = base._snapshot.ActivityNumber;
             this.CreatedBy = base._snapshot.CreatedBy;
             this.CreatedDate = base._snapshot.CreatedDate;
             this.UpdatedDate = base._snapshot.UpdatedDate;

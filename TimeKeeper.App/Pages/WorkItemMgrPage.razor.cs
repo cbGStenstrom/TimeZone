@@ -231,13 +231,22 @@ namespace TimeKeeper.App.Pages
         ///  matching every filter and the optional title search criterion.</returns>
         IQueryable <WorkItem> GetFilteredQuery()
         {
+            // WHAT: FEAT-001 if no filters or search term are provided, return the unfiltered query.
+            if (string.IsNullOrWhiteSpace(this._searchTerm) && (this._filter.Count == 0))
+            {
+                return this.QueryableWorkItems;
+            }
+
+            // WHAT: FEAT-001 apply all filters and the optional search term to the query.
             IQueryable<WorkItem> query = this.QueryableWorkItems;
 
+            // WHAT: FEAT-001 add all filter expressions to the query.
             foreach (Expression<Func<WorkItem, bool>> filterItem in this._filter)
             {
                 query = query.Where(filterItem);
             }
 
+            // WHAT: FEAT-001 apply the optional search term to the query.
             if (!string.IsNullOrWhiteSpace(this._searchTerm))
             {
                 string searchTerm = this._searchTerm;
@@ -245,7 +254,19 @@ namespace TimeKeeper.App.Pages
                 query = query.Where(workItem =>
                     workItem.Title.Contains(
                         searchTerm,
-                        StringComparison.OrdinalIgnoreCase));
+                        StringComparison.OrdinalIgnoreCase) 
+                    || 
+                    (workItem.ActivityNumber != null &&
+                    workItem.ActivityNumber.Contains(
+                        searchTerm,
+                        StringComparison.OrdinalIgnoreCase))
+                    ||
+                    (workItem.Project != null &&
+                     workItem.Project.Key != null &&
+                     workItem.Project.Key.Contains(
+                         searchTerm,
+                         StringComparison.OrdinalIgnoreCase))
+                );
             }
 
             return query;

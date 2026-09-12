@@ -13,6 +13,7 @@ namespace TimeKeeper.Domain.Utilities.Mappers
         {
             DataAccess.Entities.WorkItem entity = new()
             {
+                ActivityNumber = model.ActivityNumber,
                 CreatedBy = model.CreatedBy,
                 CreatedDate = model.CreatedDate.ConvertLocalToUtc(),
                 Id = model.Id,
@@ -46,6 +47,7 @@ namespace TimeKeeper.Domain.Utilities.Mappers
         /// <param name="entity"></param>
         public static void MapDomainToEntity(this Models.WorkItem model, ref DataAccess.Entities.WorkItem entity)
         {
+            entity.ActivityNumber = model.ActivityNumber;
             entity.CreatedBy = model.CreatedBy;
             entity.CreatedDate = model.CreatedDate.ConvertLocalToUtc();
             entity.UpdatedBy = model.UpdatedBy;
@@ -96,6 +98,7 @@ namespace TimeKeeper.Domain.Utilities.Mappers
         {
             var model = new Models.WorkItem()
             {
+                ActivityNumber = entity.ActivityNumber,
                 CreatedBy = entity.CreatedBy,
                 CreatedDate = entity.CreatedDate.ConvertUtcToLocal(),
                 Id = entity.Id,
@@ -109,6 +112,11 @@ namespace TimeKeeper.Domain.Utilities.Mappers
                 IsBillable = entity.IsBillable,
                 WorkItemType = (WorkItemType)entity.WorkItemType,
             };
+
+            if(entity.Project != null)
+            {
+                model.Project = entity.Project.MapEntityToDomain();
+            }
 
             //if (entity.TimeEntries != null)
             //{

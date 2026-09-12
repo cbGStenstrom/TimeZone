@@ -78,6 +78,11 @@ namespace TimeKeeper.App.Components.Forms
 
         #region public
 
+        public void Rollback()
+        {
+            this.WorkItem?.RevertToSnapshot();
+        }
+
         public bool Validate()
         {
             bool isValid = true;
@@ -92,10 +97,19 @@ namespace TimeKeeper.App.Components.Forms
                 isValid = false;
             }
 
+            if (string.IsNullOrWhiteSpace(WorkItem?.ActivityNumber))
+            {
+                isValid = false;
+            }
+
             if (string.IsNullOrWhiteSpace(WorkItem?.Title))
             {
                 isValid = false;
             }
+
+            this.ShowValidation = !isValid;
+
+            StateHasChanged();
 
             return isValid;
         }
