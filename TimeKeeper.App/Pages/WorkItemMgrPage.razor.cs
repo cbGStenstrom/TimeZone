@@ -1,303 +1,446 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Radzen;
 using System.Linq.Expressions;
+using TimeKeeper.App.Api.Enums;
 using TimeKeeper.App.Components.Dialogs;
 using TimeKeeper.App.Components.Pages;
 using TimeKeeper.Domain.Models;
 
-namespace TimeKeeper.App.Pages
+namespace TimeKeeper.App.Pages;
+
+public partial class WorkItemMgrPage : CbPageBase
 {
-    public partial class WorkItemMgrPage : CbPageBase
+    #region injected services
+    #endregion injected services
+
+    #region properties
+
+    /// <summary>
+    ///  Gets or sets the collection of work items used as the data source.
+    /// </summary>
+    List<WorkItem> DataSource { get; set; } = [];
+
+    /// <summary>
+    ///  Gets the filtered query of work items.
+    /// </summary>
+    IQueryable<WorkItem> FilteredQuery { get { return this.GetFilteredQuery(); } }
+
+    /// <summary>
+    ///  Gets a queryable sequence of work items from the underlying data source.
+    /// </summary>
+    /// <remarks>
+    ///  Provides an <see cref="IQueryable{T}"/> view over <c>DataSource</c> for LINQ query
+    ///  composition.</remarks>
+    IQueryable<WorkItem> QueryableWorkItems => this.DataSource.AsQueryable();
+
+    /// <summary>
+    ///  Gets or sets the time entry editor dialog.  
+    /// </summary>
+    TimeEntryEditorDialog? dlgTimeEntryEditor { get; set; }
+
+    #endregion properties
+
+    #region fields
+
+    /// <summary>
+    ///  Stores predicate expressions used to filter work items.
+    /// </summary>
+    /// <remarks>
+    ///  Contains expression trees that can be consumed by LINQ providers.</remarks>
+    private List<Expression<Func<Domain.Models.WorkItem, bool>>> _filter = [];
+
+    /// <summary>
+    ///  The current search term.
+    /// </summary>
+    private string? _searchTerm;
+
+    #endregion fields
+
+    #region data
+
+    /// <summary>
+    ///  Asynchronously loads filtered work items and assigns them to the data source.
+    /// </summary>
+    /// <remarks>
+    ///  Assigns an empty collection when no work items are returned.</remarks>
+    /// <returns>
+    ///  A task that represents the asynchronous operation.</returns>
+    private async Task InitializeDataSource()
     {
-        #region injected services
-        #endregion injected services
+        List<WorkItem> stageData = await base.WorkItemSvc.GetFilteredWorkItems();
+        this.DataSource = stageData ?? [];
+    }
 
-        #region properties
+    #endregion data
 
-        /// <summary>
-        ///  Gets or sets the collection of work items used as the data source.
-        /// </summary>
-        List<WorkItem> DataSource { get; set; } = [];
+    #region lifecycle
 
-        /// <summary>
-        ///  Gets the filtered query of work items.
-        /// </summary>
-        IQueryable<WorkItem> FilteredQuery { get { return this.GetFilteredQuery(); } }
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        await this.InitializeDataSource();
+    }
 
-        /// <summary>
-        ///  Gets a queryable sequence of work items from the underlying data source.
-        /// </summary>
-        /// <remarks>
-        ///  Provides an <see cref="IQueryable{T}"/> view over <c>DataSource</c> for LINQ query
-        ///  composition.</remarks>
-        IQueryable<WorkItem> QueryableWorkItems => this.DataSource.AsQueryable();
+    #endregion lifecycle
 
-        #endregion properties
+    #region event handlers
 
-        #region fields
+    /// <summary>
+    ///  Attempts to delete a work item after verifying it has no time entries and receiving 
+    ///  user confirmation.
+    /// </summary>
+    /// <remarks>
+    ///  Deletion is blocked when the work item has associated time entries.</remarks>
+    /// <param name="workItem">
+    ///  The work item to delete.</param>
+    /// <returns>
+    ///  A task that represents the asynchronous delete workflow.</returns>
+    async Task btnDeleteWorkItem_OnClick(WorkItem workItem)
+    {
+        // WHAT: FEAT-013 do not allow WorkItems with TimeEntries to be deleted.
+        int entryCount = await TimeEntrySvc.GetTimeEntryCountForWorkItem(workItem.Id);
 
-        /// <summary>
-        ///  Stores predicate expressions used to filter work items.
-        /// </summary>
-        /// <remarks>
-        ///  Contains expression trees that can be consumed by LINQ providers.</remarks>
-        private List<Expression<Func<Domain.Models.WorkItem, bool>>> _filter = [];
-
-        /// <summary>
-        ///  The current search term.
-        /// </summary>
-        private string? _searchTerm;
-
-        #endregion fields
-
-        #region data
-
-        /// <summary>
-        ///  Asynchronously loads filtered work items and assigns them to the data source.
-        /// </summary>
-        /// <remarks>
-        ///  Assigns an empty collection when no work items are returned.</remarks>
-        /// <returns>
-        ///  A task that represents the asynchronous operation.</returns>
-        private async Task InitializeDataSource()
+        if (entryCount > 0)
         {
-            List<WorkItem> stageData = await base.WorkItemSvc.GetFilteredWorkItems();
-            this.DataSource = stageData ?? [];
+            string errMsg = $"'{workItem.Title}' contains {entryCount} time entr" +
+                            $"{(entryCount == 1 ? "y" : "ies")} and cannot be deleted." +
+                            $"Consider archiving or closing the WorkItem instead.";
+            await base.DialogSvc.Alert(errMsg, "Delete Not Allowed");
+            return;
         }
 
-        #endregion data
+        bool? confirmed =
+            await DialogSvc!.Confirm(
+                $"Delete '{workItem.Title}'?",
+                "Delete Work Item",
+                new ConfirmOptions()
+                {
+                    OkButtonText = "Delete",
+                    CancelButtonText = "Cancel"
+                });
 
-        #region lifecycle
-
-        protected override async Task OnInitializedAsync()
+        if (confirmed != true)
         {
-            await base.OnInitializedAsync();
-            await this.InitializeDataSource();
+            return;
         }
 
-        #endregion lifecycle
+        await WorkItemSvc.DeleteWorkItem(workItem.Id);
 
-        #region event handlers
+        await InitializeDataSource();
+    }
 
-        /// <summary>
-        ///  Attempts to delete a work item after verifying it has no time entries and receiving 
-        ///  user confirmation.
-        /// </summary>
-        /// <remarks>
-        ///  Deletion is blocked when the work item has associated time entries.</remarks>
-        /// <param name="workItem">
-        ///  The work item to delete.</param>
-        /// <returns>
-        ///  A task that represents the asynchronous delete workflow.</returns>
-        async Task btnDeleteWorkItem_OnClick(WorkItem workItem)
+    /// <summary>
+    ///  Opens the specified work item in the editor and refreshes the data source if editing 
+    ///  returns an updated item.
+    /// </summary>
+    /// <param name="workItem">
+    ///  The work item to open for editing.</param>
+    /// <returns>
+    ///  A task that completes when the edit operation and any required data source refresh 
+    ///  finish.</returns>
+    async Task btnEditWorkItem_OnClick(WorkItem workItem)
+    {
+        WorkItem? result = await this.OpenWorkItemInEditor(workItem);
+
+        if (result != null)
         {
-            // WHAT: FEAT-013 do not allow WorkItems with TimeEntries to be deleted.
-            int entryCount = await TimeEntrySvc.GetTimeEntryCountForWorkItem(workItem.Id);
-
-            if (entryCount > 0)
-            {
-                string errMsg = $"'{workItem.Title}' contains {entryCount} time entr" +
-                                $"{(entryCount == 1 ? "y" : "ies")} and cannot be deleted." +
-                                $"Consider archiving or closing the WorkItem instead.";
-                await base.DialogSvc.Alert(errMsg, "Delete Not Allowed");
-                return;
-            }
-
-            bool? confirmed =
-                await DialogSvc!.Confirm(
-                    $"Delete '{workItem.Title}'?",
-                    "Delete Work Item",
-                    new ConfirmOptions()
-                    {
-                        OkButtonText = "Delete",
-                        CancelButtonText = "Cancel"
-                    });
-
-            if (confirmed != true)
-            {
-                return;
-            }
-
-            await WorkItemSvc.DeleteWorkItem(workItem.Id);
-
             await InitializeDataSource();
         }
-
-        /// <summary>
-        ///  Opens the specified work item in the editor and refreshes the data source if editing 
-        ///  returns an updated item.
-        /// </summary>
-        /// <param name="workItem">
-        ///  The work item to open for editing.</param>
-        /// <returns>
-        ///  A task that completes when the edit operation and any required data source refresh 
-        ///  finish.</returns>
-        async Task btnEditWorkItem_OnClick(WorkItem workItem)
-        {
-            WorkItem? result = await this.OpenWorkItemInEditor(workItem);
-
-            if (result != null)
-            {
-                await InitializeDataSource();
-            }
-        }
-
-        /// <summary>
-        ///  Handles the click event for creating a new work item.
-        /// </summary>
-        /// <returns>
-        ///  A task that represents the asynchronous operation.</returns>
-        async Task btnNewWorkItem_OnClick()
-        {
-            WorkItem? savedWorkItem = await this.OpenWorkItemInEditor(new WorkItem());
-
-            if (savedWorkItem != null)
-            {
-                await this.InitializeDataSource();
-            }
-        }
-
-        /// <summary>
-        ///  Opens the double-clicked work item in the editor and reloads the data source when changes 
-        ///  are saved.
-        /// </summary>
-        /// <remarks>
-        ///  Throws <see cref="ArgumentNullException"/> when the event data or its work item is null.
-        /// </remarks>
-        /// <param name="rowArgs">
-        ///  Provides row mouse event data for the double-clicked row, including the associated work 
-        ///  item.</param>
-        /// <returns>
-        ///  A task that represents the asynchronous operation.</returns>
-        async Task GridRow_OnDoubleClick(DataGridRowMouseEventArgs<WorkItem> rowArgs)
-        {
-            ArgumentNullException.ThrowIfNull(rowArgs?.Data);
-
-            WorkItem workItem = rowArgs.Data;
-            WorkItem? savedWorkItem = await this.OpenWorkItemInEditor(workItem);
-
-            if (savedWorkItem != null)
-            {
-                await this.InitializeDataSource();
-            }
-        }
-
-        /// <summary>
-        ///  Updates the current work item filter criteria.
-        /// </summary>
-        /// <param name="filter">
-        ///  The new filter criteria.</param>
-        void OnWorkItemFilterChange(List<Expression<Func<Domain.Models.WorkItem, bool>>>? filter)
-        {
-            this._filter.Clear();
-
-            if (filter is not null)
-            {
-                this._filter.AddRange(filter);
-            }
-        }
-
-        /// <summary>
-        ///  Clears all work item filter criteria and resets the search term.
-        /// </summary>
-        void OnWorkItemFilterClear()
-        {
-            this._filter.Clear();
-            this._searchTerm = null;
-        }
-
-        /// <summary>
-        ///  Updates the current search term from the input change event.
-        /// </summary>
-        /// <param name="args">
-        ///  Contains the updated input value.</param>
-        /// <returns>
-        ///  A task that represents the asynchronous operation.</returns>
-        async Task txSearchTerm_OnInput(ChangeEventArgs args)
-        {
-            this._searchTerm = args.Value?.ToString();
-        }
-
-        #endregion event handlers
-
-        #region methods
-
-        /// <summary>
-        ///  Builds a query of work items filtered by all configured predicates and, when provided, 
-        ///  a case-insensitive title search term.
-        /// </summary>
-        /// <returns>
-        ///  An <see cref="IQueryable{T}"/> of <see cref="WorkItem"/> that includes only items 
-        ///  matching every filter and the optional title search criterion.</returns>
-        IQueryable <WorkItem> GetFilteredQuery()
-        {
-            // WHAT: FEAT-001 if no filters or search term are provided, return the unfiltered query.
-            if (string.IsNullOrWhiteSpace(this._searchTerm) && (this._filter.Count == 0))
-            {
-                return this.QueryableWorkItems;
-            }
-
-            // WHAT: FEAT-001 apply all filters and the optional search term to the query.
-            IQueryable<WorkItem> query = this.QueryableWorkItems;
-
-            // WHAT: FEAT-001 add all filter expressions to the query.
-            foreach (Expression<Func<WorkItem, bool>> filterItem in this._filter)
-            {
-                query = query.Where(filterItem);
-            }
-
-            // WHAT: FEAT-001 apply the optional search term to the query.
-            if (!string.IsNullOrWhiteSpace(this._searchTerm))
-            {
-                string searchTerm = this._searchTerm;
-
-                query = query.Where(workItem =>
-                    workItem.Title.Contains(
-                        searchTerm,
-                        StringComparison.OrdinalIgnoreCase) 
-                    || 
-                    (workItem.ActivityNumber != null &&
-                    workItem.ActivityNumber.Contains(
-                        searchTerm,
-                        StringComparison.OrdinalIgnoreCase))
-                    ||
-                    (workItem.Project != null &&
-                     workItem.Project.Key != null &&
-                     workItem.Project.Key.Contains(
-                         searchTerm,
-                         StringComparison.OrdinalIgnoreCase))
-                );
-            }
-
-            return query;
-        }
-
-        /// <summary>
-        ///  Opens the work item editor dialog for the specified work item.
-        /// </summary>
-        /// <param name="workItem">
-        ///  The work item to create or edit.</param>
-        /// <returns>
-        ///  A task that represents the asynchronous operation. The task result contains the saved 
-        ///  work item, or <see langword="null"/> if the dialog is canceled.</returns>
-        async Task<WorkItem?> OpenWorkItemInEditor(WorkItem workItem)
-        {
-            string dialogTitle = workItem.IsNew ? "New Work Item" : $"Edit Work Item: {workItem.Title}";
-
-            Dictionary<string, object> parameters = new() { { "WorkItem", workItem } };
-
-            DialogOptions dlgOptions = new DialogOptions()
-            {
-                Width = "900px",
-                Resizable = true,
-                Draggable = true
-            };
-
-            WorkItem? savedWorkItem = await DialogSvc!.OpenAsync<WorkItemEditorDialog>(dialogTitle, parameters, dlgOptions);
-
-            return savedWorkItem;
-        }
-
-        #endregion methods
     }
+
+    /// <summary>
+    ///  Handles the click event for creating a new work item.
+    /// </summary>
+    /// <returns>
+    ///  A task that represents the asynchronous operation.</returns>
+    async Task btnNewWorkItem_OnClick()
+    {
+        WorkItem? savedWorkItem = await this.OpenWorkItemInEditor(new WorkItem());
+
+        if (savedWorkItem != null)
+        {
+            await this.InitializeDataSource();
+        }
+    }
+
+
+    async Task btnStartWork_OnClick(WorkItem workItem)
+    {
+        TimeEntry? activeEntry =
+            await this.TimeEntrySvc!.GetActiveTimeEntry();
+
+        //
+        // No active work exists.
+        //
+        if (activeEntry == null)
+        {
+            await OpenStartWorkDialog(workItem);
+            return;
+        }
+
+        // WHAT: Open the existing time entry.
+        // WHY: FEAT-012 user is already working on the selected WorkItem, so allow the user to edit
+        //  it.
+        if (activeEntry.WorkItemId == workItem.Id)
+        {
+            await OpenExistingTimeEntry(activeEntry);
+            return;
+        }
+
+        // WHAT: User confirm they want to stop the current work and start the new one.
+        // WHY: FEAT-012 User is working on another item. Allows them to stop the current work and
+        //  start the new one, or continue with the current work.
+        bool? stopCurrent = await DialogSvc!.Confirm(
+                $"Current Activity:\r\n" +
+                $"{activeEntry.WorkItem?.DisplayIdentifier}\r\n\r\n" +
+                $"Selected Activity:\r\n" +
+                $"{workItem.DisplayIdentifier}\r\n\r\n" +
+                $"Stop the current activity and begin the selected one?",
+                "Active Work Detected",
+                new ConfirmOptions()
+                {
+                    OkButtonText = "Stop Current And Start New",
+                    CancelButtonText = "Continue Current Activity"
+                });
+
+        if (stopCurrent != true)
+        {
+            return;
+        }
+
+        await StopActiveTimeEntry(activeEntry);
+
+        if (this.Layout is not null)
+        {
+            await this.Layout.Refresh();
+        }
+
+        await OpenStartWorkDialog(workItem);
+    }
+
+    /// <summary>
+    ///  Opens the double-clicked work item in the editor and reloads the data source when changes 
+    ///  are saved.
+    /// </summary>
+    /// <remarks>
+    ///  Throws <see cref="ArgumentNullException"/> when the event data or its work item is null.
+    /// </remarks>
+    /// <param name="rowArgs">
+    ///  Provides row mouse event data for the double-clicked row, including the associated work 
+    ///  item.</param>
+    /// <returns>
+    ///  A task that represents the asynchronous operation.</returns>
+    async Task GridRow_OnDoubleClick(DataGridRowMouseEventArgs<WorkItem> rowArgs)
+    {
+        ArgumentNullException.ThrowIfNull(rowArgs?.Data);
+
+        WorkItem workItem = rowArgs.Data;
+        WorkItem? savedWorkItem = await this.OpenWorkItemInEditor(workItem);
+
+        if (savedWorkItem != null)
+        {
+            await this.InitializeDataSource();
+        }
+    }
+
+    /// <summary>
+    ///  Updates the current work item filter criteria.
+    /// </summary>
+    /// <param name="filter">
+    ///  The new filter criteria.</param>
+    void OnWorkItemFilterChange(List<Expression<Func<Domain.Models.WorkItem, bool>>>? filter)
+    {
+        this._filter.Clear();
+
+        if (filter is not null)
+        {
+            this._filter.AddRange(filter);
+        }
+    }
+
+    /// <summary>
+    ///  Clears all work item filter criteria and resets the search term.
+    /// </summary>
+    void OnWorkItemFilterClear()
+    {
+        this._filter.Clear();
+        this._searchTerm = null;
+    }
+
+    /// <summary>
+    ///  Handles creation of a time entry by reinitializing the data source and requesting a UI 
+    ///  refresh.
+    /// </summary>
+    /// <param name="entry">
+    ///  The newly created time entry.</param>
+    /// <returns>
+    ///  A task that represents the asynchronous refresh operation after a time entry is created.
+    /// </returns>
+    async Task TimeEntry_OnCreated(TimeEntry entry)
+    {
+        await InitializeDataSource();
+
+        if (this.Layout is not null)
+        {
+            await this.Layout.Refresh();
+        }
+
+        StateHasChanged();
+    }
+
+    /// <summary>
+    ///  Updates the current search term from the input change event.
+    /// </summary>
+    /// <param name="args">
+    ///  Contains the updated input value.</param>
+    /// <returns>
+    ///  A task that represents the asynchronous operation.</returns>
+    async Task txSearchTerm_OnInput(ChangeEventArgs args)
+    {
+        this._searchTerm = args.Value?.ToString();
+    }
+
+    #endregion event handlers
+
+    #region methods
+
+    /// <summary>
+    ///  Builds a query of work items filtered by all configured predicates and, when provided, 
+    ///  a case-insensitive title search term.
+    /// </summary>
+    /// <returns>
+    ///  An <see cref="IQueryable{T}"/> of <see cref="WorkItem"/> that includes only items 
+    ///  matching every filter and the optional title search criterion.</returns>
+    IQueryable <WorkItem> GetFilteredQuery()
+    {
+        // WHAT: FEAT-001 if no filters or search term are provided, return the unfiltered query.
+        if (string.IsNullOrWhiteSpace(this._searchTerm) && (this._filter.Count == 0))
+        {
+            return this.QueryableWorkItems;
+        }
+
+        // WHAT: FEAT-001 apply all filters and the optional search term to the query.
+        IQueryable<WorkItem> query = this.QueryableWorkItems;
+
+        // WHAT: FEAT-001 add all filter expressions to the query.
+        foreach (Expression<Func<WorkItem, bool>> filterItem in this._filter)
+        {
+            query = query.Where(filterItem);
+        }
+
+        // WHAT: FEAT-001 apply the optional search term to the query.
+        if (!string.IsNullOrWhiteSpace(this._searchTerm))
+        {
+            string searchTerm = this._searchTerm;
+
+            query = query.Where(workItem =>
+                workItem.Title.Contains(
+                    searchTerm,
+                    StringComparison.OrdinalIgnoreCase) 
+                || 
+                (workItem.ActivityNumber != null &&
+                workItem.ActivityNumber.Contains(
+                    searchTerm,
+                    StringComparison.OrdinalIgnoreCase))
+                ||
+                (workItem.Project != null &&
+                 workItem.Project.Key != null &&
+                 workItem.Project.Key.Contains(
+                     searchTerm,
+                     StringComparison.OrdinalIgnoreCase))
+            );
+        }
+
+        return query;
+    }
+
+    /// <summary>
+    ///  Opens the time entry editor for an existing time entry and initializes the edit callback.   
+    /// </summary>
+    /// <param name="activeEntry">
+    ///  The existing time entry to open for editing.</param>
+    /// <returns>
+    ///  A task that represents the asynchronous operation.</returns>
+    async Task OpenExistingTimeEntry(TimeEntry activeEntry)
+    {
+        if (dlgTimeEntryEditor == null)
+        {
+            return;
+        }
+
+        var callback = EventCallback.Factory.Create<TimeEntry>(this, TimeEntry_OnCreated);
+
+        await dlgTimeEntryEditor.Open(
+            activeEntry,
+            $"Edit Work - {activeEntry.WorkItem?.DisplayIdentifier}",
+            callback,
+            TimeEntrySaveActions.ContinueLater);
+    }
+
+    /// <summary>
+    /// Opens the time entry editor to start work on the specified work item.
+    /// </summary>
+    /// <param name="workItem">The work item to associate with the new start-work time entry.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    async Task OpenStartWorkDialog(WorkItem workItem)
+    {
+        if (dlgTimeEntryEditor == null)
+        {
+            return;
+        }
+
+        TimeEntry model = new()
+        {
+            LaborerId = this.SessionService!.User!.Id,
+            WorkItemId = workItem.Id,
+            WorkItem = workItem,
+            StartWork = DateTime.Now
+        };
+
+        var callback = EventCallback.Factory.Create<TimeEntry>(this, TimeEntry_OnCreated);
+
+        await dlgTimeEntryEditor.Open(model, $"Start Work - {workItem.DisplayIdentifier}", callback, TimeEntrySaveActions.StartWork);
+    }
+
+    /// <summary>
+    ///  Opens the work item editor dialog for the specified work item.
+    /// </summary>
+    /// <param name="workItem">
+    ///  The work item to create or edit.</param>
+    /// <returns>
+    ///  A task that represents the asynchronous operation. The task result contains the saved 
+    ///  work item, or <see langword="null"/> if the dialog is canceled.</returns>
+    async Task<WorkItem?> OpenWorkItemInEditor(WorkItem workItem)
+    {
+        string dialogTitle = workItem.IsNew ? "New Work Item" : $"Edit Work Item: {workItem.Title}";
+
+        Dictionary<string, object> parameters = new() { { "WorkItem", workItem } };
+
+        DialogOptions dlgOptions = new DialogOptions()
+        {
+            Width = "900px",
+            Resizable = true,
+            Draggable = true
+        };
+
+        WorkItem? savedWorkItem = await DialogSvc!.OpenAsync<WorkItemEditorDialog>(dialogTitle, parameters, dlgOptions);
+
+        return savedWorkItem;
+    }
+
+    /// <summary>
+    ///  Sets the end time of the active time entry to the current local time and persists the update 
+    ///  for the current user.
+    /// </summary>
+    /// <param name="activeEntry">
+    ///  The active time entry to stop and update.</param>
+    /// <returns>
+    ///  A task that represents the asynchronous operation.</returns>
+    async Task StopActiveTimeEntry(TimeEntry activeEntry)
+    {
+        activeEntry.EndWork = DateTime.Now;
+        await this.TimeEntrySvc!.UpdateTimeEntry(activeEntry, this.SessionService!.User!);
+    }
+
+    #endregion methods
 }

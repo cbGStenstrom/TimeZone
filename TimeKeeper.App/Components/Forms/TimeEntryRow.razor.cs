@@ -230,7 +230,7 @@ namespace TimeKeeper.App.Components.Forms
         string GetWorkItemTitle(int workitemId)
         {
             var workItem = this.WorkItems.FirstOrDefault(e=>e.Id == workitemId);
-            return workItem?.Title ?? string.Empty;
+            return $"{workItem?.DisplayIdentifier} {workItem?.Title}";
         }
 
         #endregion private

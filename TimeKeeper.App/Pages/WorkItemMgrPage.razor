@@ -55,13 +55,19 @@
 
             @* Actions *@
             <RadzenDataGridColumn TItem="WorkItem"
-                Width="90px"
+                Width="125px"
                 Sortable="false"
                 Filterable="false"
                 Resizable="false"
                 TextAlign="TextAlign.Center">
 
                 <Template Context="workItem">
+
+                    <RadzenButton Icon="play_arrow"
+                        Variant="Variant.Text"
+                        ButtonStyle="ButtonStyle.Success"
+                        Size="ButtonSize.Small"
+                        Click="@(() => btnStartWork_OnClick(workItem))" />
 
                     <RadzenButton Icon="edit"
                         Variant="Variant.Text"
@@ -177,5 +183,4 @@
 
 </div>
 
-
-
+<TimeEntryEditorDialog @ref="@this.dlgTimeEntryEditor" />

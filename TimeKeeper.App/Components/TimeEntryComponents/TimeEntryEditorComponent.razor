@@ -7,14 +7,15 @@
     {
         <RadzenStack Orientation="Orientation.Horizontal" Gap=".5rem" AlignItems="AlignItems.Center">
 
-            @if(this.LoadedTimeEntry.WorkItem != null)
+            @if (this.LoadedTimeEntry.WorkItem != null)
             {
                 <RadzenButton 
-                    Icon="edit_note" 
-                    Variant="@Variant.Text" 
+                    Icon="edit_note"
+                    Variant="@Variant.Text"
                     Click="OnSelectWorkItemClick">
                 </RadzenButton>
-                <h4 style="margin-bottom: 0;">@(this.LoadedTimeEntry.WorkItem?.Title ?? "Select a Workitem")</h4>
+
+                <h4>@($"{this.LoadedTimeEntry.WorkItem.DisplayIdentifier} {this.LoadedTimeEntry.WorkItem.Title}")</h4>
             }
             else
             {
