@@ -19,12 +19,8 @@ public partial class WorkItem : ModelBase<WorkItem>
     {
         get
         {
-            string projectKey =
-                Project?.Key ?? string.Empty;
-
-            return string.IsNullOrWhiteSpace(ActivityNumber)
-                ? projectKey
-                : $"{projectKey}-{ActivityNumber}";
+            string projectKey = Project?.Key ?? "##";
+            return string.IsNullOrWhiteSpace(ActivityNumber) ? projectKey : $"{projectKey}-{ActivityNumber}";
         }
     }
 

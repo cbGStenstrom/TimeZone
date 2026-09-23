@@ -32,10 +32,14 @@ namespace TimeKeeper.Domain.Queries
         /// <returns></returns>
         public async Task<Models.WorkItem?> Handle(GetWorkitemById request, CancellationToken cancellationToken)
         {
-            WorkItem? entity = await this._dbCtx.WorkItems.Include(e=>e.TimeEntries).FirstOrDefaultAsync(e => e.Id == request.itemID, cancellationToken);
+            WorkItem? entity = await this._dbCtx.WorkItems
+                                         .Include(e=>e.Project)
+                                         .Include(e=>e.TimeEntries)
+                                         .FirstOrDefaultAsync(e => e.Id == request.itemID, cancellationToken);
+
             Models.WorkItem? result = entity?.MapEntityToDomain();
 
-            if (entity?.TimeEntries != null)
+            if (entity?.TimeEntries is not null && result is not null)
             {
                 result.TimeEntries = new List<Models.TimeEntry>();
                 foreach (DataAccess.Entities.TimeEntry entry in entity.TimeEntries)

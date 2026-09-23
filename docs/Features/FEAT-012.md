@@ -8,8 +8,14 @@
 
 ----
 
+## Technical Approach
+- Use existing TimeEntryEditorDialog
+- Use existing TimeEntryEditorComponent
+- Pre-populate WorkItem
+- Do not use TimeEntryStartWorkComponent
 
 
+## Description
 User should be able to click on a button on an item in the grid on the **WorkItem Manager** and be able to "Start Work" on it. When doing so it should validate that there is not another workitem already being worked on and prompt the user what to do. 
 
 - "Discard" the current workitem 

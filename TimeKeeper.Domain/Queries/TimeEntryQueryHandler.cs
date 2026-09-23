@@ -54,7 +54,8 @@ public class TimeEntryQueryHandler(TimeKeeperDbContext dbCtx) :
     /// <returns></returns>
     public async Task<IEnumerable<Models.TimeEntry>> Handle(GetFilteredTimeEntries request, CancellationToken cancellationToken = default)
     {
-        var query = this._dbCtx.TimeEntries.Include(entry => entry.WorkItem) as IQueryable<DataAccess.Entities.TimeEntry>;
+        var query = this._dbCtx.TimeEntries.Include(entry => entry.WorkItem) 
+                                           .ThenInclude(workitem => workitem.Project) as IQueryable<DataAccess.Entities.TimeEntry>;
 
         if (request.Filter != null)
         {
@@ -94,7 +95,9 @@ public class TimeEntryQueryHandler(TimeKeeperDbContext dbCtx) :
     /// </returns>
     public async Task<Models.TimeEntry> Handle(GetTimeEntryById request, CancellationToken cancellationToken = default)
     {
-        var query = this._dbCtx.TimeEntries.Include(entry => entry.WorkItem).Where(e=>e.Id == request.TimeEntryId) as IQueryable<DataAccess.Entities.TimeEntry>;
+        var query = this._dbCtx.TimeEntries.Include(entry => entry.WorkItem)
+                                           .ThenInclude(workitem => workitem.Project) 
+                                           .Where(e=>e.Id == request.TimeEntryId) as IQueryable<DataAccess.Entities.TimeEntry>;
 
         var dd = query.ToList();
         DataAccess.Entities.TimeEntry? entity = await query.FirstOrDefaultAsync(cancellationToken);
@@ -120,7 +123,8 @@ public class TimeEntryQueryHandler(TimeKeeperDbContext dbCtx) :
     public async Task<Models.TimeEntry?> Handle(GetActiveTimeEntry request, CancellationToken cancellationToken = default)
     {
         var query = this._dbCtx.TimeEntries.Include(entry => entry.WorkItem)
-                                            .Where(e => !e.EndWork.HasValue ) as IQueryable<DataAccess.Entities.TimeEntry>;
+                                           .ThenInclude(workitem => workitem.Project)
+                                           .Where(e => !e.EndWork.HasValue ) as IQueryable<DataAccess.Entities.TimeEntry>;
 
         DataAccess.Entities.TimeEntry? entity = await query.FirstOrDefaultAsync(cancellationToken);
         Models.TimeEntry? result = entity?.MapEntityToDomain();

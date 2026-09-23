@@ -224,6 +224,17 @@ public partial class TimeEntryEditorComponent : CbComponentBase
     #endregion data
 
     #region lifecycle
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (LoadedTimeEntry != null && LoadedTimeEntry.WorkItem != null && LoadedTimeEntry.WorkItemId == 0)
+        {
+            LoadedTimeEntry.WorkItemId = LoadedTimeEntry.WorkItem.Id;
+        }
+
+        await base.OnParametersSetAsync();
+    }
+
     #endregion lifecycle
 
     #region event handlers
