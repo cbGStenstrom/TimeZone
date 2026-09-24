@@ -157,6 +157,16 @@ public partial class AppLayout : LayoutComponentBase
         this.SessionSvc?.Logout();
         this.CheckForLogin();
     }
+    
+    /// <summary>
+    ///  Navigates to the "/MyDay" route.    
+    /// </summary>
+    /// <remarks>
+    ///  No navigation occurs when the navigation manager is unavailable.</remarks>
+    void lnkMyDay_OnClick()
+    {
+        this.NavigationMgr?.NavigateTo("/MyDay");
+    }
 
     /// <summary>
     /// Handles the click event of the Projects button on the sidemenu.

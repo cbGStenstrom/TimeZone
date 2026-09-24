@@ -1,0 +1,29 @@
+﻿<RadzenCard>
+
+    <h4>
+        Yesterday's Accomplishments
+    </h4>
+
+    @if (TimeEntries.Any())
+    {
+        @foreach (var entry in TimeEntries)
+        {
+            <RadzenCard Style="margin-bottom:.5rem;">
+
+                <div>
+                    <strong>@entry.WorkItem?.DisplayIdentifier</strong>
+                </div>
+                <div>@entry.WorkItem?.Title</div>
+                <div style="margin-top:.5rem;">@entry.Accomplishment</div>
+
+            </RadzenCard>
+        }
+    }
+    else
+    {
+        <div>
+            No work recorded yesterday.
+        </div>
+    }
+
+</RadzenCard>

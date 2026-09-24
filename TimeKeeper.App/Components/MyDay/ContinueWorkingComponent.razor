@@ -1,0 +1,45 @@
+﻿@using TimeKeeper.App.Models
+
+<RadzenCard>
+
+    <RadzenText TextStyle="TextStyle.H5">
+        Continue Working
+    </RadzenText>
+
+    <RadzenStack Orientation="Orientation.Vertical"
+        Gap=".5rem"
+        Style="margin-top:1rem;">
+
+        @foreach (var activity in Activities)
+        {
+            <RadzenCard Variant="Variant.Flat">
+
+                <RadzenRow AlignItems="AlignItems.Center"
+                    JustifyContent="JustifyContent.SpaceBetween">
+
+                    <RadzenStack Orientation="Orientation.Vertical"
+                        Gap=".25rem">
+
+                        <RadzenText TextStyle="TextStyle.Subtitle1">
+                            @activity.ActivityIdentifier
+                        </RadzenText>
+
+                        <RadzenText TextStyle="TextStyle.Body2">
+                            @activity.ActivityTitle
+                        </RadzenText>
+
+                    </RadzenStack>
+
+                    <RadzenButton Text="Resume Work"
+                        Icon="play_arrow"
+                        ButtonStyle="ButtonStyle.Success"
+                        Click="@(() => ResumeWork_Click(activity))" />
+
+                </RadzenRow>
+
+            </RadzenCard>
+        }
+
+    </RadzenStack>
+
+</RadzenCard>

@@ -1,42 +1,163 @@
-# FEAT-012 Start Work from WorkItem/Activitiy grid
+# FEAT-012 - Start Work from WorkItem Grid
 
-**State:** open
+**Status**: Closed
 
-**Created by:** @cbGStenstrom
-
-**Created at:** 2026-09-11 13:45:06.000 UTC
-
-----
-
-## Technical Approach
-- Use existing TimeEntryEditorDialog
-- Use existing TimeEntryEditorComponent
-- Pre-populate WorkItem
-- Do not use TimeEntryStartWorkComponent
+**Completed**: 2026-09-23
 
 
-## Description
-User should be able to click on a button on an item in the grid on the **WorkItem Manager** and be able to "Start Work" on it. When doing so it should validate that there is not another workitem already being worked on and prompt the user what to do. 
+## Summary
 
-- "Discard" the current workitem 
-- "Close" the current work item
-- "Cancel" and leave the current workitem active.
+Implemented the ability to start work directly from the Work Item Manager without requiring the user to manually select the WorkItem from the Start Time Entry dialog.
 
-Currently the workflow to start work on a workitem from the WorkItem Manager is 
+The new workflow significantly reduces the number of clicks required to begin work and makes the WorkItem Manager the primary entry point for daily activity tracking.
 
-1. The user visits WorkItem Manger
-2. User filters the grid to find a Work Item. 
-3. The user then clicks on the "START WORK" button in the footer.
-4. The Start Time Entry dialog box opens and the user has to select the Workitem from the dialog box.
-5. If there is a WorkItem currently being worked, the "START WORK" button would not be visible, instead an "EDIT WORK" button would be visible.
+### Changes Implemented
+#### WorkItem Manager Enhancements
 
-The new workflow would look like ...
+Added a **Start Work** action to the WorkItem Manager grid.
 
-1. The user visits WorkItem Manger
-2. User filters the grid to find a Work Item. ​‌
-3. The user clicks on the WorkItem record ​‌
-4. The Start Time Entry dialog box opens, the selected WorkItem is pre-selected as the WorkItem to start working on.​‌
-5. When the user clicks on the WorkItem to start working on it, it is possible that another workitem is already being worked. We will need to detect this scenario, and prompt the user to determine how he/she wants to handle the currently active workitem. ​
+New Actions Column:
+```
+▶ Start Work
+✏ Edit Work Item
+🗑 Delete Work Item
+```
 
-----
-----
+Users can now initiate work directly from the selected WorkItem.
+
+---
+
+#### Time Entry Workflow Integration
+
+Refactored the workflow to reuse the existing:
+
+```
+TimeEntryEditorDialog
+TimeEntryEditorComponent
+```
+
+instead of introducing a separate start-work experience.
+
+Benefits:
+
+- Consistent user experience
+- Single editing workflow
+- Reduced code duplication
+- Improved maintainability
+---
+
+#### Automatic WorkItem Selection
+
+When starting work from the WorkItem grid:
+
+```
+WorkItem Manager
+    ↓
+Click ▶
+    ↓
+Time Entry Editor Opens
+    ↓
+Selected WorkItem Pre-Populated
+```
+
+The user no longer needs to select the WorkItem from within the editor.
+
+---
+
+#### Active Time Entry Conflict Detection
+
+Implemented validation to prevent multiple concurrent active TimeEntries.
+
+#### No Active Time Entry
+
+``` 
+Start Work 
+```
+opens normally.
+
+#### Active Entry For Same WorkItem
+
+```
+▶ Same WorkItem
+```
+
+opens the existing active TimeEntry for editing.
+
+No duplicate TimeEntry is created.
+
+
+#### Active Entry For Different WorkItem
+
+User is prompted:
+```
+Current Activity:
+    <Current Activity>
+ 
+Selected Activity:
+    <Selected Activity>
+ 
+[ Stop Current And Start New ]
+[ Continue Current Activity ]
+```
+This ensures only one active TimeEntry exists at any given time.
+
+### Benefits
+- Reduced clicks when beginning work.
+- Improved daily workflow efficiency.
+- Prevented duplicate active TimeEntries.
+- Improved integration between Activity Management and Time Tracking.
+- Established a unified TimeEntry editing experience.
+- Improved overall usability of the WorkItem Manager.
+
+
+### Technical Notes
+#### New Behavior
+```
+▶ Same Activity
+    → Open Existing Active Entry
+ 
+▶ Different Activity
+    → Prompt User
+ 
+▶ No Active Activity
+    → Start New Entry
+```
+
+### Architectural Direction
+
+This feature further establishes:
+
+```
+TimeEntryEditorDialog
+TimeEntryEditorComponent
+```
+
+as the preferred workflow for creating and maintaining TimeEntries.
+
+Future technical debt item:
+
+```
+TECH-002
+Evaluate retirement of:
+ 
+- TimeEntryStartWorkComponent
+- TimeEntryEndWorkComponent
+ 
+and standardize all TimeEntry workflows through
+TimeEntryEditorComponent.
+ 
+```
+
+### Acceptance Criteria
+
+| Requirement	 | Status |
+|:---------|:---------|
+| Start Work available from WorkItem Manager	   | ✅   |
+| WorkItem pre-selected	| ✅ |
+| User may enter accomplishments when starting work |	✅|
+| Existing Time Entry Editor reused	| ✅| 
+| Active TimeEntry conflicts detected	| ✅| 
+| Same WorkItem opens existing TimeEntry | ✅| 
+| Different WorkItem prompts user	| ✅| 
+| Duplicate active TimeEntries prevented	| ✅| 
+| Workflow fully tested	| ✅| 
