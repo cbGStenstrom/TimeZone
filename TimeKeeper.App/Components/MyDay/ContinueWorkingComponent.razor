@@ -2,42 +2,33 @@
 
 <RadzenCard>
 
-    <RadzenText TextStyle="TextStyle.H5">
+    <RadzenText TextStyle="TextStyle.H5" Style="margin-bottom:2rem;">
         Continue Working
     </RadzenText>
-
-    <RadzenStack Orientation="Orientation.Vertical"
-        Gap=".5rem"
-        Style="margin-top:1rem;">
+    <RadzenStack Orientation="Orientation.Vertical" Gap=".5rem">
 
         @foreach (var activity in Activities)
         {
-            <RadzenCard Variant="Variant.Flat">
+            <RadzenStack Orientation="@Orientation.Horizontal" Gap="1rem" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
 
-                <RadzenRow AlignItems="AlignItems.Center"
-                    JustifyContent="JustifyContent.SpaceBetween">
-
-                    <RadzenStack Orientation="Orientation.Vertical"
-                        Gap=".25rem">
-
-                        <RadzenText TextStyle="TextStyle.Subtitle1">
-                            @activity.ActivityIdentifier
-                        </RadzenText>
-
-                        <RadzenText TextStyle="TextStyle.Body2">
-                            @activity.ActivityTitle
-                        </RadzenText>
-
-                    </RadzenStack>
-
-                    <RadzenButton Text="Resume Work"
-                        Icon="play_arrow"
+                <RadzenStack Orientation="@Orientation.Horizontal" Gap="1rem" AlignItems="@AlignItems.Center">
+                    <RadzenButton Icon="play_arrow"
+                        Variant="Variant.Text"
                         ButtonStyle="ButtonStyle.Success"
+                        Size="ButtonSize.Small"
                         Click="@(() => ResumeWork_Click(activity))" />
 
-                </RadzenRow>
+                    <div>@($"{activity.ActivityIdentifier} {activity.ActivityTitle}")</div>
+                </RadzenStack>
 
-            </RadzenCard>
+                <RadzenStack Orientation="@Orientation.Horizontal" Gap="1rem" AlignItems="@AlignItems.Center" JustifyContent="JustifyContent.Start">
+                    <label>Last: </label>
+                    <div style="font-size:.85rem; color:var(--rz-text-secondary-color); white-space:nowrap;min-width:6rem;">
+                        @activity.LastWorkedDisplay
+                    </div>
+                </RadzenStack>
+
+            </RadzenStack>
         }
 
     </RadzenStack>

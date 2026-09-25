@@ -108,7 +108,12 @@ public partial class MyDayPage : CbPageBase
         // WHAT: Refresh yesterday's activities
         // WHY: Because the user may have edited an entry from yesterday, and we want to reflect
         //  that change in the summary.
-        await LoadYesterdayEntries();
+        await this.LoadYesterdayEntries();
+
+        // WHAT: Refresh recent activities 
+        // WHY: Because the user may have edited an entry from the last seven days, and we want to
+        //  reflect that change in the summary.
+        await this.LoadRecentActivities();
         StateHasChanged();
     }
 

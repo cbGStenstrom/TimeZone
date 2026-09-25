@@ -1,6 +1,9 @@
 ﻿@using TimeKeeper.App.Components.Dialogs
 @inherits CbComponentBase
 
+@{
+    var activeTimeEntry = this.ActiveTimeEntry;
+}
 
 <RadzenStack 
     Orientation="@this.StatusOrientation"
@@ -8,7 +11,7 @@
     AlignItems="@this.StatusAlignItems"
     JustifyContent="@JustifyContent.Start">
 
-    @if (this.ActiveTimeEntry != null)
+    @if (activeTimeEntry != null)
     {
         <div class="cb-button" @onclick="@(async () => { await btnEndWork_OnClick(); })">Edit Work</div>
 
@@ -19,12 +22,12 @@
 
         <RadzenStack Orientation="@Orientation.Horizontal" Gap=".25rem" AlignItems="@AlignItems.Center" class="cb-label-message">
             <label>Workitem:</label>
-            <span class="cb-message">@($"{this.ActiveTimeEntry.WorkItem?.DisplayIdentifier} {this.ActiveTimeEntry.WorkItem?.Title}")</span>
+            <span class="cb-message">@($"{activeTimeEntry.WorkItem?.DisplayIdentifier} {activeTimeEntry.WorkItem?.Title}")</span>
         </RadzenStack>
 
         <RadzenStack Orientation="@Orientation.Horizontal" Gap=".25rem" AlignItems="@AlignItems.Center" class="cb-label-message">
             <label>Start Time:</label>
-            <span class="cb-message">@this.ActiveTimeEntry?.StartWork?.ToString("g")</span>
+            <span class="cb-message">@activeTimeEntry.StartWork?.ToString("g")</span>
         </RadzenStack>
     }
     else

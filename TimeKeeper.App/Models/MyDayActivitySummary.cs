@@ -62,7 +62,35 @@ public class MyDayActivitySummary
     ///  Gets a value indicating whether the associated work item is in review.
     /// </summary>
     public bool IsInReview => WorkItem.IsInReview;
-    
+
+    /// <summary>
+    ///  Gets a user-friendly display string for the date in <c>LastWorked</c> based on how recent it is.
+    /// </summary>
+    public string LastWorkedDisplay
+    {
+        get
+        {
+            DateTime today = DateTime.Today;
+
+            if (LastWorked.Date == today)
+            {
+                return "Today";
+            }
+
+            if (LastWorked.Date == today.AddDays(-1))
+            {
+                return "Yesterday";
+            }
+
+            if (LastWorked.Date > today.AddDays(-7))
+            {
+                return LastWorked.ToString("dddd");
+            }
+
+            return LastWorked.ToString("MMM dd");
+        }
+    }
+
     /// <summary>
     ///  Gets the key of the associated project.
     /// </summary>
@@ -79,4 +107,9 @@ public class MyDayActivitySummary
     public int WorkItemId => WorkItem.Id;
 
     #endregion
+
+    #region public methods
+
+
+    #endregion public methods
 }

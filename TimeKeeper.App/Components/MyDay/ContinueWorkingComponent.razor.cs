@@ -53,8 +53,7 @@ public partial class ContinueWorkingComponent : ComponentBase
     {
         if (OnResumeWorkClicked.HasDelegate)
         {
-            await OnResumeWorkClicked
-                .InvokeAsync(summary);
+            await OnResumeWorkClicked.InvokeAsync(summary);
         }
     }
 
