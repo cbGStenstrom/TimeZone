@@ -5,13 +5,13 @@
     <RadzenText TextStyle="TextStyle.H5" Style="margin-bottom:2rem;">
         Continue Working
     </RadzenText>
-    <RadzenStack Orientation="Orientation.Vertical" Gap=".5rem">
+    <RadzenStack Orientation="Orientation.Vertical" Gap=".15rem">
 
         @foreach (var activity in Activities)
         {
             <RadzenStack Orientation="@Orientation.Horizontal" Gap="1rem" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
 
-                <RadzenStack Orientation="@Orientation.Horizontal" Gap="1rem" AlignItems="@AlignItems.Center">
+                <RadzenStack Orientation="@Orientation.Horizontal" Gap=".3rem" AlignItems="@AlignItems.Center">
                     <RadzenButton Icon="play_arrow"
                         Variant="Variant.Text"
                         ButtonStyle="ButtonStyle.Success"

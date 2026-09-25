@@ -27,12 +27,14 @@
 
                 @foreach (var activity in YesterdayActivities)
                 {
-                    <YesterdayActivitySummaryComponent Summary="@activity"
+                    <YesterdayActivitySummaryComponent 
+                        Summary="@activity"
+                        IsExpanded="@(ExpandedActivity == activity)"
+                        OnExpandClicked="YesterdayActivity_ExpandClicked"
                         OnResumeWorkClicked="ResumeWork_Click"
                         OnViewHistoryClicked="ViewHistory_Click">
                     </YesterdayActivitySummaryComponent>
                 }
-
             </RadzenStack>
         </RadzenStack>
 

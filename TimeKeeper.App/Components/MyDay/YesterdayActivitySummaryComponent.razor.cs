@@ -11,6 +11,12 @@ namespace TimeKeeper.App.Components.MyDay
         #region parameters
 
         /// <summary>
+        ///  Gets or sets a value indicating whether the component is expanded.
+        /// </summary>
+        [Parameter]
+        public bool IsExpanded { get; set; }
+
+        /// <summary>
         ///  Gets or sets the callback invoked when resume work is clicked.
         /// </summary>
         [Parameter]
@@ -36,6 +42,17 @@ namespace TimeKeeper.App.Components.MyDay
         #endregion properties
 
         #region events
+
+        /// <summary>
+        ///  Gets or sets the callback that is invoked when an expand action is clicked for a day 
+        ///  activity summary.  
+        /// </summary>
+        /// <remarks>
+        ///  Exposed as a component parameter so parent components can handle expand interactions.
+        /// </remarks>
+        [Parameter]
+        public EventCallback<MyDayActivitySummary> OnExpandClicked { get; set; }
+
         #endregion events
 
         #region data
@@ -45,6 +62,25 @@ namespace TimeKeeper.App.Components.MyDay
         #endregion lifecycle
 
         #region event handlers
+
+        /// <summary>
+        ///  Invokes the expand-click callback with the current summary when a summary is available 
+        ///  and a handler is assigned.
+        /// </summary>
+        /// <remarks>
+        ///  The callback is invoked only when <c>Summary</c> is not <see langword="null"/> and
+        ///  <c>OnExpandClicked</c> has a delegate.</remarks>
+        /// <returns>
+        ///  A task that represents the asynchronous operation.</returns>
+        private async Task ExpandClicked()
+        {
+            if (Summary != null &&
+                OnExpandClicked.HasDelegate)
+            {
+                await OnExpandClicked.InvokeAsync(
+                    Summary);
+            }
+        }
 
         /// <summary>
         ///  Invokes the resume-work callback with the current summary when a summary is available 

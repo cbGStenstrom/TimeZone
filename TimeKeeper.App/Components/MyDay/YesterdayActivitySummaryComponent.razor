@@ -2,124 +2,75 @@
 
 @if (Summary != null)
 {
-    <RadzenCard class="cb-activity-summary-card">
+    <RadzenCard Style="margin-bottom:.5rem;">
 
-        <RadzenStack Orientation="Orientation.Vertical" Gap="1rem">
+        <!-- Summary Header -->
 
-            @* Header *@
-            <RadzenRow AlignItems="AlignItems.Center"
-                JustifyContent="JustifyContent.SpaceBetween">
+        <div @onclick="ExpandClicked" style="cursor:pointer;">
 
-                <RadzenStack Orientation="Orientation.Vertical" Gap=".25rem">
-@* 
-                    <RadzenText TextStyle="TextStyle.H5"> @Summary.ActivityIdentifier </RadzenText> *@
+            <RadzenRow AlignItems="AlignItems.Center">
 
-                    <RadzenText TextStyle="TextStyle.H5"> @Summary.ActivityTitle </RadzenText>
-
-                </RadzenStack>
-
-                <RadzenStack Orientation="Orientation.Horizontal" Gap=".5rem">
-
-                    @if (Summary.IsBillable)
-                    {
-                        <RadzenBadge Text="Billable" BadgeStyle="BadgeStyle.Success" />
-                    }
-
-                    @if (Summary.IsInReview)
-                    {
-                        <RadzenBadge Text="In Review" BadgeStyle="BadgeStyle.Warning" />
-                    }
-
-                </RadzenStack>
-
-            </RadzenRow>
-
-            @* Summary Row *@
-            <RadzenRow Gap="2rem">
-
-                <RadzenColumn Size="3">
-
-                    <RadzenText TextStyle="TextStyle.Overline">
-                        Time Logged
-                    </RadzenText>
-
-                    <RadzenText TextStyle="TextStyle.H6">
-                        @Summary.TotalHoursWorked.ToString("0.##") hrs
-                    </RadzenText>
-
+                <RadzenColumn Size="1">
+                    <RadzenIcon Icon="@(IsExpanded ? "keyboard_arrow_down" : "keyboard_arrow_right")" />
                 </RadzenColumn>
 
-                <RadzenColumn Size="3">
-
-                    <RadzenText TextStyle="TextStyle.Overline">
-                        Entries
-                    </RadzenText>
-
-                    <RadzenText TextStyle="TextStyle.H6">
-                        @Summary.Entries.Count
-                    </RadzenText>
-
+                <RadzenColumn Size="5">
+                    <RadzenText TextStyle="TextStyle.Subtitle1"Style="font-weight:600;"> @Summary.ActivityIdentifier </RadzenText>
+                    <RadzenText TextStyle="TextStyle.Body2"> @Summary.ActivityTitle </RadzenText>
                 </RadzenColumn>
 
-                <RadzenColumn Size="6">
+                <RadzenColumn Size="2">
+                    <RadzenText TextStyle="TextStyle.Caption"> Time Logged </RadzenText>
+                    <RadzenText> @Summary.TotalHoursWorked.ToString("0.##") hrs </RadzenText>
+                </RadzenColumn>
 
-                    <RadzenText TextStyle="TextStyle.Overline">
-                        Last Worked
-                    </RadzenText>
+                <RadzenColumn Size="2">
+                    <RadzenText TextStyle="TextStyle.Caption"> Entries </RadzenText>
+                    <RadzenText> @Summary.EntryCount </RadzenText>
+                </RadzenColumn>
 
-                    <RadzenText TextStyle="TextStyle.H6">
-                        @Summary.LastWorked.ToString("g")
-                    </RadzenText>
-
+                <RadzenColumn Size="2">
+                    <RadzenText TextStyle="TextStyle.Caption"> Last Worked </RadzenText>
+                    <RadzenText> @Summary.LastWorkedDisplay </RadzenText>
                 </RadzenColumn>
 
             </RadzenRow>
 
-            @* Accomplishments *@
-            <RadzenCard Variant="Variant.Flat">
+        </div>
 
-                <RadzenText TextStyle="TextStyle.Subtitle1">
-                    Accomplishments
-                </RadzenText>
+        @if (IsExpanded)
+        {
+            <hr />
 
-                <RadzenStack Orientation="Orientation.Vertical"
-                    Gap=".75rem"
-                    Style="margin-top:.75rem;">
+            <RadzenStack Orientation="Orientation.Vertical" Gap=".75rem">
 
-                    @foreach (var entry in Summary.Entries)
-                    {
-                        <div class="cb-accomplishment-entry">
+                @foreach (var entry in Summary.Entries)
+                {
+                    <RadzenRow AlignItems="AlignItems.Start">
 
-                            <RadzenRow AlignItems="AlignItems.Start">
+                        <RadzenColumn Size="2">
+                            <RadzenText TextStyle="TextStyle.Caption"> @entry.StartWork?.ToString("h:mm tt") </RadzenText>
+                        </RadzenColumn>
 
-                                <RadzenColumn Size="2">
+                        <RadzenColumn Size="10">
+                            @if (!string.IsNullOrWhiteSpace(entry.Accomplishment))
+                            {
+                                @((MarkupString)entry.Accomplishment)
+                            }
+                            else
+                            {
+                                @("[No Accomplishments Recorded]");
+                            }
+                        </RadzenColumn>
 
-                                    <RadzenText TextStyle="TextStyle.Caption">
-                                        @entry.StartWork?.ToString("h:mm tt")
-                                    </RadzenText>
+                    </RadzenRow>
+                }
 
-                                </RadzenColumn>
+            </RadzenStack>
 
-                                <RadzenColumn Size="10">
+            <hr />
 
-                                    <RadzenText TextStyle="TextStyle.Body2">
-                                        @entry.Accomplishment
-                                    </RadzenText>
-
-                                </RadzenColumn>
-
-                            </RadzenRow>
-
-                        </div>
-                    }
-
-                </RadzenStack>
-
-            </RadzenCard>
-
-            @* Actions *@
-            <RadzenRow JustifyContent="JustifyContent.End"
-                Gap=".5rem">
+            <RadzenRow JustifyContent="JustifyContent.End" Gap=".5rem">
 
                 <RadzenButton Text="Resume Work"
                     Icon="play_arrow"
@@ -132,8 +83,7 @@
                     Click="@ViewHistory_Click" />
 
             </RadzenRow>
-
-        </RadzenStack>
+        }
 
     </RadzenCard>
 }

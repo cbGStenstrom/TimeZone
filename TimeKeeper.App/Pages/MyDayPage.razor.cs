@@ -45,6 +45,11 @@ public partial class MyDayPage : CbPageBase
     TimeEntryEditorDialog? dlgTimeEntryEditor { get; set; }
 
     /// <summary>
+    ///  Gets or sets the activity summary that is currently expanded.
+    /// </summary>
+    private MyDayActivitySummary? ExpandedActivity { get; set; }
+
+    /// <summary>
     ///  Gets or sets the collection of recent activity summaries.
     /// </summary>
     List<MyDayActivitySummary> RecentActivities { get; set; } = [];
@@ -127,6 +132,30 @@ public partial class MyDayPage : CbPageBase
     async Task ViewHistory_Click(MyDayActivitySummary summary)
     {
         NavigationMgr?.NavigateTo($"/WorkItemHistory/{summary.WorkItemId}");
+    }
+
+    /// <summary>
+    ///  Expands or collapses the selected yesterday activity summary and refreshes the component 
+    ///  state.
+    /// </summary>
+    /// <param name="summary">
+    ///  The activity summary to expand or collapse.</param>
+    /// <returns>
+    ///  A completed task.</returns>
+    private Task YesterdayActivity_ExpandClicked(MyDayActivitySummary summary)
+    {
+        if (ExpandedActivity == summary)
+        {
+            ExpandedActivity = null;
+        }
+        else
+        {
+            ExpandedActivity = summary;
+        }
+
+        StateHasChanged();
+
+        return Task.CompletedTask;
     }
 
     #endregion event handlers
