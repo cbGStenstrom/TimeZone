@@ -1,5 +1,6 @@
 ﻿@using TimeKeeper.App.Models
 
+
 @if (Summary != null)
 {
     <RadzenCard Style="margin-bottom:.5rem;">
@@ -55,7 +56,9 @@
                         <RadzenColumn Size="10">
                             @if (!string.IsNullOrWhiteSpace(entry.Accomplishment))
                             {
-                                @((MarkupString)entry.Accomplishment)
+                                <div class="tz-accomplishment-html">
+                                    @((MarkupString)entry.Accomplishment)
+                                </div>
                             }
                             else
                             {
