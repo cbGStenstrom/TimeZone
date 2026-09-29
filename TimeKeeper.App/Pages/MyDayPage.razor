@@ -21,7 +21,10 @@
         <RadzenStack Orientation="Orientation.Vertical" Gap="1rem">
             <CurrentActivityCardComponent ActiveTimeEntry="@ActiveTimeEntry" />
 
-            <ContinueWorkingComponent Activities="@RecentActivities" OnResumeWorkClicked="ResumeWork_Click" />
+            <ContinueWorkingComponent 
+                Activities="@RecentActivities" 
+                OnResumeWorkClicked="ResumeWork_Click">
+            </ContinueWorkingComponent>
 
             <RadzenStack Orientation="Orientation.Vertical" Gap="1rem">
 

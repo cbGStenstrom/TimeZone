@@ -15,8 +15,8 @@
                 </RadzenColumn>
 
                 <RadzenColumn Size="5">
-                    <RadzenText TextStyle="TextStyle.Subtitle1"Style="font-weight:600;"> @Summary.ActivityIdentifier </RadzenText>
-                    <RadzenText TextStyle="TextStyle.Body2"> @Summary.ActivityTitle </RadzenText>
+                    <RadzenText TextStyle="TextStyle.Subtitle1"Style="font-weight:600;"> @($"{Summary.ActivityIdentifier} {Summary.ActivityTitle}") </RadzenText>
+                    <RadzenText TextStyle="TextStyle.Body2"> </RadzenText>
                 </RadzenColumn>
 
                 <RadzenColumn Size="2">
