@@ -5,6 +5,7 @@ using TimeKeeper.App.Components.Dialogs;
 using TimeKeeper.App.Components.Pages;
 using TimeKeeper.App.Models;
 using TimeKeeper.App.Services.Interfaces;
+using TimeKeeper.App.Shared.Layout;
 using TimeKeeper.Domain.Models;
 
 namespace TimeKeeper.App.Pages;
@@ -22,6 +23,13 @@ public partial class MyDayPage : CbPageBase
     public IWorkLauncherService WorkLauncherSvc { get; set; } = default!;
 
     #endregion injected services
+
+    #region parameters
+
+    [CascadingParameter(Name ="Layout")]
+    private AppLayout AppLayout { get; set; } = default!;
+
+    #endregion parameters
 
     #region properties
 
@@ -108,7 +116,7 @@ public partial class MyDayPage : CbPageBase
         // WHAT: Refresh the active time entry.
         // WHY: Because the user may have edited the active time entry, and we want to reflect
         // that change in the summary.
-        this.ActiveTimeEntry = await TimeEntrySvc!.GetActiveTimeEntry();
+        this.ActiveTimeEntry = await TimeEntrySvc.GetActiveTimeEntry();
 
         // WHAT: Refresh yesterday's activities
         // WHY: Because the user may have edited an entry from yesterday, and we want to reflect
@@ -119,7 +127,11 @@ public partial class MyDayPage : CbPageBase
         // WHY: Because the user may have edited an entry from the last seven days, and we want to
         //  reflect that change in the summary.
         await this.LoadRecentActivities();
-        StateHasChanged();
+
+        // WHAT: Refresh the layout and request a UI re-render. This will update the Footer component
+        //  to reflect the current active time entry.
+        await AppLayout.Refresh();
+        //StateHasChanged();
     }
 
     /// <summary>
