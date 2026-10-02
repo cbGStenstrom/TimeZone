@@ -39,7 +39,20 @@ param(
         Mandatory = $true,
         ParameterSetName = "Continue"
     )]
+    [Parameter(Mandatory = $true, ParameterSetName = "ManualPass")]
+    [Parameter(Mandatory = $true, ParameterSetName = "ManualFail")]
     [string]$Run,
+
+    [Parameter(Mandatory = $true, ParameterSetName = "ManualPass")]
+    [switch]$Pass,
+    [Parameter(Mandatory = $true, ParameterSetName = "ManualFail")]
+    [switch]$Fail,
+    [Parameter(ParameterSetName = "ManualPass")]
+    [Parameter(ParameterSetName = "ManualFail")]
+    [string[]]$Scenarios,
+    [Parameter(ParameterSetName = "ManualPass")]
+    [Parameter(ParameterSetName = "ManualFail")]
+    [string]$Notes,
 
     # --------------------------------------------------------
     # New-work mode.
@@ -139,8 +152,11 @@ Set-Location $RepoRoot
 # ------------------------------------------------------------
 
 $IsContinue = ($PSCmdlet.ParameterSetName -eq "Continue")
+$IsManual = $PSCmdlet.ParameterSetName -in @('ManualPass', 'ManualFail')
+$OwnsExecution = $false
+$DirectReview = $false
 
-if ($IsContinue) {
+if ($IsContinue -or $IsManual) {
 
     # Ship run IDs currently use this exact timestamp format.
     # Restricting the value also prevents accidentally pointing
@@ -152,7 +168,7 @@ if ($IsContinue) {
         Write-Host ""
         Write-Host "Expected format:"
         Write-Host "2026-10-02_114200"
-        return
+        exit 1
     }
 
     $RunId   = $Run
@@ -199,6 +215,158 @@ $ReportingTarget = $null
 $ReportingAttempted = $false
 $ReportingEligible = $false
 $ImplementationSummaryFile = Join-Path $RunRoot "implementation-summary.md"
+$ManualFile = Join-Path $RunRoot 'manual-validation.md'
+$CycleFile = Join-Path $RunRoot 'validation-cycle.txt'
+$Cycle = 1
+
+function Save-ValidationCycle {
+    [IO.File]::WriteAllText($CycleFile, [string]$Cycle)
+}
+
+function Save-ReportHistory {
+    param([string]$Path)
+    if (Test-Path -LiteralPath $Path -PathType Leaf) {
+        Copy-Item -LiteralPath $Path -Destination "$Path.history.$([guid]::NewGuid().ToString('N'))" -ErrorAction Stop
+        Remove-Item -LiteralPath $Path -ErrorAction Stop
+    }
+}
+
+function Assert-ManualTesterEvidence {
+    param([string]$Text, [bool]$RequireSuccess)
+    $Lines = @($Text.TrimEnd() -split '\r?\n')
+    if ($Lines[-1].Trim() -ine 'BLOCKED') { throw 'Tester report must conclude standalone BLOCKED.' }
+    $Fence = ''; $FenceLength = 0; $IgnoredDepth = 0; $CurrentSection = $false
+    $Declarations = @(); $Records = @{}
+    foreach ($Raw in $Lines) {
+        $Line = $Raw.Trim()
+        if ($Fence) {
+            if ($Line -match '^(`{3,}|~{3,})\s*$' -and
+                $Matches[1].Substring(0,1) -eq $Fence -and $Matches[1].Length -ge $FenceLength) {
+                $Fence = ''; $FenceLength = 0
+            }
+            continue
+        }
+        if ($Line -match '^(`{3,}|~{3,})') {
+            $Marker = $Matches[1].Substring(0,1)
+            $Fence = $Marker; $FenceLength = $Matches[1].Length
+            continue
+        }
+        if ($Fence -or $Line -match '^(>|["''])') { continue }
+        if ($Line -match '^(#{1,6})\s+(.+)$') {
+            $Depth = $Matches[1].Length; $Heading = $Matches[2]
+            if ($IgnoredDepth -and $Depth -le $IgnoredDepth) { $IgnoredDepth = 0 }
+            if (-not $IgnoredDepth -and $Heading -match '(?i)\b(history|historical|examples?|simulated|simulation)\b') {
+                $IgnoredDepth = $Depth
+            }
+            $CurrentSection = $Heading -ieq 'Current automated results'
+            continue
+        }
+        if ($IgnoredDepth) { continue }
+        if ($Line -match '^(?i:PASS|FAIL|BLOCKED)$') { $Declarations += $Line.ToUpperInvariant(); continue }
+        if (-not $RequireSuccess -or -not $Line) { continue }
+        # Tables use exactly Record | Value; legacy anchored records remain supported.
+        if ($Line -match '^\|\s*([^|]+?)\s*\|\s*([^|]*?)\s*\|$') {
+            $Key = $Matches[1].Trim(); $Value = $Matches[2].Trim()
+            if (($Key -ieq 'Record' -and $Value -ieq 'Value') -or $Key -match '^:?-+:?$') { continue }
+            $Line = "${Key}: $Value"
+        }
+        $Key = ''; $Value = ''; $Valid = $true; $Failure = $false
+        if ($Line -match '^(?i)(Build|Automated tests|Tests|Validation|Result|Check\s+[^:]+):\s*(.*)$') {
+            $Key = $Matches[1]; $Value = $Matches[2].ToUpperInvariant()
+            $Valid = $Value -match '^(PASS|PASSED|FAIL|FAILED|BLOCKED)$'
+            $Failure = $Value -match '^FAIL'
+        } elseif ($Line -match '^(?i)(?:Command\s+(.+?)\s+)?exit code\s*[:=]?\s*(.*)$') {
+            $Key = 'exit code ' + $Matches[1]; $Value = $Matches[2]
+            $Valid = $Value -match '^[+-]?\d+$'; $Failure = $Valid -and $Value -notmatch '^[+-]?0+$'
+        } elseif ($Line -match '^(?i)(?:Passed:\s*\d+,\s*)?Failed(?: tests)?:\s*(.*)$') {
+            $Key = 'failed tests'; $Value = $Matches[1]
+            $Valid = $Value -match '^\d+$'; $Failure = $Valid -and $Value -notmatch '^0+$'
+        } elseif ($Line -match '^(?i)\d+ passed,\s*(.*?) failed$') {
+            $Key = 'failed tests'; $Value = $Matches[1]
+            $Valid = $Value -match '^\d+$'; $Failure = $Valid -and $Value -notmatch '^0+$'
+        } elseif ($Line -match '^(?i)Demonstrated defect:\s*(.*)$') {
+            $Key = 'demonstrated defect'; $Value = $Matches[1]
+            $Valid = -not [string]::IsNullOrWhiteSpace($Value)
+            $Failure = $Value -notmatch '^(?i)(none|no)$'
+        } elseif ($CurrentSection) {
+            throw "Malformed current automated record: $Line"
+        }
+        if ($Key) {
+            if (-not $Valid) { throw "Malformed or unknown current automated result: $Line" }
+            if ($Failure) { throw "Manual PASS cannot override current automated failure: $Line" }
+            if ($Records.ContainsKey($Key) -and $Records[$Key] -ine $Value) {
+                throw "Conflicting current automated results for ${Key}."
+            }
+            $Records[$Key] = $Value
+        }
+    }
+    if ($Fence -or $IgnoredDepth -or $Declarations.Count -eq 0) { throw 'Missing unquoted Tester terminal outcome.' }
+    if (@($Declarations | Select-Object -Unique).Count -ne 1) { throw 'Contradictory standalone Tester outcomes.' }
+}
+
+# Preflight runs outside the mutation and interruption handlers.
+if ($IsManual) {
+    try {
+        if (-not ($Pass -or $Fail)) { throw 'An affirmative -Pass or -Fail is required.' }
+        if (-not (Test-Path -LiteralPath $RunRoot -PathType Container)) { throw 'Run does not exist.' }
+        if (-not (Test-Path -LiteralPath $RunStatusFile -PathType Leaf) -or
+            (Get-Content -LiteralPath $RunStatusFile -Raw -ErrorAction Stop).Trim() -cne 'BLOCKED') {
+            throw 'Manual verification requires exact BLOCKED status.'
+        }
+        $Required = @($TaskFile, $PlanFile, $TestReportFile, $GitStatusStart,
+            $GitDiffStart, $GitStagedStart, $GitStatusBeforeCode, $GitDiffBeforeCode, $GitStagedBeforeCode)
+        $Metadata = (Get-Content -LiteralPath $TaskFile -Raw -ErrorAction Stop) -split '(?m)^## ', 2
+        if ($Metadata[0] -match '(?m)^Source: GitHub Issue #') { $Required += $IssueFile }
+        $Required += @((Join-Path $RepoRoot 'AGENTS.md'), (Join-Path $RepoRoot 'TimeKeeper.sln'),
+            (Join-Path $ShipRoot 'SHIP.md'))
+        foreach ($Role in @('planner','coder','tester','reviewer')) { $Required += Join-Path $AgentsRoot "$Role.md" }
+        foreach ($Path in $Required) {
+            if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) { throw "Missing prerequisite: $Path" }
+        }
+        foreach ($Path in @($TaskFile, $PlanFile, $TestReportFile)) {
+            if ([string]::IsNullOrWhiteSpace((Get-Content -LiteralPath $Path -Raw -ErrorAction Stop))) {
+                throw "Empty prerequisite: $Path"
+            }
+        }
+        $Evidence = Get-Content -LiteralPath $TestReportFile -Raw -ErrorAction Stop
+        Assert-ManualTesterEvidence -Text $Evidence -RequireSuccess ([bool]$Pass)
+        if (Test-Path -LiteralPath $CycleFile) {
+            $SavedCycle = (Get-Content -LiteralPath $CycleFile -Raw -ErrorAction Stop).Trim()
+            if ($SavedCycle -notmatch '^[1-3]$') { throw 'Invalid validation-cycle metadata.' }
+            $Cycle = [int]$SavedCycle
+        }
+        if (-not $PSBoundParameters.ContainsKey('Scenarios')) {
+            $Scenarios = @(Read-Host 'Enter verified scenarios/observations (FAIL must describe the demonstrated defect)')
+        }
+        if (-not $Scenarios -or @($Scenarios | Where-Object { [string]::IsNullOrWhiteSpace($_) }).Count) {
+            throw 'Nonblank human scenarios/observations are required.'
+        }
+        $HumanEvidence = $Scenarios -join "`n"
+        if ($Fail -and ($HumanEvidence -match '(?i)\bno (?:implementation )?defect\b|\bdefect\s*:\s*none\b' -or
+            ($HumanEvidence -match '(?i)\b(unavailable|missing|unable|cannot)\b' -and
+             $HumanEvidence -notmatch '(?i)\b(defect|bug|incorrect|exception|crash|failed|expected|instead)\b'))) {
+            throw 'Manual FAIL must describe a demonstrated implementation defect, not missing capability alone.'
+        }
+        $Result = if ($Pass) { 'PASS' } else { 'FAIL' }
+        $Entry = "# Manual Validation`n`nRun: $RunId`nResult: $Result`nRecorded: $([DateTimeOffset]::Now.ToString('o'))`nCycle: $Cycle`n`n## Scenarios verified / observations`n`n"
+        $Entry += ($Scenarios | ForEach-Object { '- ' + $_ }) -join "`n"
+        $Entry += "`n`n## Notes`n`n$Notes`n"
+        $Previous = ''
+        if (Test-Path -LiteralPath $ManualFile) { $Previous = [IO.File]::ReadAllText($ManualFile) + "`n---`n`n" }
+        $TempEvidence = Join-Path $RunRoot ('.manual-' + [guid]::NewGuid().ToString('N') + '.tmp')
+        try {
+            [IO.File]::WriteAllText($TempEvidence, $Previous + $Entry)
+            if (Test-Path -LiteralPath $ManualFile -PathType Leaf) {
+                [IO.File]::Replace($TempEvidence, $ManualFile, [System.Management.Automation.Language.NullString]::Value)
+            } else { [IO.File]::Move($TempEvidence, $ManualFile) }
+        } finally {
+            if (Test-Path -LiteralPath $TempEvidence) { Remove-Item -LiteralPath $TempEvidence -Force }
+        }
+    } catch {
+        Write-Host "SHIP STOPPED: $($_.Exception.Message)" -ForegroundColor Red
+        exit 1
+    }
+}
 
 # Only accept identity from the saved metadata, never from task/issue prose.
 function Resolve-ReportingTarget {
@@ -285,6 +453,7 @@ $Implementation
 
 ### Validation
 Tester: **$Tester** (MISSING means unavailable/not run).
+$(if ($DirectReview) { 'Human validation: **PASS**; original Tester remains BLOCKED. See manual-validation.md.' })
 $Validation
 
 ### Review
@@ -405,6 +574,7 @@ $Message
 # ------------------------------------------------------------
 
 function Stop-ShipBlocked {
+    Save-ValidationCycle
     Set-ShipStatus "BLOCKED"
     Write-ShipStep "SHIP BLOCKED"
     Write-Host "Tester could not complete required validation. Human intervention is required." -ForegroundColor Yellow
@@ -572,7 +742,20 @@ try {
     # CONTINUE EXISTING RUN
     # ========================================================
 
-    if ($IsContinue) {
+    if ($IsManual) {
+        $OwnsExecution = $true
+        $ReportingEligible = $true
+        if ($PostResult) { $ReportingTarget = Restore-ReportingTarget }
+        $TaskDescription = "Manually verified Ship run $RunId"
+        $DirectReview = [bool]$Pass
+        Save-ValidationCycle
+        if ($Fail) {
+            if ($Cycle -ge $MaxCycles) { Stop-Ship 'Maximum correction cycles reached after manual failure.' 2 }
+            $Cycle++
+            Save-ValidationCycle
+        }
+    }
+    elseif ($IsContinue) {
 
         Write-ShipStep "CONTINUING RUN $RunId"
 
@@ -706,6 +889,7 @@ try {
             -Path $RunRoot |
             Out-Null
 
+        $OwnsExecution = $true
         Set-ShipStatus "RUNNING"
         $ReportingEligible = $true
 
@@ -1126,6 +1310,8 @@ Do not implement the plan.
     # This is the baseline Tester and Reviewer should use.
     # --------------------------------------------------------
 
+    $OwnsExecution = $true
+    if (-not $IsManual) {
     Write-ShipStep "Capturing pre-Coder Git baseline"
 
     Save-GitSnapshot `
@@ -1142,6 +1328,8 @@ Do not implement the plan.
     # CODER
     # ========================================================
 
+    }
+    if (-not $DirectReview) {
     Set-ShipStatus "CODING"
 
 
@@ -1184,6 +1372,9 @@ Do not modify the Planner's plan.
 "@
 
 
+    if ($IsManual) {
+        $CoderPrompt += "`nRead $TestReportFile and $ManualFile. Address only the demonstrated implementation defect in the latest human FAIL observations. Missing capability alone is not a defect. Fresh Tester validation is required after correction.`n"
+    }
     $CoderPrompt += Get-SummaryInstructions
     Invoke-CodexAgent `
         -RoleName "CODER" `
@@ -1199,7 +1390,8 @@ Do not modify the Planner's plan.
     # TEST / REVIEW LOOP
     # ========================================================
 
-    $Cycle = 1
+    }
+    Save-ValidationCycle
 
 
     while ($Cycle -le $MaxCycles) {
@@ -1212,6 +1404,9 @@ Do not modify the Planner's plan.
         # TESTER
         # ====================================================
 
+        Save-ValidationCycle
+        if (-not $DirectReview) {
+        Save-ReportHistory $TestReportFile
         Set-ShipStatus "TESTING"
 
 
@@ -1265,6 +1460,10 @@ The report must include:
 - files modified by Tester
 
 Conclude with exactly one primary outcome on the final standalone line: PASS, FAIL, or BLOCKED.
+Put current execution evidence under ## Current automated results, using the
+Record | Value table or anchored records specified in .ship/agents/tester.md.
+Put narrative, limitations, historical failures and simulated examples in separate
+sections. Quote or fence status examples; never declare a second distinct outcome.
 
 PASS: All required validation completed successfully.
 FAIL: Validation demonstrated incorrect implementation or required behavior.
@@ -1348,12 +1547,15 @@ After correction, Tester will run again.
 
 
             $TestCorrectionPrompt += Get-SummaryInstructions
+            if (Test-Path -LiteralPath $IssueFile -PathType Leaf) { $TestCorrectionPrompt += "`nRead $IssueFile.`n" }
             Invoke-CodexAgent `
                 -RoleName "CODER - TEST CORRECTION CYCLE $Cycle" `
                 -Prompt $TestCorrectionPrompt
 
 
             $Cycle++
+            $DirectReview = $false
+            Save-ValidationCycle
             continue
         }
 
@@ -1374,6 +1576,9 @@ After correction, Tester will run again.
         # REVIEWER
         # ====================================================
 
+        }
+        Save-ValidationCycle
+        Save-ReportHistory $ReviewReportFile
         Set-ShipStatus "REVIEWING"
 
 
@@ -1403,6 +1608,9 @@ Read:
         }
 
 
+        if (Test-Path -LiteralPath $ManualFile -PathType Leaf) {
+            $ReviewerPrompt += "`nRead $ManualFile. Direct manual review: $DirectReview. When true, original Tester outcome remains BLOCKED; successful automated evidence plus latest human PASS must cover every outstanding approved criterion. Require changes for coverage gaps. After any correction, older human evidence is historical and cannot replace fresh Tester validation. Do not weaken acceptance criteria.`n"
+        }
         $ReviewerPrompt += @"
 Inspect:
 
@@ -1484,7 +1692,7 @@ CHANGES_REQUESTED
             Write-Host "Coder:    COMPLETE" `
                 -ForegroundColor Green
 
-            Write-Host "Tester:   PASS" `
+            Write-Host $(if ($DirectReview) { 'Validation: automated evidence plus manual PASS' } else { 'Tester:   PASS' }) `
                 -ForegroundColor Green
 
             Write-Host "Reviewer: PASS" `
@@ -1585,12 +1793,15 @@ After correction, Tester and Reviewer will run again.
 
 
             $ReviewCorrectionPrompt += Get-SummaryInstructions
+            if (Test-Path -LiteralPath $IssueFile -PathType Leaf) { $ReviewCorrectionPrompt += "`nRead $IssueFile.`n" }
             Invoke-CodexAgent `
                 -RoleName "CODER - REVIEW CORRECTION CYCLE $Cycle" `
                 -Prompt $ReviewCorrectionPrompt
 
 
             $Cycle++
+            $DirectReview = $false
+            Save-ValidationCycle
             continue
         }
 
@@ -1606,7 +1817,7 @@ finally {
     # Ctrl+C / interruption handling
     # ========================================================
 
-    if (Test-Path $RunRoot) {
+    if ($OwnsExecution -and (Test-Path $RunRoot)) {
 
         $CurrentStatus =
             Get-ShipStatus
