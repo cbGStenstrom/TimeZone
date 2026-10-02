@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 using TimeKeeper.App.Api.Enums;
 using TimeKeeper.App.Components.Dialogs;
 using TimeKeeper.App.Components.Pages;
+using TimeKeeper.App.Services.Interfaces;
 using TimeKeeper.Domain.Models;
 
 namespace TimeKeeper.App.Pages;
@@ -11,6 +12,13 @@ namespace TimeKeeper.App.Pages;
 public partial class WorkItemMgrPage : CbPageBase
 {
     #region injected services
+
+    /// <summary>
+    ///  Gets or sets the service used to launch work operations.
+    /// </summary>
+    [Inject]
+    public IWorkLauncherService WorkLauncherSvc { get; set; } = default!;
+
     #endregion injected services
 
     #region properties
@@ -163,59 +171,22 @@ public partial class WorkItemMgrPage : CbPageBase
         }
     }
 
-
+    /// <summary>
+    /// Starts work on the selected work item, resolving any currently active time entry first.
+    /// </summary>
+    /// <remarks>If no active time entry exists, a start-work dialog is opened. If the active entry matches
+    /// the selected work item, the existing entry is opened. If a different entry is active, confirmation is requested
+    /// before stopping it and starting the selected work item.</remarks>
+    /// <param name="workItem">The work item selected to begin work on.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     async Task btnStartWork_OnClick(WorkItem workItem)
     {
-        TimeEntry? activeEntry =
-            await this.TimeEntrySvc!.GetActiveTimeEntry();
-
-        //
-        // No active work exists.
-        //
-        if (activeEntry == null)
-        {
-            await OpenStartWorkDialog(workItem);
-            return;
-        }
-
-        // WHAT: Open the existing time entry.
-        // WHY: FEAT-012 user is already working on the selected WorkItem, so allow the user to edit
-        //  it.
-        if (activeEntry.WorkItemId == workItem.Id)
-        {
-            await OpenExistingTimeEntry(activeEntry);
-            return;
-        }
-
-        // WHAT: User confirm they want to stop the current work and start the new one.
-        // WHY: FEAT-012 User is working on another item. Allows them to stop the current work and
-        //  start the new one, or continue with the current work.
-        bool? stopCurrent = await DialogSvc!.Confirm(
-                $"Current Activity:\r\n" +
-                $"{activeEntry.WorkItem?.DisplayIdentifier}\r\n\r\n" +
-                $"Selected Activity:\r\n" +
-                $"{workItem.DisplayIdentifier}\r\n\r\n" +
-                $"Stop the current activity and begin the selected one?",
-                "Active Work Detected",
-                new ConfirmOptions()
-                {
-                    OkButtonText = "Stop Current And Start New",
-                    CancelButtonText = "Continue Current Activity"
-                });
-
-        if (stopCurrent != true)
-        {
-            return;
-        }
-
-        await StopActiveTimeEntry(activeEntry);
-
-        if (this.Layout is not null)
-        {
-            await this.Layout.Refresh();
-        }
-
-        await OpenStartWorkDialog(workItem);
+        await WorkLauncherSvc!.StartWork(
+            workItem,
+            dlgTimeEntryEditor!,
+            SessionService!.User!,
+            DialogSvc!,
+            EventCallback.Factory.Create<TimeEntry>(this, TimeEntry_OnCreated));
     }
 
     /// <summary>

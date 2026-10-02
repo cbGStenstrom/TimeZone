@@ -1,0 +1,20 @@
+﻿@if (ActiveTimeEntry != null)
+{
+    <RadzenCard>
+
+        <RadzenStack Orientation="Orientation.Vertical" Gap=".5rem">
+
+            <h4> Currently Working On </h4>
+            <h2> @($"{ActiveTimeEntry.WorkItem?.DisplayIdentifier} {ActiveTimeEntry.WorkItem?.Title}") </h2>
+            <div> Started: @ActiveTimeEntry.StartWork?.ToString("g") </div>
+
+        </RadzenStack>
+
+    </RadzenCard>
+}
+else
+{
+    <RadzenCard>
+        <h4>No Active Work</h4>
+    </RadzenCard>
+}

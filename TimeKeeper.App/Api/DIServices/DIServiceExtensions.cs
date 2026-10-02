@@ -1,5 +1,7 @@
 ﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
+using TimeKeeper.App.Services;
+using TimeKeeper.App.Services.Interfaces;
 using TimeKeeper.DataAccess.Entities;
 using TimeKeeper.Domain.Services;
 using TimeKeeper.Domain.Services.Interfaces;
@@ -27,6 +29,9 @@ namespace TimeKeeper.App.Api.DIServices.Extensiions
 
             services.AddScoped<TimeEntryServiceOptions>();
             services.AddTransient<ITimeEntryService, TimeEntryService>();
+
+
+            services.AddTransient<IWorkLauncherService, WorkLauncherService>();
             return services;
         }
 

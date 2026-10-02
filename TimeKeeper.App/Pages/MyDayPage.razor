@@ -1,0 +1,49 @@
+﻿@page "/MyDay"
+@using TimeKeeper.App.Components.MyDay
+@inherits CbPageBase
+@layout AppLayout
+
+<PageTitle>My Day</PageTitle>
+
+<RadzenLayout Style="height:100%;">
+
+    <RadzenHeader Style="height:3.7rem;">
+        <RadzenStack Orientation="Orientation.Vertical" Gap="0rem" class="cb-pad-inline-start-1rem cb-pad-block-start-6px">
+
+            <h5 class="cb-margin-block-1px"> My Day </h5>
+            <span style="font-size:.85rem;"> @DateLabel </span>
+
+        </RadzenStack>
+    </RadzenHeader>
+
+    <RadzenBody Style="padding:1rem;">
+
+        <RadzenStack Orientation="Orientation.Vertical" Gap="1rem">
+            <CurrentActivityCardComponent ActiveTimeEntry="@ActiveTimeEntry" />
+
+            <ContinueWorkingComponent 
+                Activities="@RecentActivities" 
+                OnResumeWorkClicked="ResumeWork_Click">
+            </ContinueWorkingComponent>
+
+            <RadzenStack Orientation="Orientation.Vertical" Gap="1rem">
+
+                @foreach (var activity in YesterdayActivities)
+                {
+                    <YesterdayActivitySummaryComponent 
+                        Summary="@activity"
+                        IsExpanded="@(ExpandedActivity == activity)"
+                        OnExpandClicked="YesterdayActivity_ExpandClicked"
+                        OnResumeWorkClicked="ResumeWork_Click"
+                        OnViewHistoryClicked="ViewHistory_Click">
+                    </YesterdayActivitySummaryComponent>
+                }
+            </RadzenStack>
+        </RadzenStack>
+
+    </RadzenBody>
+
+</RadzenLayout>
+
+            
+<TimeEntryEditorDialog @ref="@this.dlgTimeEntryEditor" />

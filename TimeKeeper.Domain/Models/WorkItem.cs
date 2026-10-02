@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Identity.Client;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Runtime.CompilerServices;
@@ -12,6 +13,8 @@ public partial class WorkItem : ModelBase<WorkItem>
     
     public string? ActivityNumber { get; set; }
 
+    public string? Description { get; set; } = null!;
+
     /// <summary>
     /// Gets the display identifier.
     /// </summary>
@@ -24,21 +27,33 @@ public partial class WorkItem : ModelBase<WorkItem>
         }
     }
 
+    public string DisplayTitle
+    {
+        get
+        {
+            string projectKey = Project?.Key ?? "";
+            return string.IsNullOrWhiteSpace(ActivityNumber) ? projectKey : $"{projectKey}-{ActivityNumber} {Title}";
+        }
+    }
+
+
     public bool IsBillable { get; set; }
 
     public int Id { get; set; }
 
+    public bool IsInReview { get; set; }
+
     public bool IsNew { get { return (this.Id == default(int)); } }
+
+    public bool IsOpen { get; set; }
+
+    public virtual Project Project { get; set; } = null!;
 
     public int ProjectId { get; set; }
 
+    public virtual ICollection<TimeEntry> TimeEntries { get; set; } = new List<TimeEntry>();
+
     public string Title { get; set; } = null!;
-
-    public string? Description { get; set; } = null!;
-
-    public bool IsInReview { get; set; }
-
-    public bool IsOpen { get; set; }
 
     public WorkItemType? WorkItemType { get; set; }
 
@@ -51,10 +66,6 @@ public partial class WorkItem : ModelBase<WorkItem>
     public DateTime UpdatedDate { get; set; }
 
     public string UpdatedBy { get; set; } = null!;
-
-    public virtual Project Project { get; set; } = null!;
-
-    public virtual ICollection<TimeEntry> TimeEntries { get; set; } = new List<TimeEntry>();
 
     #endregion properties
 

@@ -1,0 +1,92 @@
+﻿@using TimeKeeper.App.Models
+
+
+@if (Summary != null)
+{
+    <RadzenCard Style="margin-bottom:.5rem;">
+
+        <!-- Summary Header -->
+
+        <div @onclick="ExpandClicked" style="cursor:pointer;">
+
+            <RadzenRow AlignItems="AlignItems.Center">
+
+                <RadzenColumn Size="1">
+                    <RadzenIcon Icon="@(IsExpanded ? "keyboard_arrow_down" : "keyboard_arrow_right")" />
+                </RadzenColumn>
+
+                <RadzenColumn Size="5">
+                    <RadzenText TextStyle="TextStyle.Subtitle1"Style="font-weight:600;"> @($"{Summary.ActivityIdentifier} {Summary.ActivityTitle}") </RadzenText>
+                    <RadzenText TextStyle="TextStyle.Body2"> </RadzenText>
+                </RadzenColumn>
+
+                <RadzenColumn Size="2">
+                    <RadzenText TextStyle="TextStyle.Caption"> Time Logged </RadzenText>
+                    <RadzenText> @Summary.TotalHoursWorked.ToString("0.##") hrs </RadzenText>
+                </RadzenColumn>
+
+                <RadzenColumn Size="2">
+                    <RadzenText TextStyle="TextStyle.Caption"> Entries </RadzenText>
+                    <RadzenText> @Summary.EntryCount </RadzenText>
+                </RadzenColumn>
+
+                <RadzenColumn Size="2">
+                    <RadzenText TextStyle="TextStyle.Caption"> Last Worked </RadzenText>
+                    <RadzenText> @Summary.LastWorkedDisplay </RadzenText>
+                </RadzenColumn>
+
+            </RadzenRow>
+
+        </div>
+
+        @if (IsExpanded)
+        {
+            <hr />
+
+            <RadzenStack Orientation="Orientation.Vertical" Gap=".75rem">
+
+                @foreach (var entry in Summary.Entries)
+                {
+                    <RadzenRow AlignItems="AlignItems.Start">
+
+                        <RadzenColumn Size="2">
+                            <RadzenText TextStyle="TextStyle.Caption"> @entry.StartWork?.ToString("h:mm tt") </RadzenText>
+                        </RadzenColumn>
+
+                        <RadzenColumn Size="10">
+                            @if (!string.IsNullOrWhiteSpace(entry.Accomplishment))
+                            {
+                                <div class="tz-accomplishment-html">
+                                    @((MarkupString)entry.Accomplishment)
+                                </div>
+                            }
+                            else
+                            {
+                                @("[No Accomplishments Recorded]");
+                            }
+                        </RadzenColumn>
+
+                    </RadzenRow>
+                }
+
+            </RadzenStack>
+
+            <hr />
+
+            <RadzenRow JustifyContent="JustifyContent.End" Gap=".5rem">
+
+                <RadzenButton Text="Resume Work"
+                    Icon="play_arrow"
+                    ButtonStyle="ButtonStyle.Success"
+                    Click="@ResumeWork_Click" />
+
+                <RadzenButton Text="View History"
+                    Icon="history"
+                    ButtonStyle="ButtonStyle.Light"
+                    Click="@ViewHistory_Click" />
+
+            </RadzenRow>
+        }
+
+    </RadzenCard>
+}

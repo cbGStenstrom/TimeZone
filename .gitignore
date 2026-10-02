@@ -361,3 +361,14 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Project files
+TimeKeeper.Data/.dacfx/
+
+# Automated ChatGPT Code Generator files
+.ship/reports/*
+.ship/current-task.md
+
+# Ship runtime artifacts
+.ship/runs/
+

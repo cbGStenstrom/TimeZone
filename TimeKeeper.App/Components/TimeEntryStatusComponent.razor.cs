@@ -26,7 +26,8 @@ public partial class TimeEntryStatusComponent : CbComponentBase
     /// </summary>
     /// <remarks>
     ///  Use this property to handle changes to the active time entry in the parent component. The
-    ///  callback receives the new active <see cref="TimeEntry"/> as its argument.
+    ///  callback receives the new active <see cref="TimeEntry"/> as its argument, or null if no
+    ///  active time entry exists.
     /// </remarks>
     [Parameter]
     public EventCallback<TimeEntry> ActiveTimeEntryChanged { get; set; }
@@ -215,11 +216,12 @@ public partial class TimeEntryStatusComponent : CbComponentBase
     /// <param name="endedTimeEntryId">
     ///  The identifier of the time entry that has ended.
     /// </param>
-    private async void Dialog_OnTimeEntryEnded()
+    private async Task Dialog_OnTimeEntryEnded()
     {
         this.dlgTimeEntryEditor?.Close();
 
-        await this.ActiveTimeEntryChanged.InvokeAsync();
+        TimeEntry? activeTimeEntry = await base.TimeEntrySvc.GetActiveTimeEntry();
+        await this.ActiveTimeEntryChanged.InvokeAsync(activeTimeEntry!);
         await this.OnTimeEntryChanged.InvokeAsync();
     }
 
