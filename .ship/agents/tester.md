@@ -23,10 +23,24 @@ Report:
 - tests failed
 - new tests added
 - acceptance criteria verified
+- commands executed and exit codes
+- warnings and files modified by Tester
 
-Return either:
-PASS
-or
-FAIL
+Conclude with exactly one primary outcome on the final standalone line:
+- PASS: All required validation completed successfully.
+- FAIL: Validation demonstrated incorrect implementation or required behavior.
+- BLOCKED: Required validation cannot be completed because of an external
+  prerequisite, unavailable tooling or capability, missing credentials,
+  unavailable services, infrastructure or test data, or required human interaction.
 
 If FAIL, explain exactly why.
+If a defect was demonstrated, use FAIL and report other limitations as evidence.
+Do not infer a defect from missing capability. Do not weaken acceptance criteria
+or skip required validation to produce PASS.
+
+For BLOCKED, explain:
+- what validation completed successfully
+- what validation remains incomplete
+- the specific blocker
+- whether any implementation defect was demonstrated
+- what human action or capability is required to continue

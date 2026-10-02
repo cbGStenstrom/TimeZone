@@ -114,6 +114,7 @@ param(
 #   CODING
 #   TESTING
 #   REVIEWING
+#   BLOCKED
 #   PASS
 #   FAILED
 #   ABORTED_BY_USER
@@ -400,9 +401,21 @@ $Message
 
 
 # ------------------------------------------------------------
-# Helper: invoke Codex
+# Helper: stop for incomplete validation
 # ------------------------------------------------------------
 
+function Stop-ShipBlocked {
+    Set-ShipStatus "BLOCKED"
+    Write-ShipStep "SHIP BLOCKED"
+    Write-Host "Tester could not complete required validation. Human intervention is required." -ForegroundColor Yellow
+    Write-Host "Run: $RunId"
+    Write-Host "Run folder: $RunRoot"
+    Write-Host "See the test report for the precise blocker and required next action:"
+    Write-Host $TestReportFile
+    exit 1
+}
+
+# Helper: invoke Codex
 function Invoke-CodexAgent {
     param(
         [string]$RoleName,
@@ -420,7 +433,7 @@ function Invoke-CodexAgent {
 
 
 # ------------------------------------------------------------
-# Helper: inspect PASS / FAIL reports
+# Helper: inspect validation and review reports
 # ------------------------------------------------------------
 
 function Get-ReportStatus {
@@ -433,6 +446,11 @@ function Get-ReportStatus {
     }
 
     $Text = Get-Content $Path -Raw
+
+    # A concluding outcome overrides successful intermediate checks.
+    if ($Text -match "(?i)(?:\A|\r?\n)[ \t]*BLOCKED\s*\z") {
+        return "BLOCKED"
+    }
 
     if ($Text -match "(?im)^\s*CHANGES_REQUESTED\s*$") {
         return "CHANGES_REQUESTED"
@@ -613,6 +631,12 @@ try {
                 "^ABORTED_BY_USER" {
                     Write-Host "This run was previously aborted."
                     Write-Host "Ship will not automatically guess where to resume."
+                }
+
+                "^BLOCKED$" {
+                    Write-Host "Required validation remains incomplete; human intervention is required."
+                    Write-Host "Ship will not automatically resume a blocked run."
+                    Write-Host "Test report: $TestReportFile"
                 }
 
                 default {
@@ -1240,13 +1264,18 @@ The report must include:
 - warnings
 - files modified by Tester
 
-Conclude with exactly one status:
+Conclude with exactly one primary outcome on the final standalone line: PASS, FAIL, or BLOCKED.
 
-PASS
+PASS: All required validation completed successfully.
+FAIL: Validation demonstrated incorrect implementation or required behavior.
+BLOCKED: Required validation cannot be completed because of an external prerequisite,
+such as unavailable tools, credentials, services, infrastructure/data, or required human interaction.
+If a defect was demonstrated, use FAIL and describe any other limitations as evidence.
+Do not weaken or skip requirements to produce PASS or infer a defect from missing capability.
 
-or
-
-FAIL
+For BLOCKED, report validation completed successfully, validation still incomplete,
+the specific blocker, whether any implementation defect was demonstrated,
+and the human action or capability required to continue.
 "@
 
 
@@ -1264,6 +1293,10 @@ FAIL
         $TestStatus =
             Get-ReportStatus `
                 -Path $TestReportFile
+
+        if ($TestStatus -eq "BLOCKED") {
+            Stop-ShipBlocked
+        }
 
 
         # ----------------------------------------------------
@@ -1328,7 +1361,7 @@ After correction, Tester will run again.
         if ($TestStatus -ne "PASS") {
 
             Stop-Ship `
-                "Tester report did not contain a recognizable PASS or FAIL result."
+                "Tester report did not contain a recognizable PASS, FAIL, or BLOCKED result."
         }
 
 

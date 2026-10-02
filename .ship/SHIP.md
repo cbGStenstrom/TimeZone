@@ -22,6 +22,21 @@ Opt-in applies only to the current invocation, including when continuing.
 
 Ship coordinates software development work.
 
+Tester has exactly three primary outcomes: PASS means all required validation
+completed successfully and continues to Reviewer; FAIL means validation
+demonstrated incorrect implementation or required behavior and uses the existing
+Coder correction loop; BLOCKED means an external prerequisite prevents required
+validation and stops immediately for human intervention.
+
+BLOCKED is a deliberate terminal run status, distinct from FAILED and
+ABORTED_BY_USER. Required validation remains outstanding. Ship preserves all run
+artifacts, displays the run folder and test-report.md path for the blocker and
+next action, and invokes no correction Coder, Tester retry, or Reviewer.
+BLOCKED consumes no additional correction cycle and does not publish a PASS or
+FAILED GitHub result. Continuation remains restricted to AWAITING_PLAN_APPROVAL;
+blocked runs are not automatically resumed. Genuine failure and Reviewer
+correction behavior retain the existing maximum of three validation cycles.
+
 
 
 Ship does not directly implement production code.
