@@ -62,6 +62,8 @@ public partial class MyDayPage : CbPageBase
     /// </summary>
     List<MyDayActivitySummary> RecentActivities { get; set; } = [];
 
+    List<MyDayActivitySummary> ReviewActivities { get; set; } = [];
+
     /// <summary>
     ///  Gets or sets the collection of activity summaries recorded for the previous day.
     /// </summary>
@@ -76,6 +78,7 @@ public partial class MyDayPage : CbPageBase
         this.ActiveTimeEntry = await base.TimeEntrySvc!.GetActiveTimeEntry();
         await LoadYesterdayEntries();
         await LoadRecentActivities();
+        await LoadReviewActivities();
     }
 
     #endregion lifecycle
@@ -127,6 +130,7 @@ public partial class MyDayPage : CbPageBase
         // WHY: Because the user may have edited an entry from the last seven days, and we want to
         //  reflect that change in the summary.
         await this.LoadRecentActivities();
+        await this.LoadReviewActivities();
 
         // WHAT: Refresh the layout and request a UI re-render. This will update the Footer component
         //  to reflect the current active time entry.
@@ -173,6 +177,28 @@ public partial class MyDayPage : CbPageBase
     #endregion event handlers
 
     #region methods
+
+    private async Task LoadReviewActivities()
+    {
+        var workItems = await WorkItemSvc!.GetFilteredWorkItems([w => w.IsInReview]);
+        if (workItems.Count == 0)
+        {
+            ReviewActivities = [];
+            return;
+        }
+
+        var workItemIds = workItems.Select(w => w.Id).ToArray();
+        var entries = await TimeEntrySvc!.GetFilteredTimeEntries(
+            [e => workItemIds.Contains(e.WorkItemId)]);
+        var lastWorkedByItem = entries.GroupBy(e => e.WorkItemId)
+            .ToDictionary(g => g.Key, g => g.Max(e => e.EndWork ?? e.StartWork) ?? DateTime.MinValue);
+
+        ReviewActivities = [.. workItems.Select(w => new MyDayActivitySummary
+        {
+            WorkItem = w,
+            LastWorked = lastWorkedByItem.GetValueOrDefault(w.Id, DateTime.MinValue)
+        }).OrderByDescending(a => a.LastWorked).ThenBy(a => a.WorkItemId)];
+    }
 
     /// <summary>
     ///  Loads recent activity summaries from time entries created in the last seven days, grouped 

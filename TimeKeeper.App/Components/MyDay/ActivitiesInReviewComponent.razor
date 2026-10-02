@@ -1,0 +1,32 @@
+@using TimeKeeper.App.Models
+
+<RadzenCard>
+    <RadzenText TextStyle="TextStyle.H5" Style="margin-bottom:2rem;">Activities In Review</RadzenText>
+    @if (Activities.Count == 0)
+    {
+        <div>No activities currently in review.</div>
+    }
+    else
+    {
+        <RadzenStack Orientation="Orientation.Vertical" Gap=".15rem">
+            @foreach (var activity in Activities)
+            {
+                <div @key="activity.WorkItemId" style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.5rem;">
+                    <div style="display:flex;align-items:center;gap:.3rem;flex:1;min-width:0;">
+                        <RadzenButton Icon="play_arrow" Variant="Variant.Text"
+                                      ButtonStyle="ButtonStyle.Success" Size="ButtonSize.Small"
+                                      aria-label="@($"Resume Work on {activity.ActivityIdentifier} {activity.ActivityTitle}")"
+                                      Click="@(() => OnResumeWorkClicked.InvokeAsync(activity))" />
+                        <div>@activity.ActivityIdentifier @activity.ActivityTitle</div>
+                    </div>
+                    <div style="font-size:.85rem;color:var(--rz-text-secondary-color);white-space:nowrap;">
+                        Last: @(activity.LastWorked == DateTime.MinValue ? "Not yet worked" : activity.LastWorkedDisplay)
+                    </div>
+                    <RadzenButton Text="View History" Icon="history" Variant="Variant.Text"
+                                  ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
+                                  Click="@(() => OnViewHistoryClicked.InvokeAsync(activity))" />
+                </div>
+            }
+        </RadzenStack>
+    }
+</RadzenCard>

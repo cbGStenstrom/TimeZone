@@ -26,6 +26,11 @@
                 OnResumeWorkClicked="ResumeWork_Click">
             </ContinueWorkingComponent>
 
+            <ActivitiesInReviewComponent
+                Activities="@ReviewActivities"
+                OnResumeWorkClicked="ResumeWork_Click"
+                OnViewHistoryClicked="ViewHistory_Click" />
+
             <RadzenStack Orientation="Orientation.Vertical" Gap="1rem">
 
                 @foreach (var activity in YesterdayActivities)

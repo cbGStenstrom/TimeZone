@@ -1,2 +1,26 @@
 ﻿@inherits CbComponentBase
-<h3>WorkItemHistoryComponent</h3>
+@if (!WorkItemId.HasValue)
+{
+    <h3>WorkItemHistoryComponent</h3>
+}
+else if (SelectedWorkItem == null)
+{
+    <p>Activity not found.</p>
+}
+else
+{
+    <RadzenStack Orientation="Orientation.Vertical" Style="padding:1rem;">
+        <h3>@SelectedWorkItem.DisplayIdentifier @SelectedWorkItem.Title</h3>
+        @if (Entries.Count == 0)
+        {
+            <p>No time entries for this activity.</p>
+        }
+        else
+        {
+            @foreach (var entry in Entries)
+            {
+                <WorkItemEntriesItemComponent @key="entry.Id" Model="@entry" />
+            }
+        }
+    </RadzenStack>
+}

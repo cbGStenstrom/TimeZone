@@ -64,6 +64,9 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Codex Workflow", "Codex Workflow", "{B1166F05-C4D9-4621-867E-DEDEA82FE154}"
 	ProjectSection(SolutionItems) = preProject
 		AGENTS.md = AGENTS.md
+		ship-continue.ps1 = ship-continue.ps1
+		ship-full.ps1 = ship-full.ps1
+		ship-plan.ps1 = ship-plan.ps1
 		ship.ps1 = ship.ps1
 	EndProjectSection
 EndProject

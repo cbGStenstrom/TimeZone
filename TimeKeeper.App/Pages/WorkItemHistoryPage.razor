@@ -1,5 +1,6 @@
 ﻿@inherits CbComponentBase
 @layout AppLayout
 @page "/WorkItemHistory"
+@page "/WorkItemHistory/{WorkItemId:int}"
 
-<WorkItemHistoryComponent></WorkItemHistoryComponent>
+<WorkItemHistoryComponent WorkItemId="@WorkItemId" />

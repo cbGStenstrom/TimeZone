@@ -1,28 +1,27 @@
-\## Problem
+## Problem
 
 What is happening now?
 
 
 
-\## Desired behavior
+## Desired behavior
 
 What should happen instead?
 
 
 
-\## Acceptance criteria
+## Acceptance criteria
 
 What must be true when this is complete?
 
 
 
-\## Constraints
+## Constraints
 
 What should not be changed?
 
 
 
-\## Notes / Context
+## Notes / Context
 
 Anything useful for understanding the issue.
-
