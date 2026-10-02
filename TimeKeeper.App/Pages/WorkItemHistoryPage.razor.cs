@@ -9,6 +9,8 @@ public partial class WorkItemHistoryPage : CbComponentBase
     #endregion injected services
 
     #region parameters
+    [Parameter]
+    public int? WorkItemId { get; set; }
     #endregion parameters
 
     #region properties
