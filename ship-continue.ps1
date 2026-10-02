@@ -2,7 +2,8 @@ param(
     [Parameter(
         Mandatory = $true
     )]
-    [string]$Run
+    [string]$Run,
+    [switch]$PostResult
 )
 
 # ============================================================
@@ -19,4 +20,4 @@ param(
 
 $ShipEngine = Join-Path $PSScriptRoot "ship.ps1"
 
-& $ShipEngine -Run $Run
+& $ShipEngine -Run $Run -PostResult:$PostResult

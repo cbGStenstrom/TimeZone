@@ -1,5 +1,23 @@
 \# Ship Orchestrator
 
+## Optional GitHub result reporting
+
+Reporting is off by default. Opt in for a Full run or an approved continuation:
+
+```powershell
+.\ship-full.ps1 -Issue 47 -PostResult
+.\ship-continue.ps1 -Run 2026-10-02_143015 -PostResult
+```
+
+Ship writes `github-result.md` in the run folder before posting one concise
+PASS or deliberate FAILED comment to the originating issue using GitHub CLI.
+An opted-in GitHub Coder records actual changes in `implementation-summary.md`.
+Detailed validation and review evidence remains in the local reports.
+Reporting failures produce a warning and preserve the workflow status and exit
+behavior. There are no automatic posting retries. Free-text tasks, planning
+pauses, rejected continuations, and interrupted runs do not post results.
+Opt-in applies only to the current invocation, including when continuing.
+
 
 
 Ship coordinates software development work.

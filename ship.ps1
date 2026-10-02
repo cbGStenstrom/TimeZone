@@ -61,7 +61,9 @@ param(
         ParameterSetName = "Issue"
     )]
     [ValidateSet("Full", "PlanOnly")]
-    [string]$Mode = "Full"
+    [string]$Mode = "Full",
+
+    [switch]$PostResult
 )
 
 # ============================================================
@@ -192,6 +194,122 @@ $GitDiffAfter   = Join-Path $RunRoot "git-diff-after.patch"
 
 $MaxCycles = 3
 
+$ReportingTarget = $null
+$ReportingAttempted = $false
+$ReportingEligible = $false
+$ImplementationSummaryFile = Join-Path $RunRoot "implementation-summary.md"
+
+# Only accept identity from the saved metadata, never from task/issue prose.
+function Resolve-ReportingTarget {
+    param([string]$Url, [string]$Number)
+
+    if ($Url -cmatch '^https://github\.com/[^/\s?#]+/[^/\s?#]+/issues/([1-9][0-9]*)$' -and
+        $Matches[1] -eq $Number) {
+        return $Url
+    }
+    Write-Warning "GitHub result reporting skipped: missing or malformed issue identity."
+}
+
+function Restore-ReportingTarget {
+    try {
+        $Metadata = (Get-Content $TaskFile -Raw -ErrorAction Stop) -split '(?m)^## ', 2
+        if ($Metadata[0] -notmatch '(?m)^Source: GitHub Issue #([1-9][0-9]*)\s*$') { return }
+        $Number = $Matches[1]
+        $Url = $null
+        if ($Metadata[0] -match '(?m)^GitHub URL:\s*\r?\n\s*([^\r\n]+)') {
+            $Url = $Matches[1].Trim()
+        }
+        elseif (Test-Path $IssueFile) {
+            $Snapshot = (Get-Content $IssueFile -Raw -ErrorAction Stop) -split '(?m)^## Description\s*$', 2
+            if ($Snapshot[0] -match '(?m)^## URL\s*\r?\n\s*([^\r\n]+)') {
+                $Url = $Matches[1].Trim()
+            }
+        }
+        Resolve-ReportingTarget $Url $Number
+    }
+    catch { Write-Warning "GitHub result reporting skipped: saved identity could not be read. $($_.Exception.Message)" }
+}
+
+function Get-BoundedEvidence {
+    param([string]$Path, [switch]$Validation)
+
+    if (-not (Test-Path $Path)) { return '- Unavailable; no evidence was recorded.' }
+    $Lines = @(Get-Content $Path -ErrorAction Stop | Where-Object {
+        if ($Validation) {
+            $_ -match '(?i)(msbuild|dotnet test|exit code|tests? (run|passed|failed)|passed\s*[:=]|failed\s*[:=]|\d+\s+(tests?\s+)?(passed|failed))'
+        }
+        else { $_ -match '^\s*[-*]\s+\S' }
+    } | Select-Object -First 5 | ForEach-Object {
+        $Line = ($_ -replace '^\s*[-*]\s+', '').Trim()
+        if ($Line.Length -gt 240) { $Line = $Line.Substring(0, 240) + '...' }
+        '- ' + $Line
+    })
+    if ($Lines.Count -eq 0) { return '- Unavailable; no concise evidence was recorded.' }
+    return $Lines -join "`n"
+}
+
+function Publish-ShipResult {
+    param([ValidateSet('PASS', 'FAILED')][string]$Status, [string]$Reason)
+
+    if (-not $PostResult -or -not $ReportingEligible -or $script:ReportingAttempted) { return }
+    $script:ReportingAttempted = $true
+    if (-not $ReportingTarget) {
+        Write-Warning 'GitHub result reporting skipped: no resolved GitHub issue target.'
+        return
+    }
+    $ResultFile = Join-Path $RunRoot 'github-result.md'
+    $ReceiptFile = Join-Path $RunRoot 'github-result-posted.txt'
+    $PreviousExitCode = $global:LASTEXITCODE
+    try {
+        if (Test-Path $ReceiptFile) { return }
+        $Implementation = Get-BoundedEvidence $ImplementationSummaryFile
+        $Validation = Get-BoundedEvidence $TestReportFile -Validation
+        $Tester = Get-ReportStatus $TestReportFile
+        $Reviewer = Get-ReportStatus $ReviewReportFile
+        $Failure = ''
+        if ($Status -eq 'FAILED') {
+            $BriefReason = ($Reason -replace '\s+', ' ').Trim()
+            if ($BriefReason.Length -gt 300) { $BriefReason = $BriefReason.Substring(0, 300) + '...' }
+            $Failure = "`nFailure: $BriefReason`n"
+        }
+        @"
+## Ship Run Complete
+
+Run: $RunId
+
+Status: **$Status**
+$Failure
+### Implementation
+$Implementation
+
+### Validation
+Tester: **$Tester** (MISSING means unavailable/not run).
+$Validation
+
+### Review
+Reviewer: **$Reviewer** (MISSING means unavailable/not run).
+
+### Local artifacts
+$RunRoot
+"@ | Set-Content -LiteralPath $ResultFile -Encoding UTF8 -ErrorAction Stop
+
+        if (-not (Get-Command gh -ErrorAction SilentlyContinue)) { throw 'GitHub CLI (gh) was not found.' }
+        & gh auth status *> $null
+        if ($LASTEXITCODE -ne 0) { throw 'GitHub CLI is not authenticated.' }
+        & gh issue comment $ReportingTarget --body-file $ResultFile
+        if ($LASTEXITCODE -ne 0) { throw "GitHub comment returned exit code $LASTEXITCODE." }
+        $ReportingTarget | Set-Content -LiteralPath $ReceiptFile -Encoding UTF8 -ErrorAction Stop
+    }
+    catch { Write-Warning "GitHub result reporting failed; workflow status is unchanged. $($_.Exception.Message)" }
+    finally { $global:LASTEXITCODE = $PreviousExitCode }
+}
+
+function Get-SummaryInstructions {
+    if ($PostResult -and $ReportingTarget) {
+        return "`nWrite/update $ImplementationSummaryFile with at most five short bullets describing actual implemented changes. Do not infer changes from the plan or invent validation results.`n"
+    }
+}
+
 
 # ------------------------------------------------------------
 # Helper: print section heading
@@ -262,6 +380,7 @@ FAILED
 $Message
 "@ |
             Set-Content -Path $RunStatusFile -Encoding UTF8
+        Publish-ShipResult -Status FAILED -Reason $Message
     }
 
     Write-Host ""
@@ -390,6 +509,13 @@ function Save-GitSnapshot {
 try {
 
     Write-ShipStep "SHIP v1.3 STARTING"
+
+    # Recover identity before repository checks can deliberately fail a valid run.
+    if ($IsContinue -and (Test-Path $TaskFile) -and
+        (Get-ShipStatus) -eq 'AWAITING_PLAN_APPROVAL') {
+        $ReportingEligible = $true
+        if ($PostResult) { $ReportingTarget = Restore-ReportingTarget }
+    }
 
 
     # --------------------------------------------------------
@@ -557,6 +683,7 @@ try {
             Out-Null
 
         Set-ShipStatus "RUNNING"
+        $ReportingEligible = $true
 
         Write-Host "Run ID:   $RunId"
         Write-Host "Run path: $RunRoot"
@@ -611,6 +738,10 @@ try {
             # -----------------------------------------------
             # Labels
             # -----------------------------------------------
+
+            if ($PostResult) {
+                $ReportingTarget = Resolve-ReportingTarget $IssueData.url ([string]$IssueData.number)
+            }
 
             $LabelNames = @()
 
@@ -1029,6 +1160,7 @@ Do not modify the Planner's plan.
 "@
 
 
+    $CoderPrompt += Get-SummaryInstructions
     Invoke-CodexAgent `
         -RoleName "CODER" `
         -Prompt $CoderPrompt
@@ -1182,6 +1314,7 @@ After correction, Tester will run again.
 "@
 
 
+            $TestCorrectionPrompt += Get-SummaryInstructions
             Invoke-CodexAgent `
                 -RoleName "CODER - TEST CORRECTION CYCLE $Cycle" `
                 -Prompt $TestCorrectionPrompt
@@ -1309,6 +1442,7 @@ CHANGES_REQUESTED
 
 
             Set-ShipStatus "PASS"
+            Publish-ShipResult -Status PASS
 
 
             Write-ShipStep "SHIP COMPLETE"
@@ -1417,6 +1551,7 @@ After correction, Tester and Reviewer will run again.
 "@
 
 
+            $ReviewCorrectionPrompt += Get-SummaryInstructions
             Invoke-CodexAgent `
                 -RoleName "CODER - REVIEW CORRECTION CYCLE $Cycle" `
                 -Prompt $ReviewCorrectionPrompt
