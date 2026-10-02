@@ -11,7 +11,8 @@ param(
         Mandatory = $true,
         ParameterSetName = "Issue"
     )]
-    [int]$Issue
+    [int]$Issue,
+    [switch]$PostResult
 )
 
 # ============================================================
@@ -26,11 +27,11 @@ if ($PSCmdlet.ParameterSetName -eq "Issue") {
 
     & $ShipEngine `
         -Issue $Issue `
-        -Mode Full
+        -Mode Full -PostResult:$PostResult
 }
 else {
 
     & $ShipEngine `
         -Task $Task `
-        -Mode Full
+        -Mode Full -PostResult:$PostResult
 }
