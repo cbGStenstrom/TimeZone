@@ -59,6 +59,35 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "bugs", "bugs", "{FE31E48C-F
 		docs\Bugs\Bugs.md = docs\Bugs\Bugs.md
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimeKeeper.Domain.Tests", "TimeKeeper.Domain.Tests\TimeKeeper.Domain.Tests.csproj", "{2A309C87-97B7-4501-A651-0770F7686B44}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Codex Workflow", "Codex Workflow", "{B1166F05-C4D9-4621-867E-DEDEA82FE154}"
+	ProjectSection(SolutionItems) = preProject
+		AGENTS.md = AGENTS.md
+		ship.ps1 = ship.ps1
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ship", "ship", "{A68B0BE6-B4F3-4220-9BA5-FC3F88E8DF7A}"
+	ProjectSection(SolutionItems) = preProject
+		.ship\SHIP.md = .ship\SHIP.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "agents", "agents", "{D54C2FB1-E49B-415D-86FC-3175E3BEA14C}"
+	ProjectSection(SolutionItems) = preProject
+		.ship\agents\coder.md = .ship\agents\coder.md
+		.ship\agents\planner.md = .ship\agents\planner.md
+		.ship\agents\reviewer.md = .ship\agents\reviewer.md
+		.ship\agents\tester.md = .ship\agents\tester.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "plans", "plans", "{12C63AE9-4372-4843-BD77-FAC87DB8D85C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "reports", "reports", "{64ACBD8C-B3E6-4D02-87B7-05A9FE2D3817}"
+	ProjectSection(SolutionItems) = preProject
+		.ship\reports\review-report.md = .ship\reports\review-report.md
+		.ship\reports\test-report.md = .ship\reports\test-report.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -83,6 +112,10 @@ Global
 		{5A6B37BD-C6DA-469F-B418-44584F6E45F3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5A6B37BD-C6DA-469F-B418-44584F6E45F3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5A6B37BD-C6DA-469F-B418-44584F6E45F3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2A309C87-97B7-4501-A651-0770F7686B44}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2A309C87-97B7-4501-A651-0770F7686B44}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2A309C87-97B7-4501-A651-0770F7686B44}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2A309C87-97B7-4501-A651-0770F7686B44}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -92,6 +125,11 @@ Global
 		{DD4D3809-C6C7-4624-8ABB-EF55D373D075} = {4676EC9A-D357-4F39-8E14-49787DA23D75}
 		{56F56921-90E9-4FBA-B2E3-7B46A1591CBE} = {4676EC9A-D357-4F39-8E14-49787DA23D75}
 		{FE31E48C-F809-44CD-898C-FF14FF7456FD} = {4676EC9A-D357-4F39-8E14-49787DA23D75}
+		{B1166F05-C4D9-4621-867E-DEDEA82FE154} = {33F804E1-A761-4395-8EBE-E7B590F0F6BF}
+		{A68B0BE6-B4F3-4220-9BA5-FC3F88E8DF7A} = {B1166F05-C4D9-4621-867E-DEDEA82FE154}
+		{D54C2FB1-E49B-415D-86FC-3175E3BEA14C} = {A68B0BE6-B4F3-4220-9BA5-FC3F88E8DF7A}
+		{12C63AE9-4372-4843-BD77-FAC87DB8D85C} = {A68B0BE6-B4F3-4220-9BA5-FC3F88E8DF7A}
+		{64ACBD8C-B3E6-4D02-87B7-05A9FE2D3817} = {A68B0BE6-B4F3-4220-9BA5-FC3F88E8DF7A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {AD3B2E40-0248-444D-A81B-CF5870B05454}
