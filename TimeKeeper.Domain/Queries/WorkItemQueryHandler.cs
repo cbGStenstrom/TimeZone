@@ -33,6 +33,7 @@ namespace TimeKeeper.Domain.Queries
         public async Task<Models.WorkItem?> Handle(GetWorkitemById request, CancellationToken cancellationToken)
         {
             WorkItem? entity = await this._dbCtx.WorkItems
+                                         .Include(e=>e.Type)
                                          .Include(e=>e.Project)
                                          .Include(e=>e.TimeEntries)
                                          .FirstOrDefaultAsync(e => e.Id == request.itemID, cancellationToken);
@@ -73,7 +74,7 @@ namespace TimeKeeper.Domain.Queries
                 }
             }
 
-            List<WorkItem> entities = await query.Include(e => e.Project).ToListAsync();
+            List<WorkItem> entities = await query.Include(e => e.Type).Include(e => e.Project).ToListAsync();
 
             List<Models.WorkItem> results = new List<Models.WorkItem>();
             foreach(WorkItem entity in entities)

@@ -11,7 +11,7 @@ using TimeKeeper.Domain.Utilities.Mappers;
 
 namespace TimeKeeper.Domain.Commands
 {
-    public  class WorkItemCommandHandler(TimeKeeperDbContext ctx) :
+    public class WorkItemCommandHandler(TimeKeeperDbContext ctx) :
                 IRequestHandler<AddWorkItem, Models.WorkItem>,
                 IRequestHandler<DeleteWorkItem, Models.WorkItem?>,
                 IRequestHandler<UpdateWorkItem, Boolean>,
@@ -33,12 +33,14 @@ namespace TimeKeeper.Domain.Commands
         /// <returns></returns>
         public async Task<Models.WorkItem> Handle(AddWorkItem request, CancellationToken cancellationToken)
         {
+            await ValidateType(request.Model.WorkItemType, null, cancellationToken);
             WorkItem entity = request.Model.MapDomainToEntity();
             entity.CreatedDate = entity.UpdatedDate = DateTime.UtcNow;
 
             this._dbCtx.WorkItems.Add(entity);
             await this._dbCtx.SaveChangesAsync(cancellationToken);
 
+            await _dbCtx.Entry(entity).Reference(w => w.Type).LoadAsync(cancellationToken);
             Models.WorkItem result = entity.MapEntityToDomain();
             result.TakeSnapshot();
             return result;
@@ -52,7 +54,7 @@ namespace TimeKeeper.Domain.Commands
         /// <returns></returns>
         public async Task<Models.WorkItem?> Handle(DeleteWorkItem request, CancellationToken cancellationToken)
         {
-            WorkItem? entity = await this._dbCtx.WorkItems.FirstOrDefaultAsync(e=>e.Id == request.WorkItemID);
+            WorkItem? entity = await this._dbCtx.WorkItems.FirstOrDefaultAsync(e => e.Id == request.WorkItemID);
 
             if (entity == null) { return null; }
 
@@ -95,8 +97,12 @@ namespace TimeKeeper.Domain.Commands
 
             if (existingEntity != null)
             {
+                await ValidateType(request.Model.WorkItemType, existingEntity.WorkItemType, cancellationToken);
                 request.Model.MapDomainToEntity(ref existingEntity);
                 await this._dbCtx.SaveChangesAsync(cancellationToken);
+                var type = await _dbCtx.Entry(existingEntity).Reference(w => w.Type)
+                    .Query().SingleAsync(cancellationToken);
+                request.Model.Type = type.MapEntityToDomain();
                 request.Model.TakeSnapshot();
                 result = true;
             }
@@ -105,6 +111,12 @@ namespace TimeKeeper.Domain.Commands
 
         }
 
+        async Task ValidateType(int? id, int? previous, CancellationToken ct)
+        {
+            if (id == null) throw new InvalidOperationException("Work Item Type is required.");
+            var type = await _dbCtx.WorkItemTypes.AsNoTracking().SingleOrDefaultAsync(t => t.Id == id, ct);
+            Models.WorkItemTypeRules.ValidateAssignment(id, previous, type?.Id, type?.IsEnabled ?? false);
+        }
         #endregion Handlers
 
     }

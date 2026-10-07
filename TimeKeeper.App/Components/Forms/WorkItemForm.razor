@@ -38,13 +38,17 @@
 			<RadzenColumn Size="10">
 				<RadzenDropDown Data="@this.WorkItemTypes"
 									@bind-Value="@this.WorkItem.WorkItemType"
-									Name="ddlWorkItemType"
+									Name="ddlWorkItemType" TextProperty="Name" ValueProperty="Id" TValue="int?"
 									Style="width:100%;"
 									Placeholder="Select Type"
 									AllowClear="false"
 									Change="@Form_OnChange">
 				</RadzenDropDown>
-				@if (this.WorkItem.WorkItemType == null && this.ShowValidation)
+				@if (RetainsDisabledType)
+                { <div>Current type: @WorkItem.Type!.Name (Disabled). Preserved unless an enabled replacement is selected.</div> }
+                @if (WorkItemTypes.Count == 0)
+                { <div style="color:var(--rz-danger)">No enabled Activity Types are available.</div> }
+                @if (this.WorkItem.WorkItemType == null && this.ShowValidation)
 				{
 					<RadzenText TextStyle="TextStyle.Caption" Style="color:var(--rz-danger);">Work Item Type is required.</RadzenText>
 				}

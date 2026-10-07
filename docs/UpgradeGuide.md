@@ -550,4 +550,17 @@ Old Configuration
 New Configuration
 ```
 
-Manually 
+Manually
+## Activity Types (FEAT-018)
+
+Back up the target before upgrading. Build the SSDT DACPAC, then use
+
+```powershell
+.\TimeKeeper.Data\Scripts\Deploy-018.ps1 -Server <server> -Database <database> -Dacpac <built-dacpac>
+```
+
+This Windows-authenticated wrapper runs the transactional, repeat-safe 018 bootstrap **before SqlPackage generates its deployment plan**. Do not publish the DACPAC directly to a legacy or empty database. For a fresh install first create an empty target database, then use the same wrapper. Seed IDs 0-5 retain Bugfix, Chore, Feature, Meeting, PTO and TechDebt; new IDs begin above 5. The DACPAC then establishes the non-cascading FK and index without recreating WorkItems. A predeployment seed alone cannot satisfy this ordering.
+
+Unknown legacy values stop the bootstrap before schema changes. Inspect distinct WorkitemType values, resolve their original meanings with the database owner, and retry after correcting the legacy data. Do not remap them to Bugfix. On publish failure, retain the seeded table, inspect the report and retry the wrapper; it preserves existing configured types and does not reseed deleted types. Restore the backup if rollback is required. Validate legacy WorkItem IDs, time-entry relationships, counts and names against the backup before opening the upgraded application.
+
+The published WorkItems schema requires an explicit WorkitemType on inserts; it no longer defaults omitted values to legacy Bugfix (ID 0). Explicit ID 0 remains valid while that type exists.

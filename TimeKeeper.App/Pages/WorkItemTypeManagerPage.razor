@@ -1,0 +1,99 @@
+@page "/ActivityTypeManager"
+@inherits CbPageBase
+@layout AppLayout
+@inject TimeKeeper.Domain.Services.Interfaces.IWorkItemTypeService TypeService
+<PageTitle>Activity Type Manager</PageTitle>
+<RadzenLayout Style="height:100%">
+ <AppLayoutHeaderComponent><h5>Activity Type Manager</h5></AppLayoutHeaderComponent>
+ <RadzenBody>
+  <RadzenButton Text="Add New Type" Click="Add" />
+  <label>Filter <input @bind="filter" @bind:event="oninput" placeholder="Name or Description" /></label>
+  @if (error != null) { <div role="alert" style="color:var(--rz-danger)">@error</div> }
+  <table class="rz-grid-table" style="width:100%">
+   <thead><tr>
+    @foreach(var column in columns) { <th><button @onclick="@(() => Sort(column))">@column @(sort==column ? (descending ? "(descending)" : "(ascending)") : "")</button></th> }
+    <th>Actions</th>
+   </tr></thead>
+   <tbody>
+    @foreach(var row in VisibleRows)
+    {
+     <tr @key="row.Id">
+      @if (draft?.Id == row.Id)
+      {
+       <td><RadzenTextBox @bind-Value="draft.Icon" MaxLength="120" /></td>
+       <td><RadzenTextBox @bind-Value="draft.Name" MaxLength="120" /></td>
+       <td><RadzenTextArea @bind-Value="draft.Description" MaxLength="1000" /></td>
+       <td>@row.ActivityCount</td>
+       <td><RadzenSwitch @bind-Value="draft.IsEnabled" /></td>
+       <td><RadzenButton Text="Cancel" Click="Cancel" /><RadzenButton Text="Update" Click="Update" /></td>
+      }
+      else
+      {
+       <td>@if (!string.IsNullOrWhiteSpace(row.Icon)) { <RadzenIcon Icon="@row.Icon" /> }</td>
+       <td>@row.Name</td><td>@row.Description</td><td>@row.ActivityCount</td>
+       <td><span style="@(row.IsEnabled ? "background:#d5f5df;color:#14532d;padding:4px;border-radius:12px" : "background:#eee;color:#444;padding:4px;border-radius:12px")">@(row.IsEnabled ? "Enabled" : "Disabled")</span></td>
+       <td><RadzenButton Text="Edit" Click="@(() => Edit(row))" /><RadzenButton Text="Delete" Click="@(() => Delete(row))" /></td>
+      }
+     </tr>
+    }
+   </tbody>
+  </table>
+ </RadzenBody>
+</RadzenLayout>
+@code {
+ private List<WorkItemType> rows = [];
+ private WorkItemType? draft;
+ private string filter = "", sort = "Name";
+ private bool descending;
+ private string? error;
+ private readonly string[] columns = ["Icon", "Name", "Description", "Activity Count", "Status"];
+ private IEnumerable<WorkItemType> VisibleRows
+ {
+  get {
+   var filtered=rows.Where(t => t.Name.Contains(filter,StringComparison.OrdinalIgnoreCase) || (t.Description?.Contains(filter,StringComparison.OrdinalIgnoreCase) ?? false));
+   Func<WorkItemType,object> key = sort switch {
+    "Icon" => t => t.Icon ?? "", "Description" => t => t.Description ?? "",
+    "Activity Count" => t => t.ActivityCount, "Status" => t => t.IsEnabled, _ => t => t.Name };
+   return descending ? filtered.OrderByDescending(key).ThenBy(t=>t.Name) : filtered.OrderBy(key).ThenBy(t=>t.Name);
+  }
+ }
+ protected override async Task OnInitializedAsync() { await base.OnInitializedAsync(); if(SessionSvc.User!=null) await Reload(); }
+ private async Task Reload() { rows=await TypeService.GetTypes(); }
+ private void Sort(string column) { descending=sort==column && !descending; sort=column; }
+ private void Cancel() { draft=null; error=null; }
+ private async Task Add() {
+  if(await DialogSvc.OpenAsync<WorkItemTypeAddDialog>("Add New Type") == true) await Reload();
+ }
+ private async Task Edit(WorkItemType row) {
+  error=null;
+  if(row.IsEnabled) { draft=row.Draft(); return; }
+  if(await Confirm("Enable this Activity Type?") == true)
+   await Run(async () => { await TypeService.SetEnabled(row.Id,true,SessionSvc.User!); await Reload(); });
+ }
+ private async Task Update() {
+  if(draft==null) return;
+  await Run(async () => { await TypeService.Save(draft,SessionSvc.User!); draft=null; await Reload(); });
+ }
+ private async Task Delete(WorkItemType row) {
+  var referenced=row.ActivityCount>0;
+  var message=referenced ? "This type has associated Activities and cannot be deleted. Disable it instead? Existing associations and history will be retained; it will be excluded from editable Type lists." : "Permanently delete this Activity Type?";
+  if(await Confirm(message) != true) return;
+  await Run(async () => {
+   if(referenced) await TypeService.SetEnabled(row.Id,false,SessionSvc.User!);
+   else
+   {
+    try { await TypeService.Delete(row.Id); }
+    catch
+    {
+     // Refresh stale counts; the next click must confirm the current action.
+     await Reload();
+     throw;
+    }
+   }
+   if(draft?.Id==row.Id) draft=null;
+   await Reload();
+  });
+ }
+ private Task<bool?> Confirm(string message) => DialogSvc.Confirm(message,"Activity Type",new ConfirmOptions { OkButtonText="Yes", CancelButtonText="No" });
+ private async Task Run(Func<Task> action) { error=null; try { await action(); } catch(Exception ex) { error=ex.Message; } }
+}

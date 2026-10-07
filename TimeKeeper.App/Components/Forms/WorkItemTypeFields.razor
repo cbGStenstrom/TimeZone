@@ -1,0 +1,9 @@
+<RadzenStack>
+ <label>Name <RadzenTextBox @bind-Value="Model.Name" MaxLength="120" Style="width:100%" /></label>
+ <label>Description <RadzenTextArea @bind-Value="Model.Description" MaxLength="1000" Style="width:100%" /></label>
+ <label>Icon <RadzenTextBox @bind-Value="Model.Icon" MaxLength="120" Style="width:100%" /></label>
+ <label>Enabled <RadzenSwitch @bind-Value="Model.IsEnabled" /></label>
+</RadzenStack>
+@code {
+ [Parameter, EditorRequired] public WorkItemType Model { get; set; } = default!;
+}

@@ -54,7 +54,8 @@ public class TimeEntryQueryHandler(TimeKeeperDbContext dbCtx) :
     /// <returns></returns>
     public async Task<IEnumerable<Models.TimeEntry>> Handle(GetFilteredTimeEntries request, CancellationToken cancellationToken = default)
     {
-        var query = this._dbCtx.TimeEntries.Include(entry => entry.WorkItem) 
+        var query = this._dbCtx.TimeEntries.Include(entry => entry.WorkItem).ThenInclude(w => w.Type)
+                                           .Include(entry => entry.WorkItem)
                                            .ThenInclude(workitem => workitem.Project) as IQueryable<DataAccess.Entities.TimeEntry>;
 
         if (request.Filter != null)
@@ -95,7 +96,8 @@ public class TimeEntryQueryHandler(TimeKeeperDbContext dbCtx) :
     /// </returns>
     public async Task<Models.TimeEntry> Handle(GetTimeEntryById request, CancellationToken cancellationToken = default)
     {
-        var query = this._dbCtx.TimeEntries.Include(entry => entry.WorkItem)
+        var query = this._dbCtx.TimeEntries.Include(entry => entry.WorkItem).ThenInclude(w => w.Type)
+                                           .Include(entry => entry.WorkItem)
                                            .ThenInclude(workitem => workitem.Project) 
                                            .Where(e=>e.Id == request.TimeEntryId) as IQueryable<DataAccess.Entities.TimeEntry>;
 
@@ -122,7 +124,8 @@ public class TimeEntryQueryHandler(TimeKeeperDbContext dbCtx) :
     /// </returns>
     public async Task<Models.TimeEntry?> Handle(GetActiveTimeEntry request, CancellationToken cancellationToken = default)
     {
-        var query = this._dbCtx.TimeEntries.Include(entry => entry.WorkItem)
+        var query = this._dbCtx.TimeEntries.Include(entry => entry.WorkItem).ThenInclude(w => w.Type)
+                                           .Include(entry => entry.WorkItem)
                                            .ThenInclude(workitem => workitem.Project)
                                            .Where(e => !e.EndWork.HasValue ) as IQueryable<DataAccess.Entities.TimeEntry>;
 

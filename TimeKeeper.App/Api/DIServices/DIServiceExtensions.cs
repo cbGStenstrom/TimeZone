@@ -18,6 +18,7 @@ namespace TimeKeeper.App.Api.DIServices.Extensiions
         /// <returns></returns>
         public static IServiceCollection AddTimeKeeperDomainServices(this IServiceCollection services) 
         {
+            services.AddTransient<IWorkItemTypeService, WorkItemTypeService>();
             services.AddScoped<ProjectServiceOptions>();
             services.AddTransient<IProjectService, ProjectService>();
 

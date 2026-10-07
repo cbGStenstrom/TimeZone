@@ -25,7 +25,7 @@ namespace TimeKeeper.Domain.Utilities.Mappers
                 Title = model.Title,
                 Description = model.Description,
                 IsBillable = model.IsBillable,
-                WorkItemType = (int)(model.WorkItemType ?? default),
+                WorkItemType = model.WorkItemType ?? throw new InvalidOperationException("Work Item Type is required."),
             };
 
             if (model.TimeEntries != null)
@@ -58,7 +58,7 @@ namespace TimeKeeper.Domain.Utilities.Mappers
             entity.Title = model.Title;
             entity.Description = model.Description;
             entity.IsBillable = model.IsBillable;
-            entity.WorkItemType = (int)(model.WorkItemType ?? default);
+            entity.WorkItemType = model.WorkItemType ?? throw new InvalidOperationException("Work Item Type is required.");
 
             //if(entity.TimeEntries != null)
             //{
@@ -110,10 +110,11 @@ namespace TimeKeeper.Domain.Utilities.Mappers
                 Title = entity.Title,
                 Description = entity.Description,
                 IsBillable = entity.IsBillable,
-                WorkItemType = (WorkItemType)entity.WorkItemType,
+                WorkItemType = entity.WorkItemType,
+                Type = entity.Type?.MapEntityToDomain(),
             };
 
-            if(entity.Project != null)
+            if (entity.Project != null)
             {
                 model.Project = entity.Project.MapEntityToDomain();
             }

@@ -11,11 +11,15 @@
 	IsDeployed BIT NOT NULL DEFAULT 0,
 	ProductionVersion NVARCHAR(20) NULL,
 	ReviewDate DATETIME NULL,
-	WorkitemType INT NOT NULL DEFAULT 0,
+	WorkitemType INT NOT NULL,
 	[Description] NVARCHAR(MAX),
 	CreatedDate DATETIME NOT NULL DEFAULT GETDATE(),
 	CreatedBy NVARCHAR(120) NOT NULL DEFAULT 'AUTO',
 	UpdatedDate DATETIME NOT NULL DEFAULT GETDATE(),
 	UpdatedBy NVARCHAR(120) NOT NULL DEFAULT 'AUTO',
+    CONSTRAINT FK_WorkItems_WorkItemTypes FOREIGN KEY (WorkitemType) REFERENCES dbo.WorkItemTypes(Id),
     CONSTRAINT [FK_WorkItems_ToProjects] FOREIGN KEY ([ProjectID]) REFERENCES [Projects]([ID]) ON DELETE CASCADE
 )
+
+GO
+CREATE INDEX IX_WorkItems_WorkitemType ON dbo.WorkItems(WorkitemType);

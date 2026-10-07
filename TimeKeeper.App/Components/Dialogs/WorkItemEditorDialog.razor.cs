@@ -53,26 +53,30 @@ public partial class WorkItemEditorDialog : CbComponentBase
             return;
         }
 
-        if (WorkItem.IsNew)
+        try
         {
-            WorkItem created =
-                await WorkItemSvc!.AddWorkItem(WorkItem)
-                ?? throw new Exception("Failed to create Work Item.");
-
-            DialogSvc!.Close(created);
-        }
-        else
-        {
-            bool success =
-                await WorkItemSvc!.UpdateWorkItem(WorkItem);
-
-            if (!success)
+            if (WorkItem.IsNew)
             {
-                throw new Exception("Failed to save Work Item.");
-            }
+                WorkItem created =
+                    await WorkItemSvc!.AddWorkItem(WorkItem)
+                    ?? throw new Exception("Failed to create Work Item.");
 
-            DialogSvc!.Close(WorkItem);
+                DialogSvc!.Close(created);
+            }
+            else
+            {
+                bool success =
+                    await WorkItemSvc!.UpdateWorkItem(WorkItem);
+
+                if (!success)
+                {
+                    throw new Exception("Failed to save Work Item.");
+                }
+
+                DialogSvc!.Close(WorkItem);
+            }
         }
+        catch (InvalidOperationException ex) { await DialogSvc!.Alert(ex.Message, "Validation"); }
     }
 
     void btnCancel_OnClick()
