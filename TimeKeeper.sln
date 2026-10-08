@@ -73,6 +73,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ship", "ship", "{A68B0BE6-B4F3-4220-9BA5-FC3F88E8DF7A}"
 	ProjectSection(SolutionItems) = preProject
 		.ship\SHIP.md = .ship\SHIP.md
+		.ship\ShipReadme.md = .ship\ShipReadme.md
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "agents", "agents", "{D54C2FB1-E49B-415D-86FC-3175E3BEA14C}"
