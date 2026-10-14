@@ -71,3 +71,60 @@ A simulated failure scenario can pass; a historical failure is not an unresolved
 current failure. Quote or fence status examples. Distinct unquoted standalone
 outcomes contradict each other. The final nonblank line must be the unquoted,
 unfenced primary outcome; narrative PASS words cannot substitute for it.
+
+## External automated continuation
+
+Only a user invokes `ship-validate.ps1` in Developer PowerShell. Never invoke it
+from an agent. For a blocked automated requirement, write pending-validation.json
+in the run folder using this version 1 contract (values below are examples):
+
+```json
+{
+  "version": 1, "run": "2026-10-07_190659", "cycle": 1,
+  "reportHash": "SHA256 of current test-report.md",
+  "planHash": "SHA256 of approved plan.md",
+  "implementationHash": "engine-supplied implementation identity",
+  "checks": [{
+    "id": "domain-tests", "requirement": "exact excerpt from approved plan",
+    "reportReference": "exact excerpt from current report identifying blocker",
+    "reason": "Infrastructure prerequisite unavailable",
+    "executable": "dotnet",
+    "arguments": ["test", "TimeKeeper.Domain.Tests/TimeKeeper.Domain.Tests.csproj"],
+    "workingDirectory": ".",
+    "records": ["Command domain tests exit code: 1", "Failed tests: 5"]
+  }]
+}
+```
+
+Map only exact unique anchored current infrastructure records. Never map a
+behavioral failure, aggregate with unrelated failures, or unclear legacy evidence.
+An empty records list supports required commands that never ran. Keep human
+requirements in the report, outside executable requests. Unsupported commands
+remain BLOCKED. Do not invent fixture scripts or claim database disposability.
+Request preparation is read-only and executes no validation; preserve the report.
+
+External attempt result JSON contains separate sanitized streams, timestamps,
+exit code and REQUIRES_TESTER_ASSESSMENT or INCOMPLETE classification. Assess each
+check explicitly in the fresh report: reference attempt ID, classification
+(PASS, demonstrated behavioral FAIL, infrastructure BLOCKED), reason, output and
+coverage including skipped tests. Exit zero alone does not prove required coverage.
+Consume fresh matching host results rather than rerunning checks in the sandbox.
+Preserve original failed records in report history and explain their exact
+reconciliation. Unrelated failures remain current. Incomplete or stale attempts
+cannot satisfy requirements. After code correction all prior external and human
+observations are historical. Remaining browser/deployment coverage keeps BLOCKED.
+
+For host continuation write external-assessment.json before concluding, with
+version=1, run, cycle, reportHash (SHA256 of the fresh report), implementationHash
+(engine supplied), and attempts. Each attempt has file (external-<id>.result.json),
+classification (PASS/FAIL/BLOCKED), reason, coverageComplete (boolean), and
+demonstratedDefect (boolean). Assess every listed current attempt exactly once.
+PASS requires exit zero and complete coverage for that check; skipped required
+coverage is BLOCKED. FAIL requires demonstrated incorrect behavior and explanation.
+Do not include stale attempts as current. Remaining human criteria may leave the
+report BLOCKED even when every assessed automated check passes.
+
+If the engine has not supplied an implementation identity, describe pending
+checks in the BLOCKED report and defer manifest creation to the wrapper's read-only
+request-preparation stage. Do not guess identities. Reviewed fixture scripts and
+policy entries are prerequisites; request preparation never creates them.
