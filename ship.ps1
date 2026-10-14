@@ -235,6 +235,12 @@ function Save-ReportHistory {
     }
 }
 
+function Format-ShipDisplayPath {
+    param([string]$Path)
+    if (Get-Command Protect-ExternalText -ErrorAction SilentlyContinue) { return Protect-ExternalText $Path }
+    return $Path
+}
+
 function Assert-ManualTesterEvidence {
     param([string]$Text, [bool]$RequireSuccess, [bool]$AllowFailure = $false)
     $Lines = @($Text.TrimEnd() -split '\r?\n')
@@ -490,7 +496,7 @@ $Validation
 Reviewer: **$Reviewer** (MISSING means unavailable/not run).
 
 ### Local artifacts
-$RunRoot
+$(Format-ShipDisplayPath $RunRoot)
 "@ | Set-Content -LiteralPath $ResultFile -Encoding UTF8 -ErrorAction Stop
 
         if (-not (Get-Command gh -ErrorAction SilentlyContinue)) { throw 'GitHub CLI (gh) was not found.' }
@@ -500,7 +506,11 @@ $RunRoot
         if ($LASTEXITCODE -ne 0) { throw "GitHub comment returned exit code $LASTEXITCODE." }
         $ReportingTarget | Set-Content -LiteralPath $ReceiptFile -Encoding UTF8 -ErrorAction Stop
     }
-    catch { Write-Warning "GitHub result reporting failed; workflow status is unchanged. $($_.Exception.Message)" }
+    catch {
+        $Message = "GitHub result reporting failed; workflow status is unchanged. $($_.Exception.Message)"
+        if (Get-Command Protect-ExternalText -ErrorAction SilentlyContinue) { $Message = Protect-ExternalText $Message }
+        Write-Warning $Message
+    }
     finally { $global:LASTEXITCODE = $PreviousExitCode }
 }
 
@@ -591,7 +601,7 @@ $Message
 
     if (Test-Path $RunRoot) {
         Write-Host "Run folder:"
-        Write-Host $RunRoot
+        Write-Host (Format-ShipDisplayPath $RunRoot)
         Write-Host ""
     }
 
@@ -609,9 +619,9 @@ function Stop-ShipBlocked {
     Write-ShipStep "SHIP BLOCKED"
     Write-Host "Tester could not complete required validation. Human intervention is required." -ForegroundColor Yellow
     Write-Host "Run: $RunId"
-    Write-Host "Run folder: $RunRoot"
+    Write-Host ("Run folder: " + (Format-ShipDisplayPath $RunRoot))
     Write-Host "See the test report for the precise blocker and required next action:"
-    Write-Host $TestReportFile
+    Write-Host (Format-ShipDisplayPath $TestReportFile)
     exit 1
 }
 
@@ -805,6 +815,10 @@ Map only clearly identified infrastructure failures. Leave unsupported or ambigu
                 Copy-Item -LiteralPath $OriginalReport -Destination $TestReportFile -Force -ErrorAction Stop
             }
             Set-ShipStatus 'BLOCKED'
+            if (-not (Test-Path -LiteralPath $RequestFile -PathType Leaf)) {
+                Write-Warning 'Request preparation did not create pending-validation.json. Run remains BLOCKED; request preparation must be retried.'
+                return
+            }
             Write-Host 'Requests prepared without execution. Invoke ship-validate again to validate and confirm them.'
             return
         }
@@ -844,7 +858,7 @@ Map only clearly identified infrastructure failures. Leave unsupported or ambigu
             Write-Host "SHIP STOPPED" -ForegroundColor Red
             Write-Host ""
             Write-Host "Run does not exist:"
-            Write-Host $RunRoot
+            Write-Host (Format-ShipDisplayPath $RunRoot)
             return
         }
 
@@ -898,7 +912,7 @@ Map only clearly identified infrastructure failures. Leave unsupported or ambigu
                 "^BLOCKED$" {
                     Write-Host "Required validation remains incomplete; human intervention is required."
                     Write-Host "Ship will not automatically resume a blocked run."
-                    Write-Host "Test report: $TestReportFile"
+                    Write-Host ("Test report: " + (Format-ShipDisplayPath $TestReportFile))
                 }
 
                 default {
@@ -946,7 +960,7 @@ Map only clearly identified infrastructure failures. Leave unsupported or ambigu
 
         Write-Host ""
         Write-Host "Using approved plan:"
-        Write-Host $PlanFile
+        Write-Host (Format-ShipDisplayPath $PlanFile)
 
         # Issue snapshot is optional because this may have been
         # a free-text task.
@@ -973,7 +987,7 @@ Map only clearly identified infrastructure failures. Leave unsupported or ambigu
         $ReportingEligible = $true
 
         Write-Host "Run ID:   $RunId"
-        Write-Host "Run path: $RunRoot"
+        Write-Host ("Run path: " + (Format-ShipDisplayPath $RunRoot))
 
 
         # ----------------------------------------------------
@@ -1346,7 +1360,7 @@ Do not implement the plan.
 
             Write-Host ""
             Write-Host "Plan:"
-            Write-Host $PlanFile
+            Write-Host (Format-ShipDisplayPath $PlanFile)
 
             Write-Host ""
             Write-Host "Status:"
@@ -1811,22 +1825,22 @@ CHANGES_REQUESTED
 
             Write-Host ""
             Write-Host "Run artifacts:"
-            Write-Host $RunRoot
+            Write-Host (Format-ShipDisplayPath $RunRoot)
 
 
             Write-Host ""
             Write-Host "Plan:"
-            Write-Host $PlanFile
+            Write-Host (Format-ShipDisplayPath $PlanFile)
 
 
             Write-Host ""
             Write-Host "Test report:"
-            Write-Host $TestReportFile
+            Write-Host (Format-ShipDisplayPath $TestReportFile)
 
 
             Write-Host ""
             Write-Host "Review report:"
-            Write-Host $ReviewReportFile
+            Write-Host (Format-ShipDisplayPath $ReviewReportFile)
 
 
             Write-Host ""
@@ -1966,7 +1980,7 @@ finally {
 
             Write-Host ""
             Write-Host "Run folder:"
-            Write-Host $RunRoot
+            Write-Host (Format-ShipDisplayPath $RunRoot)
 
 
             Write-Host ""
