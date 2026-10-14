@@ -41,7 +41,10 @@ param(
     )]
     [Parameter(Mandatory = $true, ParameterSetName = "ManualPass")]
     [Parameter(Mandatory = $true, ParameterSetName = "ManualFail")]
+    [Parameter(Mandatory = $true, ParameterSetName = "External")]
     [string]$Run,
+    [Parameter(Mandatory = $true, ParameterSetName = "External")]
+    [switch]$ExternalValidation,
 
     [Parameter(Mandatory = $true, ParameterSetName = "ManualPass")]
     [switch]$Pass,
@@ -152,11 +155,12 @@ Set-Location $RepoRoot
 # ------------------------------------------------------------
 
 $IsContinue = ($PSCmdlet.ParameterSetName -eq "Continue")
+$IsExternal = $PSCmdlet.ParameterSetName -eq "External"
 $IsManual = $PSCmdlet.ParameterSetName -in @('ManualPass', 'ManualFail')
 $OwnsExecution = $false
 $DirectReview = $false
 
-if ($IsContinue -or $IsManual) {
+if ($IsContinue -or $IsManual -or $IsExternal) {
 
     # Ship run IDs currently use this exact timestamp format.
     # Restricting the value also prevents accidentally pointing
@@ -231,8 +235,14 @@ function Save-ReportHistory {
     }
 }
 
+function Format-ShipDisplayPath {
+    param([string]$Path)
+    if (Get-Command Protect-ExternalText -ErrorAction SilentlyContinue) { return Protect-ExternalText $Path }
+    return $Path
+}
+
 function Assert-ManualTesterEvidence {
-    param([string]$Text, [bool]$RequireSuccess)
+    param([string]$Text, [bool]$RequireSuccess, [bool]$AllowFailure = $false)
     $Lines = @($Text.TrimEnd() -split '\r?\n')
     if ($Lines[-1].Trim() -ine 'BLOCKED') { throw 'Tester report must conclude standalone BLOCKED.' }
     $Fence = ''; $FenceLength = 0; $IgnoredDepth = 0; $CurrentSection = $false
@@ -293,7 +303,7 @@ function Assert-ManualTesterEvidence {
         }
         if ($Key) {
             if (-not $Valid) { throw "Malformed or unknown current automated result: $Line" }
-            if ($Failure) { throw "Manual PASS cannot override current automated failure: $Line" }
+            if ($Failure -and -not $AllowFailure) { throw "Manual PASS cannot override current automated failure: $Line" }
             if ($Records.ContainsKey($Key) -and $Records[$Key] -ine $Value) {
                 throw "Conflicting current automated results for ${Key}."
             }
@@ -305,9 +315,10 @@ function Assert-ManualTesterEvidence {
 }
 
 # Preflight runs outside the mutation and interruption handlers.
-if ($IsManual) {
+if ($IsManual -or $IsExternal) {
     try {
-        if (-not ($Pass -or $Fail)) { throw 'An affirmative -Pass or -Fail is required.' }
+        if ($IsExternal -and -not $ExternalValidation) { throw 'An affirmative -ExternalValidation switch is required.' }
+        if ($IsManual -and -not ($Pass -or $Fail)) { throw 'An affirmative -Pass or -Fail is required.' }
         if (-not (Test-Path -LiteralPath $RunRoot -PathType Container)) { throw 'Run does not exist.' }
         if (-not (Test-Path -LiteralPath $RunStatusFile -PathType Leaf) -or
             (Get-Content -LiteralPath $RunStatusFile -Raw -ErrorAction Stop).Trim() -cne 'BLOCKED') {
@@ -329,12 +340,31 @@ if ($IsManual) {
             }
         }
         $Evidence = Get-Content -LiteralPath $TestReportFile -Raw -ErrorAction Stop
-        Assert-ManualTesterEvidence -Text $Evidence -RequireSuccess ([bool]$Pass)
+        if ($IsExternal) { . (Join-Path $ShipRoot 'external-validation.ps1') }
+        Assert-ManualTesterEvidence -Text $Evidence -RequireSuccess ([bool]($Pass -or $IsExternal)) -AllowFailure ([bool]$IsExternal)
+        if ($IsManual -and $Pass -and (Test-Path (Join-Path $RunRoot 'external-current.json'))) {
+            . (Join-Path $ShipRoot 'external-validation.ps1')
+            $Receipt = Get-Content (Join-Path $RunRoot 'external-current.json') -Raw | ConvertFrom-Json
+            if ($Receipt.version -ne 1 -or $Receipt.run -cne $RunId -or
+                $Receipt.planHash -cne (Get-ExternalHash $PlanFile) -or
+                $Receipt.evidenceHash -cne (Get-ExternalEvidenceIdentity) -or
+                $Receipt.reportHash -cne (Get-ExternalHash $TestReportFile) -or
+                $Receipt.implementationHash -cne (Get-ImplementationIdentity)) { throw 'External evidence is stale; fresh Tester validation required.' }
+        }
         if (Test-Path -LiteralPath $CycleFile) {
             $SavedCycle = (Get-Content -LiteralPath $CycleFile -Raw -ErrorAction Stop).Trim()
             if ($SavedCycle -notmatch '^[1-3]$') { throw 'Invalid validation-cycle metadata.' }
             $Cycle = [int]$SavedCycle
         }
+        if ($IsManual -and $Pass -and $Receipt -and $Receipt.cycle -ne $Cycle) { throw 'External receipt belongs to an older validation cycle.' }
+        if ($IsExternal) {
+            . (Join-Path $ShipRoot 'external-validation.ps1')
+            $RequestFile = Join-Path $RunRoot 'pending-validation.json'
+            if (Test-Path -LiteralPath $RequestFile) {
+                $Request = Get-Content -LiteralPath $RequestFile -Raw -ErrorAction Stop | ConvertFrom-Json
+                Assert-ExternalRequest $Request
+            }
+        } else {
         if (-not $PSBoundParameters.ContainsKey('Scenarios')) {
             $Scenarios = @(Read-Host 'Enter verified scenarios/observations (FAIL must describe the demonstrated defect)')
         }
@@ -362,8 +392,11 @@ if ($IsManual) {
         } finally {
             if (Test-Path -LiteralPath $TempEvidence) { Remove-Item -LiteralPath $TempEvidence -Force }
         }
+        }
     } catch {
-        Write-Host "SHIP STOPPED: $($_.Exception.Message)" -ForegroundColor Red
+        $Message = $_.Exception.Message
+        if (Get-Command Protect-ExternalText -ErrorAction SilentlyContinue) { $Message = Protect-ExternalText $Message }
+        Write-Host "SHIP STOPPED: $Message" -ForegroundColor Red
         exit 1
     }
 }
@@ -414,7 +447,9 @@ function Get-BoundedEvidence {
         '- ' + $Line
     })
     if ($Lines.Count -eq 0) { return '- Unavailable; no concise evidence was recorded.' }
-    return $Lines -join "`n"
+    $Text = $Lines -join "`n"
+    if (Get-Command Protect-ExternalText -ErrorAction SilentlyContinue) { $Text = Protect-ExternalText $Text }
+    return $Text
 }
 
 function Publish-ShipResult {
@@ -454,13 +489,14 @@ $Implementation
 ### Validation
 Tester: **$Tester** (MISSING means unavailable/not run).
 $(if ($DirectReview) { 'Human validation: **PASS**; original Tester remains BLOCKED. See manual-validation.md.' })
+$(if ($IsExternal) { 'Automated validation includes sanitized host execution evidence, assessed by Tester. See external result artifacts.' })
 $Validation
 
 ### Review
 Reviewer: **$Reviewer** (MISSING means unavailable/not run).
 
 ### Local artifacts
-$RunRoot
+$(Format-ShipDisplayPath $RunRoot)
 "@ | Set-Content -LiteralPath $ResultFile -Encoding UTF8 -ErrorAction Stop
 
         if (-not (Get-Command gh -ErrorAction SilentlyContinue)) { throw 'GitHub CLI (gh) was not found.' }
@@ -470,7 +506,11 @@ $RunRoot
         if ($LASTEXITCODE -ne 0) { throw "GitHub comment returned exit code $LASTEXITCODE." }
         $ReportingTarget | Set-Content -LiteralPath $ReceiptFile -Encoding UTF8 -ErrorAction Stop
     }
-    catch { Write-Warning "GitHub result reporting failed; workflow status is unchanged. $($_.Exception.Message)" }
+    catch {
+        $Message = "GitHub result reporting failed; workflow status is unchanged. $($_.Exception.Message)"
+        if (Get-Command Protect-ExternalText -ErrorAction SilentlyContinue) { $Message = Protect-ExternalText $Message }
+        Write-Warning $Message
+    }
     finally { $global:LASTEXITCODE = $PreviousExitCode }
 }
 
@@ -561,7 +601,7 @@ $Message
 
     if (Test-Path $RunRoot) {
         Write-Host "Run folder:"
-        Write-Host $RunRoot
+        Write-Host (Format-ShipDisplayPath $RunRoot)
         Write-Host ""
     }
 
@@ -579,9 +619,9 @@ function Stop-ShipBlocked {
     Write-ShipStep "SHIP BLOCKED"
     Write-Host "Tester could not complete required validation. Human intervention is required." -ForegroundColor Yellow
     Write-Host "Run: $RunId"
-    Write-Host "Run folder: $RunRoot"
+    Write-Host ("Run folder: " + (Format-ShipDisplayPath $RunRoot))
     Write-Host "See the test report for the precise blocker and required next action:"
-    Write-Host $TestReportFile
+    Write-Host (Format-ShipDisplayPath $TestReportFile)
     exit 1
 }
 
@@ -594,7 +634,16 @@ function Invoke-CodexAgent {
 
     Write-ShipStep "Running $RoleName"
 
-    & codex exec --sandbox workspace-write $Prompt
+    if ($IsExternal) {
+        & codex exec --sandbox workspace-write (Protect-ExternalText $Prompt) 2>&1 | ForEach-Object { Write-Host (Protect-ExternalText ([string]$_)) }
+        if (-not $PreparingExternalRequests) {
+            foreach ($Path in @($TestReportFile, $ReviewReportFile, (Join-Path $RunRoot 'implementation-summary.md'))) {
+                if (Test-Path -LiteralPath $Path) { [IO.File]::WriteAllText($Path, (Protect-ExternalText ([IO.File]::ReadAllText($Path)))) }
+            }
+        }
+    } else {
+        & codex exec --sandbox workspace-write $Prompt
+    }
 
     if ($LASTEXITCODE -ne 0) {
         Stop-Ship "$RoleName failed. Codex returned exit code $LASTEXITCODE."
@@ -742,7 +791,51 @@ try {
     # CONTINUE EXISTING RUN
     # ========================================================
 
-    if ($IsManual) {
+    if ($IsExternal) {
+        $TaskDescription = "Externally validated Ship run $RunId"
+        if (-not (Test-Path -LiteralPath $RequestFile)) {
+            $OwnsExecution = $true
+            Set-ShipStatus 'TESTING'
+            $OriginalReport = "$TestReportFile.history.$([guid]::NewGuid().ToString('N'))"
+            Copy-Item -LiteralPath $TestReportFile -Destination $OriginalReport -ErrorAction Stop
+            $Preparation = @"
+You are the Tester for the Ship workflow.
+Read .ship/agents/tester.md, $PlanFile and $OriginalReport.
+Read-only request preparation: do not run commands, change code, replan or replace the report.
+Write $RequestFile using version 1 pending-validation contract.
+Run: $RunId; cycle: $Cycle; reportHash: $(Get-ExternalHash $TestReportFile)
+planHash: $(Get-ExternalHash $PlanFile); implementationHash: $(Get-ImplementationIdentity)
+Map only clearly identified infrastructure failures. Leave unsupported or ambiguous checks blocked.
+"@
+            $PreparingExternalRequests = $true
+            try { Invoke-CodexAgent -RoleName 'TESTER' -Prompt $Preparation }
+            finally {
+                $PreparingExternalRequests = $false
+                # Read-only reassessment must preserve the source report byte-for-byte.
+                Copy-Item -LiteralPath $OriginalReport -Destination $TestReportFile -Force -ErrorAction Stop
+            }
+            Set-ShipStatus 'BLOCKED'
+            if (-not (Test-Path -LiteralPath $RequestFile -PathType Leaf)) {
+                Write-Warning 'Request preparation did not create pending-validation.json. Run remains BLOCKED; request preparation must be retried.'
+                return
+            }
+            Write-Host 'Requests prepared without execution. Invoke ship-validate again to validate and confirm them.'
+            return
+        }
+        foreach ($Check in $Request.checks) {
+            Write-Host (Protect-ExternalText ("$($Check.id): $($Check.executable) $($Check.arguments -join ' ') -- $($Check.reason)"))
+        }
+        $Confirmation = Read-Host 'Run ALL listed checks from this host? Enter YES to confirm'
+        if ($Confirmation -cne 'YES') { Write-Host 'No validation launched; run remains BLOCKED.'; return }
+        Assert-ExternalRequest $Request
+        $OwnsExecution = $true
+        Set-ShipStatus 'TESTING'
+        $CurrentAttempts = @()
+        foreach ($Check in $Request.checks) { Invoke-ExternalCheck $Check $Request }
+        if ($PostResult) { $ReportingTarget = Restore-ReportingTarget }
+        $ReportingEligible = $true
+    }
+    elseif ($IsManual) {
         $OwnsExecution = $true
         $ReportingEligible = $true
         if ($PostResult) { $ReportingTarget = Restore-ReportingTarget }
@@ -765,7 +858,7 @@ try {
             Write-Host "SHIP STOPPED" -ForegroundColor Red
             Write-Host ""
             Write-Host "Run does not exist:"
-            Write-Host $RunRoot
+            Write-Host (Format-ShipDisplayPath $RunRoot)
             return
         }
 
@@ -819,7 +912,7 @@ try {
                 "^BLOCKED$" {
                     Write-Host "Required validation remains incomplete; human intervention is required."
                     Write-Host "Ship will not automatically resume a blocked run."
-                    Write-Host "Test report: $TestReportFile"
+                    Write-Host ("Test report: " + (Format-ShipDisplayPath $TestReportFile))
                 }
 
                 default {
@@ -867,7 +960,7 @@ try {
 
         Write-Host ""
         Write-Host "Using approved plan:"
-        Write-Host $PlanFile
+        Write-Host (Format-ShipDisplayPath $PlanFile)
 
         # Issue snapshot is optional because this may have been
         # a free-text task.
@@ -894,7 +987,7 @@ try {
         $ReportingEligible = $true
 
         Write-Host "Run ID:   $RunId"
-        Write-Host "Run path: $RunRoot"
+        Write-Host ("Run path: " + (Format-ShipDisplayPath $RunRoot))
 
 
         # ----------------------------------------------------
@@ -1267,7 +1360,7 @@ Do not implement the plan.
 
             Write-Host ""
             Write-Host "Plan:"
-            Write-Host $PlanFile
+            Write-Host (Format-ShipDisplayPath $PlanFile)
 
             Write-Host ""
             Write-Host "Status:"
@@ -1311,7 +1404,7 @@ Do not implement the plan.
     # --------------------------------------------------------
 
     $OwnsExecution = $true
-    if (-not $IsManual) {
+    if (-not $IsManual -and -not $IsExternal) {
     Write-ShipStep "Capturing pre-Coder Git baseline"
 
     Save-GitSnapshot `
@@ -1329,7 +1422,7 @@ Do not implement the plan.
     # ========================================================
 
     }
-    if (-not $DirectReview) {
+    if (-not $DirectReview -and -not $IsExternal) {
     Set-ShipStatus "CODING"
 
 
@@ -1478,6 +1571,12 @@ and the human action or capability required to continue.
 "@
 
 
+        $TesterPrompt += "`nRead all $RunRoot/test-report.md.history.*, $RunRoot/external-*.json and $RunRoot/pending-validation.json and its .history.* files when present. Match run, cycle, implementation and report identities. After corrections all earlier host and human evidence is historical. Consume current host evidence without rerunning environment-dependent checks in the sandbox. Exit zero alone does not establish coverage; skipped required tests remain BLOCKED. Classify nonzero output: demonstrated defects FAIL, infrastructure/inconclusive BLOCKED. Preserve unrelated failures. Describe reconciliation by check ID and exact mapped records; preserve original evidence in history. Include remaining human and automated checks.`n"
+        if ($IsExternal) {
+            $TesterPrompt += "`nImplementation identity: $(Get-ImplementationIdentity); cycle: $Cycle; run: $RunId. Write external-assessment.json per tester.md for current attempts: $($CurrentAttempts -join ', '). Use SHA256 of the fresh report. Older cycle results are historical.`n"
+            $AssessmentPath = Join-Path $RunRoot 'external-assessment.json'
+            if (Test-Path $AssessmentPath) { Save-ReportHistory $AssessmentPath }
+        }
         Invoke-CodexAgent `
             -RoleName "TESTER" `
             -Prompt $TesterPrompt
@@ -1489,6 +1588,19 @@ and the human action or capability required to continue.
         }
 
 
+        if ($IsExternal) {
+            if (Test-Path -LiteralPath $RequestFile) { Save-ReportHistory $RequestFile }
+            if ($CurrentAttempts.Count) {
+                try { Assert-ExternalAssessment }
+                catch {
+                    Write-Host (Protect-ExternalText $_.Exception.Message)
+                    Stop-ShipBlocked
+                }
+            }
+            $ReceiptPath = Join-Path $RunRoot 'external-current.json'
+            if (Test-Path $ReceiptPath) { Save-ReportHistory $ReceiptPath }
+            Write-ExternalArtifact $ReceiptPath @{ version=1; reportHash=(Get-ExternalHash $TestReportFile); implementationHash=(Get-ImplementationIdentity); planHash=(Get-ExternalHash $PlanFile); evidenceHash=(Get-ExternalEvidenceIdentity); cycle=$Cycle; run=$RunId }
+        }
         $TestStatus =
             Get-ReportStatus `
                 -Path $TestReportFile
@@ -1553,6 +1665,7 @@ After correction, Tester will run again.
                 -Prompt $TestCorrectionPrompt
 
 
+            $CurrentAttempts = @()
             $Cycle++
             $DirectReview = $false
             Save-ValidationCycle
@@ -1608,6 +1721,7 @@ Read:
         }
 
 
+        $ReviewerPrompt += "`nRead original test-report.md.history.* and external-*.json and pending-validation.json.history.* when present. Assess mappings, output, freshness and complete coverage together. Earlier evidence cannot validate corrected code.`n"
         if (Test-Path -LiteralPath $ManualFile -PathType Leaf) {
             $ReviewerPrompt += "`nRead $ManualFile. Direct manual review: $DirectReview. When true, original Tester outcome remains BLOCKED; successful automated evidence plus latest human PASS must cover every outstanding approved criterion. Require changes for coverage gaps. After any correction, older human evidence is historical and cannot replace fresh Tester validation. Do not weaken acceptance criteria.`n"
         }
@@ -1711,22 +1825,22 @@ CHANGES_REQUESTED
 
             Write-Host ""
             Write-Host "Run artifacts:"
-            Write-Host $RunRoot
+            Write-Host (Format-ShipDisplayPath $RunRoot)
 
 
             Write-Host ""
             Write-Host "Plan:"
-            Write-Host $PlanFile
+            Write-Host (Format-ShipDisplayPath $PlanFile)
 
 
             Write-Host ""
             Write-Host "Test report:"
-            Write-Host $TestReportFile
+            Write-Host (Format-ShipDisplayPath $TestReportFile)
 
 
             Write-Host ""
             Write-Host "Review report:"
-            Write-Host $ReviewReportFile
+            Write-Host (Format-ShipDisplayPath $ReviewReportFile)
 
 
             Write-Host ""
@@ -1799,6 +1913,7 @@ After correction, Tester and Reviewer will run again.
                 -Prompt $ReviewCorrectionPrompt
 
 
+            $CurrentAttempts = @()
             $Cycle++
             $DirectReview = $false
             Save-ValidationCycle
@@ -1865,7 +1980,7 @@ finally {
 
             Write-Host ""
             Write-Host "Run folder:"
-            Write-Host $RunRoot
+            Write-Host (Format-ShipDisplayPath $RunRoot)
 
 
             Write-Host ""

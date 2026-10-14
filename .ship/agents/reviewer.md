@@ -80,3 +80,9 @@ If changes are requested, explain them clearly.
 
 Never fix the code yourself.
 
+
+When external evidence is supplied, review original Tester history, exact request
+mappings, host attempt streams and classifications, and the fresh Tester report
+together. Verify complete coverage and implementation freshness. Reject unexplained
+replacement of unrelated failures, skipped integration/deployment coverage, or
+historical human observations used after correction.
