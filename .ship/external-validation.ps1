@@ -126,9 +126,28 @@ function Assert-ExternalRequest {
                 $Record -notmatch '^(?:Command .+ exit code: [+-]?\d+|(?:Build|Automated tests|Check [^:]+): (?:BLOCKED|FAIL|FAILED)|Failed tests: \d+)$') {
                 throw 'Unclear or unsafe infrastructure-record mapping.'
             }
-            if (@($Evidence -split '\r?\n' | Where-Object { $_ -ceq $Record }).Count -ne 1) { throw 'Mapped record must occur exactly once.' }
+            $MatchingLines = @($Evidence -split '\r?\n' | Where-Object {
+                $Candidate = $_.Trim()
+                if ($Candidate -match '^\|\s*([^|]+?)\s*\|\s*([^|]*?)\s*\|$') {
+                    $Key = $Matches[1].Trim()
+                    $Value = $Matches[2].Trim()
+                    $Candidate = "${Key}: $Value"
+                }
+                $Candidate -ceq $Record
+            })
+            if ($MatchingLines.Count -ne 1) { throw 'Mapped record must occur exactly once.' }
+
             $Mapped[$Record] = $true
-            $Remainder = ($Remainder -split '\r?\n' | Where-Object { $_ -cne $Record }) -join "`n"
+
+            $Remainder = ($Remainder -split '\r?\n' | Where-Object {
+                $Candidate = $_.Trim()
+                if ($Candidate -match '^\|\s*([^|]+?)\s*\|\s*([^|]*?)\s*\|$') {
+                    $Key = $Matches[1].Trim()
+                    $Value = $Matches[2].Trim()
+                    $Candidate = "${Key}: $Value"
+                }
+                $Candidate -cne $Record
+            }) -join "`n"
         }
     }
     # Only explicitly mapped infrastructure records may be superseded. All other failures remain refusal evidence.

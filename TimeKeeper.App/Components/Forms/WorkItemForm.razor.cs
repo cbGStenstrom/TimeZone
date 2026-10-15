@@ -59,6 +59,16 @@ namespace TimeKeeper.App.Components.Forms
         protected async override Task OnInitializedAsync()
         {
             await this.PopulateProjectList();
+        }
+
+        protected override async Task OnParametersSetAsync()
+        {
+            await RefreshWorkItemTypes();
+        }
+
+        private async Task RefreshWorkItemTypes()
+        {
+            // Reused forms and open dropdowns must reflect current type management changes.
             var allTypes = await TypeSvc.GetTypes();
             WorkItemTypes = allTypes.Where(t => t.IsEnabled).ToList();
             if (WorkItem?.IsNew == false)

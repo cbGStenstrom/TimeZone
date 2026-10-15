@@ -72,6 +72,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Codex Workflow", "Codex Wor
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ship", "ship", "{A68B0BE6-B4F3-4220-9BA5-FC3F88E8DF7A}"
 	ProjectSection(SolutionItems) = preProject
+		.ship\external-validation.ps1 = .ship\external-validation.ps1
 		.ship\SHIP.md = .ship\SHIP.md
 		.ship\ShipReadme.md = .ship\ShipReadme.md
 	EndProjectSection

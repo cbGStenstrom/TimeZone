@@ -1,0 +1,9 @@
+﻿{
+  "scripts": [
+    {
+      "path": ".ship/validation/feat018-domain-tests.ps1",
+      "sha256": "4E9B2A7F2F57459461871D85CFEFC6F66487BD33B4B0B98F09E7D8F5534B9F28",
+      "disposable": true
+    }
+  ]
+}

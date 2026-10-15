@@ -75,10 +75,15 @@
   await Run(async () => { await TypeService.Save(draft,SessionSvc.User!); draft=null; await Reload(); });
  }
  private async Task Delete(WorkItemType row) {
-  var referenced=row.ActivityCount>0;
-  var message=referenced ? "This type has associated Activities and cannot be deleted. Disable it instead? Existing associations and history will be retained; it will be excluded from editable Type lists." : "Permanently delete this Activity Type?";
-  if(await Confirm(message) != true) return;
   await Run(async () => {
+   // Choose the confirmation from current references rather than the rendered count.
+   await Reload();
+   var current=rows.SingleOrDefault(t => t.Id==row.Id);
+   if(current==null) { if(draft?.Id==row.Id) draft=null; return; }
+   row=current;
+   var referenced=row.ActivityCount>0;
+   var message=referenced ? "This type has associated Activities and cannot be deleted. Disable it instead? Existing associations and history will be retained; it will be excluded from editable Type lists." : "Permanently delete this Activity Type?";
+   if(await Confirm(message) != true) return;
    if(referenced) await TypeService.SetEnabled(row.Id,false,SessionSvc.User!);
    else
    {

@@ -39,6 +39,7 @@
 				<RadzenDropDown Data="@this.WorkItemTypes"
 									@bind-Value="@this.WorkItem.WorkItemType"
 									Name="ddlWorkItemType" TextProperty="Name" ValueProperty="Id" TValue="int?"
+									Open="@RefreshWorkItemTypes"
 									Style="width:100%;"
 									Placeholder="Select Type"
 									AllowClear="false"
