@@ -13,10 +13,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimeKeeper.Domain", "TimeKe
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{33F804E1-A761-4395-8EBE-E7B590F0F6BF}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentation", "{4676EC9A-D357-4F39-8E14-49787DA23D75}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{4676EC9A-D357-4F39-8E14-49787DA23D75}"
 	ProjectSection(SolutionItems) = preProject
 		docs\Architecture.md = docs\Architecture.md
 		docs\Backlog.md = docs\Backlog.md
+		docs\CodingStandards.md = docs\CodingStandards.md
 		docs\Deployment.md = docs\Deployment.md
 		docs\Installation.md = docs\Installation.md
 		docs\ProductCharter.md = docs\ProductCharter.md
@@ -113,6 +114,22 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{C8C97222
 		.ship\tests\tester-secret-id.tests.ps1 = .ship\tests\tester-secret-id.tests.ps1
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Templates", "Templates", "{9E162F0E-BF6E-4A2D-864C-99EBE74FD418}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Templates", "Templates", "{F221F17E-E86E-43B5-A005-FE4AE14983FE}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "BlazorPage", "BlazorPage", "{8E31FD8C-0BED-4589-BDFB-26BF1E2CF101}"
+	ProjectSection(SolutionItems) = preProject
+		docs\Templates\BlazorPage\Page.razor = docs\Templates\BlazorPage\Page.razor
+		docs\Templates\BlazorPage\Page.razor.cs = docs\Templates\BlazorPage\Page.razor.cs
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "BlazorComponent", "BlazorComponent", "{BF822F52-C76A-4D5D-8CAE-F0454834D598}"
+	ProjectSection(SolutionItems) = preProject
+		docs\Templates\BlazorComponent\Component.razor = docs\Templates\BlazorComponent\Component.razor
+		docs\Templates\BlazorComponent\Component.razor.cs = docs\Templates\BlazorComponent\Component.razor.cs
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -157,6 +174,10 @@ Global
 		{64ACBD8C-B3E6-4D02-87B7-05A9FE2D3817} = {A68B0BE6-B4F3-4220-9BA5-FC3F88E8DF7A}
 		{664114E8-6939-4EE8-B259-0253CB920648} = {A68B0BE6-B4F3-4220-9BA5-FC3F88E8DF7A}
 		{C8C97222-3408-4A92-8D11-940AD4FEB7DE} = {A68B0BE6-B4F3-4220-9BA5-FC3F88E8DF7A}
+		{9E162F0E-BF6E-4A2D-864C-99EBE74FD418} = {664114E8-6939-4EE8-B259-0253CB920648}
+		{F221F17E-E86E-43B5-A005-FE4AE14983FE} = {4676EC9A-D357-4F39-8E14-49787DA23D75}
+		{8E31FD8C-0BED-4589-BDFB-26BF1E2CF101} = {F221F17E-E86E-43B5-A005-FE4AE14983FE}
+		{BF822F52-C76A-4D5D-8CAE-F0454834D598} = {F221F17E-E86E-43B5-A005-FE4AE14983FE}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {AD3B2E40-0248-444D-A81B-CF5870B05454}

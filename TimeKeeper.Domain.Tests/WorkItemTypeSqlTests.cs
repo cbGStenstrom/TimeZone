@@ -8,12 +8,12 @@ using TimeKeeper.Domain.Utilities.Mappers;
 using Xunit;
 namespace TimeKeeper.Domain.Tests;
 
-// Set TIMEKEEPER_TEST_SQL to a local SQL Server master connection with CREATE DATABASE permission.
-// Each test creates and removes only its own GUID-named database. No application database is used.
+// SQL integration tests use the configured TimeKeeperTestDB connection as the
+// SQL Server target. Each test creates and removes only its own GUID-named database.
 public sealed class SqlServerFactAttribute : FactAttribute
 {
-    public SqlServerFactAttribute() { if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("TIMEKEEPER_TEST_SQL"))) Skip = "TIMEKEEPER_TEST_SQL is not configured; real SQL Server validation remains outstanding."; }
 }
+
 public class WorkItemTypeSqlTests
 {
     private static readonly TimeKeeper.Domain.Models.Laborer User = new() { Username = "type-tests" };
@@ -167,7 +167,21 @@ public class WorkItemTypeSqlTests
             var builder = new SqlConnectionStringBuilder(configuration) { InitialCatalog = "master" }; master = builder.ConnectionString;
             builder.InitialCatalog = name; target = builder.ConnectionString;
         }
-        public static async Task<IsolatedDatabase> Create() { var db = new IsolatedDatabase(Environment.GetEnvironmentVariable("TIMEKEEPER_TEST_SQL")!); await using var conn = new SqlConnection(db.master); await conn.OpenAsync(); await using var cmd = new SqlCommand($"CREATE DATABASE [{db.name}]", conn); await cmd.ExecuteNonQueryAsync(); return db; }
+        public static async Task<IsolatedDatabase> Create()
+        {
+            var db = new IsolatedDatabase(
+                TestDatabaseConfiguration.TestConnectionString);
+
+            await using var conn = new SqlConnection(db.master);
+            await conn.OpenAsync();
+
+            await using var cmd =
+                new SqlCommand($"CREATE DATABASE [{db.name}]", conn);
+
+            await cmd.ExecuteNonQueryAsync();
+
+            return db;
+        }
         public SqlConnection Connection() => new(target);
         public TimeKeeperDbContext Context(SaveCounter? counter = null) { var options = new DbContextOptionsBuilder<TimeKeeperDbContext>().UseSqlServer(target); if (counter != null) options.AddInterceptors(counter); return new(options.Options); }
         public async Task Execute(string sql) { await using var conn = Connection(); await conn.OpenAsync(); await using var cmd = new SqlCommand(sql, conn); await cmd.ExecuteNonQueryAsync(); }
