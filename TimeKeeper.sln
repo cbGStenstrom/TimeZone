@@ -72,6 +72,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Codex Workflow", "Codex Wor
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ship", "ship", "{A68B0BE6-B4F3-4220-9BA5-FC3F88E8DF7A}"
 	ProjectSection(SolutionItems) = preProject
+		.ship\external-validation.ps1 = .ship\external-validation.ps1
 		.ship\SHIP.md = .ship\SHIP.md
 		.ship\ShipReadme.md = .ship\ShipReadme.md
 	EndProjectSection
@@ -95,6 +96,20 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{664114E8-6939-4EE8-B259-0253CB920648}"
 	ProjectSection(SolutionItems) = preProject
 		.ship\docs\Ship-Operator-Command-Reference.md = .ship\docs\Ship-Operator-Command-Reference.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{C8C97222-3408-4A92-8D11-940AD4FEB7DE}"
+	ProjectSection(SolutionItems) = preProject
+		.ship\tests\external-evidence.tests.ps1 = .ship\tests\external-evidence.tests.ps1
+		.ship\tests\external-validation-coverage.md = .ship\tests\external-validation-coverage.md
+		.ship\tests\external-validation-matrix.tests.ps1 = .ship\tests\external-validation-matrix.tests.ps1
+		.ship\tests\external-validation.tests.ps1 = .ship\tests\external-validation.tests.ps1
+		.ship\tests\github-result-reporting.tests.ps1 = .ship\tests\github-result-reporting.tests.ps1
+		.ship\tests\host-smoke.md = .ship\tests\host-smoke.md
+		.ship\tests\manual-validation.tests.ps1 = .ship\tests\manual-validation.tests.ps1
+		.ship\tests\prepare-host-smoke.ps1 = .ship\tests\prepare-host-smoke.ps1
+		.ship\tests\tester-assessment-contradiction.tests.ps1 = .ship\tests\tester-assessment-contradiction.tests.ps1
+		.ship\tests\tester-secret-id.tests.ps1 = .ship\tests\tester-secret-id.tests.ps1
 	EndProjectSection
 EndProject
 Global
@@ -140,6 +155,7 @@ Global
 		{12C63AE9-4372-4843-BD77-FAC87DB8D85C} = {A68B0BE6-B4F3-4220-9BA5-FC3F88E8DF7A}
 		{64ACBD8C-B3E6-4D02-87B7-05A9FE2D3817} = {A68B0BE6-B4F3-4220-9BA5-FC3F88E8DF7A}
 		{664114E8-6939-4EE8-B259-0253CB920648} = {A68B0BE6-B4F3-4220-9BA5-FC3F88E8DF7A}
+		{C8C97222-3408-4A92-8D11-940AD4FEB7DE} = {A68B0BE6-B4F3-4220-9BA5-FC3F88E8DF7A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {AD3B2E40-0248-444D-A81B-CF5870B05454}
