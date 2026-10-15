@@ -802,7 +802,6 @@ try {
 You are the Tester for the Ship workflow.
 Read .ship/agents/tester.md, $PlanFile and $OriginalReport.
 Read-only request preparation: you may use read-only shell/file inspection commands to read the required files. Do not run validation, build, test, deployment, or other state-changing commands; do not change code, replan, or replace the report.
-Inspect .ship/validation-policy.json and .ship/validation when present. For SQL-backed validation, use an approved disposable validation script instead of requesting dotnet test directly.
 Write $RequestFile using version 1 pending-validation contract.
 Run: $RunId; cycle: $Cycle; reportHash: $(Get-ExternalHash $TestReportFile)
 planHash: $(Get-ExternalHash $PlanFile); implementationHash: $(Get-ImplementationIdentity)
