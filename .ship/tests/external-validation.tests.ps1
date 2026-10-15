@@ -6,7 +6,7 @@ param(
     [switch]$EmptyBaselines
 )
 $ErrorActionPreference = 'Stop'
-$OriginalSecret=$env:SHIP_TEST_SECRET; $OriginalSql=$env:TIMEKEEPER_TEST_SQL
+$OriginalSecret=$env:SHIP_TEST_SECRET
 $Source = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 $Fixture = Join-Path ([IO.Path]::GetTempPath()) ('ship external ' + [guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory $Fixture | Out-Null
@@ -231,9 +231,8 @@ Start-Sleep -Seconds 600
             Write-Host "Prepared $Scenario : $Root"
             continue
         }
-        $SavedSecret=$env:SHIP_TEST_SECRET; $SavedSql=$env:TIMEKEEPER_TEST_SQL
+        $SavedSecret=$env:SHIP_TEST_SECRET
         $env:SHIP_TEST_SECRET='synthetic-host-secret-84921'
-        if ($Scenario -eq 'sql') { $env:TIMEKEEPER_TEST_SQL='synthetic-unproven-target' }
         $Before=@{}; Get-ChildItem $RunRoot -File | ForEach-Object { $Before[$_.Name]=(Get-FileHash $_.FullName).Hash }
         $Posting=[int]($Scenario -in @('postSecretError','retry','retryUnrelated','secretPaths','secretError','persist-started','persist-result','persist-external-current','postpass','postfail','defect','remaining','deployment','decline','interruptTester','missingrequest','sql'))
         $ErrorActionPreference='Continue'
@@ -352,7 +351,7 @@ Start-Sleep -Seconds 600
             Assert (-not ([IO.File]::ReadAllText((Join-Path $RunRoot 'test-report.md'))).Contains($env:SHIP_TEST_SECRET)) 'Secret in fresh report'
             Assert (-not ([IO.File]::ReadAllText((Join-Path $RunRoot 'github-result.md'))).Contains($env:SHIP_TEST_SECRET)) 'Secret in optional summary'
         }
-        $env:SHIP_TEST_SECRET=$SavedSecret; $env:TIMEKEEPER_TEST_SQL=$SavedSql
+        $env:SHIP_TEST_SECRET=$SavedSecret
         if ($Scenario -eq 'remaining') {
             $ErrorActionPreference='Continue'
             $ManualOutput=& powershell -NoProfile -File $Runner $Root 'manual' 2>&1 | Out-String
@@ -364,7 +363,7 @@ Start-Sleep -Seconds 600
     }
     if ($PrepareSmoke) { Write-Host "Human smoke fixtures: $Fixture" } else { Write-Host "PASS: $Count external host fixtures" }
 } finally {
-    $env:SHIP_TEST_SECRET=$OriginalSecret; $env:TIMEKEEPER_TEST_SQL=$OriginalSql
+    $env:SHIP_TEST_SECRET=$OriginalSecret
     $Resolved=[IO.Path]::GetFullPath($Fixture)
     if (-not $Resolved.StartsWith([IO.Path]::GetTempPath(),[StringComparison]::OrdinalIgnoreCase)) { throw 'Unsafe cleanup target' }
     if (-not $PrepareSmoke) { Remove-Item -LiteralPath $Resolved -Recurse -Force }

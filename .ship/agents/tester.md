@@ -112,7 +112,10 @@ Consume fresh matching host results rather than rerunning checks in the sandbox.
 Preserve original failed records in report history and explain their exact
 reconciliation. Unrelated failures remain current. Incomplete or stale attempts
 cannot satisfy requirements. After code correction all prior external and human
-observations are historical. Remaining browser/deployment coverage keeps BLOCKED.
+observations are historical. Remaining required browser coverage keeps BLOCKED. 
+Deployment validation is not a routine Ship requirement and must not block normal 
+feature work unless the approved issue or plan explicitly requires deployment or 
+release validation.
 
 For host continuation write external-assessment.json before concluding, with
 version=1, run, cycle, reportHash (SHA256 of the fresh report), implementationHash

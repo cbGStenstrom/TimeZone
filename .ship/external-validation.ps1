@@ -2,7 +2,7 @@
 function Protect-ExternalText {
     param([AllowEmptyString()][string]$Text)
     foreach ($Entry in [Environment]::GetEnvironmentVariables().GetEnumerator()) {
-        if ($Entry.Key -match '(?i)secret|password|token|credential|connection|TIMEKEEPER_TEST_SQL|api.?key' -and
+        if ($Entry.Key -match '(?i)secret|password|token|credential|connection|api.?key' -and
             -not [string]::IsNullOrEmpty([string]$Entry.Value)) {
             $Text = $Text.Replace([string]$Entry.Value, '[REDACTED]')
         }
@@ -120,15 +120,40 @@ function Assert-ExternalRequest {
             }).Count -eq 1
         }
         if (-not ($Build -or $Tests -or $ScriptApproved)) { throw 'Unsupported command. Inspect a disposable fixture script and pin it in validation-policy.json.' }
-        if ($Tests -and $env:TIMEKEEPER_TEST_SQL) { throw 'SQL target is unproven. Use an inspected disposable-fixture script.' }
         foreach ($Record in @($Check.records)) {
             if ([string]::IsNullOrWhiteSpace($Record) -or $Record -match '[\r\n]' -or $Mapped.ContainsKey($Record) -or
                 $Record -notmatch '^(?:Command .+ exit code: [+-]?\d+|(?:Build|Automated tests|Check [^:]+): (?:BLOCKED|FAIL|FAILED)|Failed tests: \d+)$') {
                 throw 'Unclear or unsafe infrastructure-record mapping.'
             }
-            if (@($Evidence -split '\r?\n' | Where-Object { $_ -ceq $Record }).Count -ne 1) { throw 'Mapped record must occur exactly once.' }
+            $MatchingLines = @($Evidence -split '\r?\n' | Where-Object {
+                $Candidate = $_.Trim()
+
+                if ($Candidate -match '^\|\s*([^|]+?)\s*\|\s*([^|]*?)\s*\|$') {
+                    $Key = $Matches[1].Trim()
+                    $Value = $Matches[2].Trim()
+                    $Candidate = "${Key}: $Value"
+                }
+
+                $Candidate -ceq $Record
+            })
+
+            if ($MatchingLines.Count -ne 1) {
+                throw 'Mapped record must occur exactly once.'
+            }
+
             $Mapped[$Record] = $true
-            $Remainder = ($Remainder -split '\r?\n' | Where-Object { $_ -cne $Record }) -join "`n"
+
+            $Remainder = ($Remainder -split '\r?\n' | Where-Object {
+                $Candidate = $_.Trim()
+
+                if ($Candidate -match '^\|\s*([^|]+?)\s*\|\s*([^|]*?)\s*\|$') {
+                    $Key = $Matches[1].Trim()
+                    $Value = $Matches[2].Trim()
+                    $Candidate = "${Key}: $Value"
+                }
+
+                $Candidate -cne $Record
+            }) -join "`n"
         }
     }
     # Only explicitly mapped infrastructure records may be superseded. All other failures remain refusal evidence.

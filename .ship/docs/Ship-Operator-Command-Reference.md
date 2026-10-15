@@ -102,7 +102,7 @@ You demonstrated incorrect implementation behavior.
 Do **not** use `-Fail` merely because:
 
 - a tool is unavailable,
-- LocalDB cannot run inside Codex,
+- required database access is unavailable,
 - a browser is unavailable,
 - credentials are missing,
 - the environment cannot perform the validation.
@@ -191,7 +191,7 @@ Required validation cannot be completed without additional capability or human a
 Examples:
 
 - browser interaction is required,
-- LocalDB cannot run in Codex,
+- required database access is unavailable,
 - credentials or external services are unavailable,
 - approved external validation must run from the host shell.
 
@@ -336,7 +336,7 @@ Means:
 Examples:
 
 - browser unavailable,
-- LocalDB inaccessible from Codex,
+- required database access is unavailable,
 - external dependency unavailable,
 - human interaction required.
 
