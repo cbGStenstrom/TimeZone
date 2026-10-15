@@ -95,6 +95,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "reports", "reports", "{64AC
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{664114E8-6939-4EE8-B259-0253CB920648}"
 	ProjectSection(SolutionItems) = preProject
+		docs\Installation.md = docs\Installation.md
 		.ship\docs\Ship-Operator-Command-Reference.md = .ship\docs\Ship-Operator-Command-Reference.md
 	EndProjectSection
 EndProject

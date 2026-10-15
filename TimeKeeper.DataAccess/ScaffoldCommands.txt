@@ -4,4 +4,4 @@
 -Context = what to name the DbContext file
 -Force = Force to overwrite any existing files (will overwrite any changes. Make changes in partial classe files.
 
-Scaffold-DbContext "Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=TimeKeeperDB;Integrated Security=True;Connect Timeout=60;Encrypt=True;Trust Server Certificate=True;Application Intent=ReadWrite;Multi Subnet Failover=False" Microsoft.EntityFrameworkCore.SqlServer -OutputDir Entities -Context TimeKeeperDbContext -Force
+Scaffold-DbContext "Data Source=GOTHAM;Initial Catalog=TimeZoneDB_Dev;Integrated Security=True;Connect Timeout=60;Encrypt=True;Trust Server Certificate=True;Application Intent=ReadWrite;Multi Subnet Failover=False" Microsoft.EntityFrameworkCore.SqlServer -OutputDir Entities -Context TimeKeeperDbContext -Force

@@ -73,8 +73,6 @@ SQL Server Express
 SQL Server Standard
 
 SQL Server Enterprise
-
-LocalDB (Development Only)
 ```
 
 Recommended:
