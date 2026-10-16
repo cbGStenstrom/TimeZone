@@ -116,9 +116,11 @@ namespace TimeKeeper.Domain.Queries
                       (time.EndWork >= startDate && time.EndWork <= endDate)
                 join item in _dbCtx.WorkItems
                     on time.WorkItemId equals item.Id
-                group new { time, item } by new { item.Id, item.IsOpen, item.Title, item.IsBillable, item.IsInReview } into g
+                group new { time, item } by new { item.Id, item.IsOpen, item.Title, item.IsBillable, item.IsInReview, ProjectKey = item.Project.Key, item.ActivityNumber } into g
                 select new WorkItemDateRangeSummaryDto
                 {
+                    ActivityNumber      = g.Key.ActivityNumber,
+                    ProjectKey          = g.Key.ProjectKey,
                     IsBillable          = g.Key.IsBillable,
                     IsOpen              = g.Key.IsOpen,
                     IsInReview          = g.Key.IsInReview,

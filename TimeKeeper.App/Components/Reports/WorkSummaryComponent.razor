@@ -60,7 +60,7 @@
 							<RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap=".5rem">
 								<i class="rzi md-20">@this.GetStatusIcon(summary)</i>
 								<i class="rzi md-20">@($"{((summary.IsBillable) ? "attach_money" : "money_off")}")</i>
-								<span class="cb-item-title">@summary.WorkItemTitle</span>
+								<span class="cb-item-title">@summary.DisplayTitle</span>
 							</RadzenStack>
 							<span>@($"{DateTimeUtils.MinutesToHours(summary.TotalMinutesWorked).ToString("F2")} hrs")</span>
 						</RadzenStack>
