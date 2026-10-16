@@ -85,6 +85,19 @@ When applying these standards:
 - Keep methods small and single-purpose.
 - Use `await` and avoid `.Result` or `.Wait()`.
 - Don't restructure or reformat code I didn't ask you to change.
+- Use file scoped namespaces 
+- Use squiggly braces for all using statements, even if they are single-line.
+- Do NOT use top-level statements in any code file. All code must be contained within a class or method.
+- When designing a new component, consider whether it should be a Blazor page or a reusable component. If it is a page, it should be routable and have a URL. If it is a reusable component, it should not have a URL and should be used within other components or pages.
+- When designing a new page or modifying an existing one, consider how the contents of the page may be reused in other pages or components. If the contents are likely to be reused, consider creating a reusable component for that content and using it within the page. This promotes code reuse and maintainability.
+- Code using DRY principles. Avoid duplicating code across components or pages. If you find yourself writing similar code in multiple places, consider refactoring it into a reusable component or service.
+- Code using SOLID principles. Ensure that your code adheres to the principles of single responsibility, open/closed, Liskov substitution, interface segregation, and dependency inversion. This will help create a more maintainable and extensible codebase.
+- Code using KISS principles. Keep your code simple and avoid unnecessary complexity. Simple code is easier to read, understand, and maintain.
+- Structure code with separation of concerns in mind. Keep different aspects of your code (e.g., data access, business logic, UI) separate and organized. This will make it easier to maintain and test your code.
+- Write code so that it's easy to read and understand. 
+  - Use meaningful names for variables, methods, and classes. Avoid abbreviations and acronyms that may not be clear to other developers.
+  - Use indentation and whitespace to improve readability. Consistent formatting makes it easier to follow the structure of the code.
+- For the most part, follow the official Microsoft C# coding conventions, but prioritize the project-specific standards outlined in this document when they conflict with the official conventions.
 
 
 ## 8. Blazor Templates
