@@ -63,6 +63,9 @@
     <Build Include="Tables\Laborers.sql" />
     <Build Include="Tables\Projects.sql" />
     <Build Include="Tables\WorkItems.sql" />
+    <Build Include="Tables\WorkItemTypes.sql" />
+    <None Include="Scripts\Deploy-018.ps1" />
+    <None Include="Scripts\018-WorkItemTypes.sql" />
     <Build Include="Tables\TimeEntries.sql" />
   </ItemGroup>
   <ItemGroup>

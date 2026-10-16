@@ -44,3 +44,21 @@ Before modifying code:
 5. Build the solution.
 6. Run relevant tests.
 7. Explain what changed.
+
+## Coding standards
+
+All production-code changes must follow `docs/CodingStandards.md`.
+
+The coding standards are requirements, not suggestions. Before modifying C# or
+Blazor code, read the standards document and inspect the relevant existing code.
+
+For Blazor pages and components:
+
+- Never place implementation code in an `@code` block.
+- Use a `.razor` file with a matching `.razor.cs` partial class.
+- Follow the project's prescribed regions, member ordering, comments, naming,
+  markup conventions, and dependency patterns.
+- Do not reformat or reorganize unrelated code.
+
+When a repository template exists for the artifact being created, use that
+template as the structural reference.

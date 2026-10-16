@@ -1,0 +1,43 @@
+@using TimeKeeper.App.Components.WorkItemComponents
+@attribute [Route(PageUrls.ActivityTypeManager)]
+@inherits CbPageBase
+@layout AppLayout
+<PageTitle>Activity Type Manager</PageTitle>
+    
+<div class="cb-activity-type-mgr">
+
+    @* Header *@
+    <AppLayoutHeaderComponent>
+        <h5 class="cb-margin-block-1px">Activity Type Manager</h5>
+    </AppLayoutHeaderComponent>
+
+    @* Toolbar *@
+    <RadzenRow AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Start" Gap="1rem" Style="padding:1rem 1rem 1rem;">
+
+        <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" AlignItems="@AlignItems.Center">
+            <RadzenButton Variant="Variant.Flat"
+                Text="Add New Type"
+                Icon="add"
+                Click="@btnAdd_OnClick">
+            </RadzenButton>
+        </RadzenStack>
+
+        <label>Filter: </label>
+        <RadzenTextBox @bind-Value="@this.FilterText" 
+            Immediate="true" 
+            Placeholder="Name or Description" 
+            Style="width:30rem;" />
+
+    </RadzenRow>
+
+    @* Grid *@
+    <div style="margin: 0 1rem;">
+        <WorkItemTypeGridComponent
+            WorkItemTypes="@this.VisibleRows"
+            OnDelete="DataGrid_OnDelete" 
+            OnEnable="DataGrid_OnEnable"
+            OnUpdate="DataGrid_OnUpdate">
+        </WorkItemTypeGridComponent>
+    </div>
+
+</div>

@@ -10,7 +10,7 @@ namespace TimeKeeper.Domain.Models;
 public partial class WorkItem : ModelBase<WorkItem>
 {
     #region properties
-    
+
     public string? ActivityNumber { get; set; }
 
     public string? Description { get; set; } = null!;
@@ -55,7 +55,9 @@ public partial class WorkItem : ModelBase<WorkItem>
 
     public string Title { get; set; } = null!;
 
-    public WorkItemType? WorkItemType { get; set; }
+    public int? WorkItemType { get; set; }
+
+    public WorkItemType? Type { get; set; }
 
 
 
@@ -134,6 +136,7 @@ public partial class WorkItem : ModelBase<WorkItem>
             this.Description = base._snapshot.Description;
             this.IsBillable = base._snapshot.IsBillable;
             this.WorkItemType = base._snapshot.WorkItemType;
+            this.Type = base._snapshot.Type;
         }
 
         // If any TimeEntries are defined then revert any changes made to them as well.

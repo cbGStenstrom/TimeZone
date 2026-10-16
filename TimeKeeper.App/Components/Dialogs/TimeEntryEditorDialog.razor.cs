@@ -80,7 +80,7 @@ public partial class TimeEntryEditorDialog : CbComponentBase
         var parameters    = new Dictionary<string, object>();
             parameters.Add("LoadedTimeEntry", timeEntryModel);
             parameters.Add("OnSaveClicked", onSaveCallback);
-            //parameters.Add("SaveAction", saveAction);
+            //parameters.btnAdd_OnClick("SaveAction", saveAction);
             parameters.Add("ShowDialogButtons", true);
 
         await this.DialogSvc.OpenAsync<TimeEntryEditorComponent>(title,

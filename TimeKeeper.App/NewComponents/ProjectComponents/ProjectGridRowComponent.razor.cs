@@ -38,7 +38,7 @@ public partial class ProjectGridRowComponent :CbComponentBase
     #region events
 
     /// <summary>
-    ///  Gets or sets the callback invoked when the Add Project action is triggered.
+    ///  Gets or sets the callback invoked when the btnAdd_OnClick Project action is triggered.
     /// </summary>
     [Parameter]
     public EventCallback<Project> OnAddProjectClick { get; set; }

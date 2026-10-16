@@ -31,7 +31,9 @@ namespace TimeKeeper.App.Components.Forms
 
         bool ShowValidation { get; set; } = false;
 
-        IEnumerable<TimeKeeper.Domain.Enums.WorkItemType> WorkItemTypes { get; } = Enum.GetValues<TimeKeeper.Domain.Enums.WorkItemType>();
+        [Inject] public IWorkItemTypeService TypeSvc { get; set; } = default!;
+        List<WorkItemType> WorkItemTypes { get; set; } = [];
+        bool RetainsDisabledType => WorkItem?.IsNew == false && WorkItem.Type?.IsEnabled == false && WorkItem.WorkItemType == WorkItem.Type.Id;
 
         #endregion properties
 
@@ -57,6 +59,20 @@ namespace TimeKeeper.App.Components.Forms
         protected async override Task OnInitializedAsync()
         {
             await this.PopulateProjectList();
+        }
+
+        protected override async Task OnParametersSetAsync()
+        {
+            await RefreshWorkItemTypes();
+        }
+
+        private async Task RefreshWorkItemTypes()
+        {
+            // Reused forms and open dropdowns must reflect current type management changes.
+            var allTypes = await TypeSvc.GetTypes();
+            WorkItemTypes = allTypes.Where(t => t.IsEnabled).ToList();
+            if (WorkItem?.IsNew == false)
+                WorkItem.Type = allTypes.SingleOrDefault(t => t.Id == WorkItem.WorkItemType);
         }
 
         #endregion lifecycle
@@ -113,7 +129,7 @@ namespace TimeKeeper.App.Components.Forms
 
             return isValid;
         }
-        
+
         #endregion public
     }
 }

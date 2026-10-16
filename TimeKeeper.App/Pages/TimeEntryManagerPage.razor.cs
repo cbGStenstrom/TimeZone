@@ -168,7 +168,7 @@ namespace TimeKeeper.App.Pages
         /// <param name="model"></param>
         async void Row_OnDeleteButtonClick(TimeEntry model)
         {
-            // Reload the list of Time entries siince one has potentially been deleted.
+            // ReloadWorkitemTypes the list of Time entries siince one has potentially been deleted.
             //
             await this.LoadTimeEntries();
             base.StateHasChanged();

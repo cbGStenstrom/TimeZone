@@ -26,13 +26,3 @@ public enum IsOpenOptions
     InReview,
     Open,
 }
-
-public enum WorkItemType
-{
-    Bugfix,
-    Chore,
-    Feature,
-    Meeting,
-    PTO,
-    TechDebt
-}

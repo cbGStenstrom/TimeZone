@@ -1,5 +1,5 @@
 ﻿@inherits CbPageBase
-@page "/WorkItemManager"
+@attribute [Route(PageUrls.WorkItemManager)]
 @layout AppLayout
 
 <div class="cb-workitem-manager">
@@ -87,7 +87,7 @@
 
             @* Type *@
             <RadzenDataGridColumn TItem="WorkItem"
-                Property="WorkItemType"
+                Property="Type.Name"
                 Title="Type"
                 Width="100px">
             </RadzenDataGridColumn>

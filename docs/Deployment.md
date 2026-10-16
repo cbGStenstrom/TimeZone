@@ -352,6 +352,13 @@ TimeZoneAppPool
 
 Deploy database updates.
 
+For Activity Types (FEAT-018), run `TimeKeeper.Data/Scripts/Deploy-018.ps1`
+against an existing target database (empty for a fresh install). It runs the
+bootstrap before publishing the built DACPAC. Direct DACPAC publishing to
+populated legacy data requires prior bootstrap; the bootstrap alone does not
+install the foreign key. See [Activity Types in the Upgrade Guide](UpgradeGuide.md#activity-types-feat-018)
+for the command, legacy-data diagnostics, and preservation checks.
+
 Methods:
 
 ```text

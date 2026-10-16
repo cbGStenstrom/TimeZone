@@ -1,0 +1,106 @@
+﻿@using System.Globalization
+@inherits CbComponentBase
+
+<RadzenDataGrid @ref="this.DataGrid"
+    TItem="WorkItemType"
+    Data="@WorkItemTypes"
+    AllowSorting="true"
+    AllowColumnResize="true"
+    Density="Density.Compact">
+    <Columns>
+        
+        @* Actions *@
+        <RadzenDataGridColumn Filterable="false"
+            Sortable="false"
+            TextAlign="TextAlign.Right"
+            Frozen="true"
+            FrozenPosition="FrozenColumnPosition.Right"
+            Width="80px">
+            <Template Context="dataItem">
+                <RadzenButton Icon="edit"
+                    ButtonStyle="ButtonStyle.Primary"
+                    Variant="Variant.Text"
+                    Size="ButtonSize.Small"
+                    Click="@(() => this.btnEdit_OnClick(dataItem))">
+                </RadzenButton>
+                <RadzenButton Icon="delete"
+                    ButtonStyle="ButtonStyle.Danger"
+                    Variant="Variant.Text"
+                    Size="ButtonSize.Small"
+                    Click="@(() => this.btnDelete_OnClick(dataItem))">
+                </RadzenButton>
+            </Template>
+            <EditTemplate Context="dataItem">
+                <RadzenButton Icon="undo"
+                    ButtonStyle="ButtonStyle.Primary"
+                    Variant="Variant.Text"
+                    Size="ButtonSize.Small"
+                    Click="@(() => this.btnCancel_OnClick(dataItem))">
+                </RadzenButton>
+                <RadzenButton Icon="save"
+                    ButtonStyle="ButtonStyle.Primary"
+                    Variant="Variant.Text"
+                    Size="ButtonSize.Small"
+                    Click="@(() => this.btnUpdate_OnClick(dataItem))">
+                </RadzenButton>
+            </EditTemplate>
+        </RadzenDataGridColumn>
+
+        @* Icon *@
+        <RadzenDataGridColumn Filterable="false"
+            Sortable="false"
+            TextAlign="@TextAlign.Center"
+            TItem="WorkItemType" 
+            Property="@nameof(WorkItemType.Icon)" 
+            Width="50px">
+        </RadzenDataGridColumn>
+
+        @* Name*@
+        <RadzenDataGridColumn TItem="WorkItemType" Property="@nameof(WorkItemType.Name)" Title="Name" Width="100px">
+            <EditTemplate Context="workItemType">
+                <RadzenTextBox @bind-Value="workItemType.Name" Style="width:100%;" />
+            </EditTemplate>
+        </RadzenDataGridColumn>
+
+        @* Description *@
+        <RadzenDataGridColumn TItem="WorkItemType" Property="@nameof(WorkItemType.Description)" Title="Description">
+            <EditTemplate Context="workItemType">
+                <RadzenTextBox @bind-Value="workItemType.Description" Style="width:100%;"/>
+            </EditTemplate>
+        </RadzenDataGridColumn>
+
+        @* IsEnabled *@
+        <RadzenDataGridColumn TItem="WorkItemType" Property="@nameof(WorkItemType.IsEnabled)" Title="IsEnabled" Width="100px"
+            TextAlign="@TextAlign.Center">
+            <Template Context="workItemType">
+                @if (workItemType.IsEnabled)
+                {
+                    <RadzenChip Text="Enabled" ChipStyle="@BadgeStyle.Success" />
+                }
+                else
+                {
+                    <RadzenChip Text="Disabled" ChipStyle="@BadgeStyle.Light" />
+                }
+            </Template>
+            <EditTemplate Context="workItemType">
+                <RadzenToggleButton @bind-Value="workItemType.IsEnabled"
+                    Text="@(workItemType.IsEnabled ? "Enabled" : "Disabled")"
+                    ButtonStyle="@(workItemType.IsEnabled ? ButtonStyle.Success : ButtonStyle.Light)"
+                    ToggleButtonStyle="@(workItemType.IsEnabled ? ButtonStyle.Success : ButtonStyle.Light)"
+                    Shade="@Shade.Default"
+                    Size="@ButtonSize.Small" />
+            </EditTemplate>
+        </RadzenDataGridColumn>
+
+        @* Activity Count*@
+        <RadzenDataGridColumn TItem="WorkItemType" TextAlign="@TextAlign.Center"
+            Property="@nameof(WorkItemType.ActivityCount)" 
+            Title="Activities" 
+            Width="125px">
+            <Template Context="dataItem">
+                @(dataItem.ActivityCount.ToString("#,0", CultureInfo.InvariantCulture))
+            </Template>
+        </RadzenDataGridColumn>
+
+    </Columns>
+</RadzenDataGrid>

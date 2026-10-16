@@ -88,3 +88,32 @@ replacement of unrelated failures, skipped required integration coverage, or
 historical human observations used after correction. Deployment validation is not
 required unless the approved issue or plan explicitly includes deployment or release
 validation.
+
+## Coding standards review
+
+Read `docs/CodingStandards.md` before reviewing production-code changes.
+
+Treat violations of mandatory coding standards as review findings.
+
+For C# and Blazor changes, verify as applicable:
+
+- Blazor implementation uses `.razor` plus `.razor.cs`; no `@code` blocks.
+- Razor directives and markup follow the required conventions.
+- `@this.` binding conventions are followed.
+- Telerik components and project utilities are used where required.
+- File-scoped namespaces and using ordering are correct.
+- Required regions are present and in the prescribed order.
+- Members are alphabetized within each region.
+- Properties are used instead of fields where required.
+- `this.` and `base.` conventions are followed.
+- Every member has the required XML documentation.
+- WHAT/WHY comments are present where warranted without restating obvious code.
+- Constants, logging, async, cancellation, and data-access conventions are followed.
+- Unrelated code was not reformatted or restructured.
+
+Do not request changes merely to fix pre-existing violations in untouched code.
+Review the code introduced or materially modified by the current implementation.
+
+Verify that new UI controls use Radzen components where the project has an
+appropriate Radzen equivalent, and that native HTML controls are not introduced
+arbitrarily.

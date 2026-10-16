@@ -1,0 +1,18 @@
+@inherits CbComponentBase
+@inject TimeKeeper.Domain.Services.Interfaces.IWorkItemTypeService TypeService
+<WorkItemTypeFields Model="draft" />
+@if (error != null) { <div role="alert" style="color:var(--rz-danger)">@error</div> }
+<RadzenButton Text="Add" Click="Add" Disabled="busy" />
+<RadzenButton Text="Cancel" Click="@(() => DialogSvc.Close(null))" Disabled="busy" />
+@code {
+ private WorkItemType draft = new();
+ private string? error;
+ private bool busy;
+ private async Task Add()
+ {
+  busy=true;
+  try { await TypeService.Save(draft, SessionService.User!); DialogSvc.Close(true); }
+  catch (Exception ex) { error=ex.Message; }
+  finally { busy=false; }
+ }
+}
