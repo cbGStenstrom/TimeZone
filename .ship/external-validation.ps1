@@ -103,6 +103,9 @@ function Assert-ExternalRequest {
         $Build = $Check.executable -ceq 'msbuild' -and $Arguments.Count -eq 1 -and $Arguments[0] -ceq 'TimeKeeper.sln'
         $Tests = $Check.executable -ceq 'dotnet' -and $Arguments.Count -eq 2 -and
             $Arguments[0] -ceq 'test' -and $Arguments[1] -ceq 'TimeKeeper.Domain.Tests/TimeKeeper.Domain.Tests.csproj'
+        # The direct command supplies no proof of a disposable SQL fixture.
+        # Require a reviewed, hash-pinned script to establish that prerequisite.
+        if ($Tests) { throw 'SQL-enabled domain tests require a proven disposable fixture. Inspect a disposable fixture script and pin it in validation-policy.json.' }
         $ScriptApproved = $false
         $PolicyPath = Join-Path $ShipRoot 'validation-policy.json'
         if ($Check.executable -ceq 'powershell' -and $Arguments.Count -eq 3 -and
@@ -119,7 +122,7 @@ function Assert-ExternalRequest {
                 $_.path -ceq $Arguments[2] -and $_.sha256 -ceq (Get-ExternalHash $ScriptPath) -and $_.disposable -eq $true
             }).Count -eq 1
         }
-        if (-not ($Build -or $Tests -or $ScriptApproved)) { throw 'Unsupported command. Inspect a disposable fixture script and pin it in validation-policy.json.' }
+        if (-not ($Build -or $ScriptApproved)) { throw 'Unsupported command. Inspect a disposable fixture script and pin it in validation-policy.json.' }
         foreach ($Record in @($Check.records)) {
             if ([string]::IsNullOrWhiteSpace($Record) -or $Record -match '[\r\n]' -or $Mapped.ContainsKey($Record) -or
                 $Record -notmatch '^(?:Command .+ exit code: [+-]?\d+|(?:Build|Automated tests|Check [^:]+): (?:BLOCKED|FAIL|FAILED)|Failed tests: \d+)$') {

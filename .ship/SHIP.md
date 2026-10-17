@@ -256,3 +256,28 @@ Human criteria still use ship-verify; resolved infrastructure history must be
 explicitly reconciled in the fresh report, and unrelated failures still refuse
 manual PASS. Corrections require fresh evidence. Final-only reporting retains
 invocation-specific opt-in. Interruption marks owned active work ABORTED_BY_USER.
+
+## Operator stop summaries
+
+Deliberate stops and pauses print a bounded operator summary with the reason,
+current automated checks when usable, outstanding human work, and the next
+supported action. Full reports remain unchanged audit records. UNKNOWN means
+current evidence or optional display context is absent or unusable, never PASS.
+BLOCKED means incomplete validation and does not establish a code defect.
+
+With current explicit automated success and bound human-only Tester context,
+perform the listed scenarios before using the displayed run-specific
+`ship-verify.ps1 -Run <id> -Pass`; observations will be requested. Use -Fail only
+for a demonstrated defect. Manual PASS cannot bypass automated failures.
+For supported infrastructure checks, restore the named prerequisite first and
+run the displayed `ship-validate.ps1 -Run <id>` from normal Developer PowerShell.
+Absent requests are prepared on the first invocation; invoke again to inspect
+and explicitly confirm execution with YES. Mixed gaps require automated repair
+first. Unsupported or unusable evidence requires fresh Tester evidence; no
+continuation command is invented.
+
+Plan pauses show the exact plan and ship-continue command. Failed runs require
+inspection/repair and a new run; no same-run continuation is supported. Aborted
+runs require inspecting git status and partial changes before deciding how to
+restart; they cannot be automatically resumed. Rejected operations preserve the
+saved status and distinguish it from the attempted operation.

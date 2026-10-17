@@ -131,3 +131,39 @@ If the engine has not supplied an implementation identity, describe pending
 checks in the BLOCKED report and defer manifest creation to the wrapper's read-only
 request-preparation stage. Do not guess identities. Reviewed fixture scripts and
 policy entries are prerequisites; request preparation never creates them.
+
+## Optional operator display context
+
+For BLOCKED, optionally write `operator-context.json` beside the final report.
+This is presentation context only; it never authorizes continuation or replaces
+any detailed report requirement. Legacy reports remain supported without it.
+Use only engine-supplied run, cycle and implementation identity. Do not guess.
+Write after finalizing the report, using its SHA256 hash:
+
+```json
+{
+  "version": 1,
+  "run": "2026-10-16_123040",
+  "cycle": 1,
+  "reportHash": "SHA256 of final test-report.md",
+  "implementationHash": "engine-supplied identity",
+  "category": "human",
+  "prerequisite": "Browser interaction required",
+  "action": "Perform the pending browser scenarios",
+  "outstanding": ["Resume Work resumes the active work item"]
+}
+```
+
+Categories are human, infrastructure, mixed, or unsupported. Use infrastructure
+or mixed only for checks supported by the external validation contract; use
+unsupported when host continuation cannot supply the missing capability.
+Prerequisite, action, and each outstanding scenario must be nonblank strings of
+at most 240 characters. Supply one to five scenarios/checks, without credentials
+or terminal controls. Maximum JSON size is 16 KiB. Human-only context requires an
+explicit current `Validation: PASS` record meaning all required automated
+validation completed successfully. Do not infer that record from zero exit codes
+or partial checks. BLOCKED remains the final outcome when human checks remain.
+Do not include arbitrary commands in the action; describe the required work.
+Engine-rendered commands supply the supported continuation. Stale, malformed,
+contradictory, or missing context causes conservative display fallback. Report
+replacement, implementation changes, and correction cycles invalidate context.

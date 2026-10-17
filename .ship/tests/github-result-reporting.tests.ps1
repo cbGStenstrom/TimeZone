@@ -44,6 +44,17 @@ function codex {
     }
     if ($Prompt -match 'You are the Tester') {
         $script:TestCycle++
+        if ($Scenario -in @('humancontext','infracontext','mixedcontext','stalecontext')) {
+            $Validation = if ($Scenario -in @('infracontext','mixedcontext')) { 'BLOCKED' } else { 'PASS' }
+            "## Current automated results`nValidation: $Validation`nBuild: PASS`nAutomated tests: PASS`nDemonstrated defect: none`n## Outstanding validation`nBLOCKED" | Set-Content (Join-Path $RunRoot 'test-report.md')
+            $Category = switch ($Scenario) { 'infracontext' { 'infrastructure' }; 'mixedcontext' { 'mixed' }; default { 'human' } }
+            @{version=1;run=(Split-Path $RunRoot -Leaf);cycle=$script:TestCycle;
+                reportHash=(Get-ExternalHash (Join-Path $RunRoot 'test-report.md'));
+                implementationHash=$(if ($Scenario -eq 'stalecontext') { 'old' } else { Get-ImplementationIdentity });
+                category=$Category;prerequisite='Required browser or SDK unavailable';action='Restore the required capability';
+                outstanding=@('Resume Work resumes active work')} | ConvertTo-Json | Set-Content (Join-Path $RunRoot 'operator-context.json')
+            return
+        }
         if ($Scenario -eq 'missing') { return }
         $Status = 'PASS'
         if ($Scenario -eq 'unknown') { $Status = 'unrecognized' }
@@ -105,6 +116,10 @@ try {
     }
     Assert ((Get-ReportStatus (Join-Path $Fixture 'missing.md')) -eq 'MISSING') 'Missing parser report'
     $Cases = @(
+        @('humancontext', 'ship.ps1', 0, 'BLOCKED', 0),
+        @('infracontext', 'ship.ps1', 0, 'BLOCKED', 0),
+        @('mixedcontext', 'ship.ps1', 0, 'BLOCKED', 0),
+        @('stalecontext', 'ship.ps1', 0, 'BLOCKED', 0),
         @('blocked', 'ship.ps1', 0, 'BLOCKED', 0),
         @('blocked', 'ship-full.ps1', 1, 'BLOCKED', 0),
         @('roundtripblocked', 'ship-continue.ps1', 1, 'BLOCKED', 0),
@@ -148,6 +163,7 @@ try {
         New-Item -ItemType Directory (Join-Path $Root '.ship/agents') -Force | Out-Null
         foreach ($File in @('ship.ps1', 'ship-full.ps1', 'ship-continue.ps1', 'ship-plan.ps1', 'AGENTS.md', 'TimeKeeper.sln')) { Copy-Item (Join-Path $SourceRoot $File) $Root }
         Copy-Item (Join-Path $SourceRoot '.ship/SHIP.md') (Join-Path $Root '.ship')
+        Copy-Item (Join-Path $SourceRoot '.ship/external-validation.ps1') (Join-Path $Root '.ship')
         Copy-Item (Join-Path $SourceRoot '.ship/agents/*.md') (Join-Path $Root '.ship/agents')
         if ($Case[1] -eq 'ship-continue.ps1' -and $Case[0] -notin @('roundtrip', 'roundtripblocked', 'invalid', 'absent')) {
             $Saved = Join-Path $Root '.ship/runs/2026-10-02_143015'
@@ -179,6 +195,13 @@ try {
         & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $Runner $Root $Case[0] $Case[1] $Case[2] *> (Join-Path $Root 'output.txt')
         $Exit = $LASTEXITCODE
         $ErrorActionPreference = 'Stop'
+        $Output = Get-Content (Join-Path $Root 'output.txt') -Raw
+        if ($Case[3] -ne 'PASS' -or $Case[0] -in @('passed','roundtrip')) {
+            Assert ($Output.Contains('Operator summary:')) "Case $Count missing operator summary"
+            Assert ($Output.Contains('Automated validation:') -and $Output.Contains('Human validation:') -and $Output.Contains('Next action:')) "Case $Count incomplete operator summary"
+        } else {
+            Assert (-not $Output.Contains('Operator summary:')) "Case $Count successful output changed"
+        }
         if ($Case[3] -eq 'NO_RUN') {
             Assert (-not (Test-Path (Join-Path $Root 'calls.jsonl'))) "Case $Count rejected run posted"
             continue
@@ -191,6 +214,17 @@ try {
         Assert ($Calls.Count -eq $Case[4]) "Case $Count comment count: $($Calls.Count)"
         if ($Case[3] -eq 'BLOCKED') {
             $Output = Get-Content (Join-Path $Root 'output.txt') -Raw
+            if ($Case[0] -eq 'humancontext') {
+                Assert ($Output.Contains(".\ship-verify.ps1 -Run $($RunDir.Name) -Pass")) 'Engine human command missing'
+                Assert ($Output.Contains('Only if all succeed') -and $Output.Contains('Pending: Resume Work')) 'Engine conditional human scenarios missing'
+            }
+            if ($Case[0] -in @('infracontext','mixedcontext')) {
+                Assert ($Output.Contains(".\ship-validate.ps1 -Run $($RunDir.Name)")) 'Engine host command missing'
+                Assert (-not $Output.Contains('ship-verify.ps1')) 'Engine suggested human bypass'
+            }
+            if ($Case[0] -eq 'stalecontext') {
+                Assert ($Output.Contains('UNKNOWN') -and -not $Output.Contains('ship-verify.ps1')) 'Engine trusted stale context'
+            }
             Assert (-not (Test-Path (Join-Path $RunDir.FullName 'github-result.md'))) "Case $Count blocked result artifact"
             if ($Case[0] -eq 'savedblocked') {
                 foreach ($Name in $SavedHashes.Keys) {
@@ -209,7 +243,7 @@ try {
                 Assert (@($Roles | Where-Object { $_ -eq 'Coder' }).Count -eq $ExpectedCycles) "Case $Count coder count"
                 Assert (@($Roles | Where-Object { $_ -eq 'Tester' }).Count -eq $ExpectedCycles) "Case $Count tester count"
                 Assert (@($Roles | Where-Object { $_ -eq 'Reviewer' }).Count -eq 0) "Case $Count reviewer executed"
-                foreach ($Evidence in @('SHIP BLOCKED', 'Human intervention is required', $RunDir.Name, $RunDir.FullName, 'test-report.md')) {
+                foreach ($Evidence in @('SHIP BLOCKED', 'Operator summary: BLOCKED', 'does not establish an implementation defect', $RunDir.Name, $RunDir.FullName, 'test-report.md')) {
                     Assert ($Output.Contains($Evidence)) "Case $Count missing output $Evidence"
                 }
                 foreach ($Artifact in @('task.md', 'issue.md', 'plan.md', 'git-status-start.txt', 'git-diff-start.patch', 'git-staged-start.patch', 'git-status-before-code.txt', 'git-diff-before-code.patch', 'git-staged-before-code.patch', 'test-report.md')) {

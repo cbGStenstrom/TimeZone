@@ -193,6 +193,11 @@ try {
         $ExpectedStatus = $Case[2]
         if ($ExpectedStatus -eq 'FAILED' -and $Case[0] -ne 'status') { $Status = ($Status -split '\r?\n')[0] }
         Assert ($Status -eq $ExpectedStatus) "Case $Count ($($Case[0])) status $Status; see $(Join-Path $Root 'output.txt')"
+        # Parameter-set binding errors occur before the engine body can run.
+        if ($Status -ne 'PASS' -and $Case[0] -notin @('both','neither')) {
+            $Output = Get-Content (Join-Path $Root 'output.txt') -Raw
+            Assert ($Output.Contains('Operator summary:') -and $Output.Contains('Next action:')) "Case $Count ($($Case[0])) missing stop summary"
+        }
         $Roles = ''; if (Test-Path (Join-Path $Root 'roles.txt')) { $Roles = (Get-Content (Join-Path $Root 'roles.txt')) -join ',' }
         Assert ($Roles -eq $Case[3]) "Case $Count roles: $Roles"
         if ($Case[2] -eq 'PASS' -and $Roles -eq 'Reviewer') { Assert ($Exit -eq 0) "Case $Count valid continuation exit" }

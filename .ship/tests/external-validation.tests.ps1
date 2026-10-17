@@ -314,6 +314,7 @@ Start-Sleep -Seconds 600
             Assert (((Get-Content (Join-Path $Root 'roles.txt')) -join ',') -eq $(if ($Scenario -in @('postSecretError','secretPaths','pass','postpass','postfail','multiple')) { 'Tester,Reviewer' } elseif ($Scenario -eq 'repair') { 'Tester,Coder,Tester,Reviewer' } else { 'Tester' })) 'Incorrect stage routing'
         } else {
             Assert ($Results.Count -eq 0 -and -not (Test-Path (Join-Path $Root 'launches.txt'))) "$Scenario unexpectedly executed"
+            Assert ($Output.Contains('Operator summary:') -and $Output.Contains('Next action:')) "$Scenario missing stop summary: $Output"
             if ($Scenario -in @('missingrequest','preparedrequest')) {
                 Assert ($Status -eq 'BLOCKED' -and $Exit -eq 0) 'Preparation did not remain BLOCKED'
                 Assert (((Get-Content (Join-Path $Root 'roles.txt')) -join ',') -eq 'Tester') 'Preparation invoked another role'
