@@ -74,3 +74,15 @@ Identify tests that should pass or be added.
 
 Do not implement the solution.
 
+## UI validation allocation
+
+Read `docs/Testing.md`. Map each acceptance criterion to the narrowest meaningful
+domain, SQL integration, bUnit, or browser/human check. Identify residual visual
+or browser requirements explicitly. Executed passing component tests can establish
+rendered values, parameter/state changes, callbacks, conditional/empty states,
+implemented filtering/sorting, and testable Radzen composition. Do not duplicate
+fully covered behavior in manual scenarios. A UI-related change alone does not
+require a browser pass. Component tests cannot establish actual CSS/layout,
+readability, visual polish or genuine browser/JS integration. Do not waive
+uncovered criteria or presume skipped/failing tests provide evidence.
+

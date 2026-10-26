@@ -5,9 +5,9 @@ Run `./ship-validate.ps1 -Run <timestamp-id> [-PostResult]` explicitly from norm
 Developer PowerShell. Exact BLOCKED and preserved prerequisites are required.
 Never invoke this wrapper from an agent or another automatic Ship stage.
 If pending-validation.json is absent, Ship preserves the report and asks Tester
-for read-only request preparation, then stops BLOCKED without running commands.
-Invoke again to validate requests and enter exactly YES to run all displayed
-checks. Blank/declined input runs nothing. Commands inherit the host environment.
+for read-only request preparation, then validates and executes unmet policy-approved
+checks in the same invocation. Explicit invocation authorizes approved checks;
+there is no YES prompt. Commands inherit the host environment.
 
 Requests follow the version 1 contract in agents/tester.md, bound to run, cycle,
 plan, report and implementation hashes. Built-in commands are the exact AGENTS.md
@@ -30,3 +30,48 @@ Human criteria still use ship-verify; resolved infrastructure history must be
 explicitly reconciled in the fresh report, and unrelated failures still refuse
 manual PASS. Corrections require fresh evidence. Final-only reporting retains
 invocation-specific opt-in. Interruption marks owned active work ABORTED_BY_USER.
+
+## Validation continuation and evidence identity (TECH-109)
+
+One explicit `ship-validate.ps1 -Run <id>` invocation prepares a missing request,
+validates it, reuses authenticated successes, executes only unmet approved checks,
+and continues through Tester and review as coverage permits. Missing approvals,
+SQL fixtures, credentials or unsupported checks still block. No YES prompt or
+new approval is implied; scripts must already satisfy the reviewed policy.
+
+Successful execution proofs bind run, implementation, approved plan, requirement,
+executable, ordered arguments, working directory and applicable script/policy
+hashes. Original attempts and assessment/request/report snapshots remain immutable.
+Fresh reconciliation binds the current report/cycle. Report/history churn and
+cycle changes alone do not require a rerun. Code/test edits, additions/deletions,
+plan/check/policy changes, tampering, incomplete or contradictory results prevent
+reuse. Legacy evidence without provable identity requires fresh execution.
+
+`ship-verify.ps1 -Run <id> -Pass` needs no scenarios or notes. It attests to ALL
+required human validation; optional text is context. Use `-PassedSubset 'criterion'`
+for explicit partial coverage, which cannot complete remaining human criteria.
+Human evidence is atomically recorded in the Markdown audit trail and bound in
+human-current.json. Valid PASS can be retained during mapped infrastructure
+blockers, then consumed after Tester confirms complete automated coverage and
+human-only remaining requirements. It never overrides defects or automated gaps.
+Code/plan changes invalidate it. Human continuation and reassessment consume no
+correction cycle; actual Coder corrections retain the three-cycle budget.
+
+## Automated component coverage (TECH-110)
+
+Run `dotnet test TimeKeeper.App.Tests/TimeKeeper.App.Tests.csproj` separately from
+ domain tests. See `docs/Testing.md` for test responsibilities and authoring.
+Planner maps criteria to meaningful automated or residual browser checks; Tester
+reports executed bUnit names, coverage, counts/skips and exits; Reviewer accepts
+that exact coverage without duplicate human scenarios. Actual layout, visual
+polish and browser/JS requirements still need appropriate evidence. UI changes
+alone do not mandate a browser pass. PASS/FAIL/BLOCKED and evidence freshness
+contracts remain unchanged.
+
+Blocked component execution uses the reviewed, hash-pinned no-argument script:
+executable `powershell`, arguments
+`["-NoProfile", "-File", ".ship/validation/component-tests.ps1"]`, workingDirectory `.`.
+Only the user invokes host continuation. This adds no arbitrary command permission
+and changes no SQL fixture or identity safeguards. Tester must assess actual test
+coverage; an exit zero alone is insufficient. Playwright is deferred until a
+specific browser/end-to-end requirement warrants it.

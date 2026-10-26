@@ -53,6 +53,8 @@ param(
     [Parameter(ParameterSetName = "ManualPass")]
     [Parameter(ParameterSetName = "ManualFail")]
     [string[]]$Scenarios,
+    [Parameter(ParameterSetName = 'ManualPass')]
+    [string[]]$PassedSubset,
     [Parameter(ParameterSetName = "ManualPass")]
     [Parameter(ParameterSetName = "ManualFail")]
     [string]$Notes,
@@ -168,10 +170,15 @@ if ($IsContinue -or $IsManual -or $IsExternal) {
     if ($Run -notmatch '^\d{4}-\d{2}-\d{2}_\d{6}$') {
         Write-Host ""
         Write-Host "SHIP STOPPED" -ForegroundColor Red
-        Write-Host "Invalid run ID: $Run" -ForegroundColor Red
+        Write-Host 'Invalid run ID.' -ForegroundColor Red
         Write-Host ""
         Write-Host "Expected format:"
         Write-Host "2026-10-02_114200"
+        Write-Host 'Operator summary: REJECTED'
+        Write-Host 'Reason: Invalid run ID; no run was selected or changed.'
+        Write-Host 'Automated validation: NOT RUN'
+        Write-Host 'Human validation: UNKNOWN'
+        Write-Host 'Next action: Supply an existing run ID in yyyy-MM-dd_HHmmss format.'
         exit 1
     }
 
@@ -237,12 +244,132 @@ function Save-ReportHistory {
 
 function Format-ShipDisplayPath {
     param([string]$Path)
-    if (Get-Command Protect-ExternalText -ErrorAction SilentlyContinue) { return Protect-ExternalText $Path }
-    return $Path
+    return ConvertTo-OperatorText $Path
+}
+
+# Presentation only: never writes artifacts or authorizes transitions.
+function ConvertTo-OperatorText {
+    param([AllowEmptyString()][string]$Value)
+    $Value = [regex]::Replace($Value, '\x1b\[[0-?]*[ -/]*[@-~]|[\x00-\x1f\x7f-\x9f]', ' ')
+    foreach ($Entry in [Environment]::GetEnvironmentVariables().GetEnumerator()) {
+        if ($Entry.Key -match '(?i)secret|password|token|credential|connection|api.?key' -and
+            -not [string]::IsNullOrEmpty([string]$Entry.Value)) {
+            $Value = $Value.Replace([string]$Entry.Value, '[REDACTED]')
+        }
+    }
+    $Value = [regex]::Replace($Value, '(?i)(?:bearer\s+|(?:token|secret|api[_-]?key|password|pwd|connectionstring)\s*[:=]\s*)[^\s;,]+', '[REDACTED]')
+    if ($Value.Length -gt 400) { $Value = $Value.Substring(0, 397) + '...' }
+    return $Value
+}
+
+function Write-OperatorSummary {
+    param([string]$Status, [string]$Reason, [string]$Action, [switch]$Rejected)
+    try {
+        $Records = @{}; $Context = $null
+        $EvidenceNote = 'UNKNOWN (no usable current evidence)'
+        if ($Status -eq 'BLOCKED' -and (Test-Path -LiteralPath $TestReportFile -PathType Leaf)) {
+            try {
+                $Records = Assert-ManualTesterEvidence -Text ([IO.File]::ReadAllText($TestReportFile)) -RequireSuccess $true -AllowFailure $true -PassThru
+                $EvidenceNote = 'INCOMPLETE (required validation remains outstanding)'
+                if ($Records.Count -eq 0) { $EvidenceNote = 'UNKNOWN (no current automated records)' }
+                if ($Records['Validation'] -match '^(PASS|PASSED)$') { $EvidenceNote = 'PASS (explicit current validation record)' }
+                $HasFailure = @($Records.Keys | Where-Object {
+                    (($Records[$_] -match '^(FAIL|FAILED|BLOCKED)$') -or
+                    (($_ -like 'exit code *' -or $_ -eq 'failed tests') -and $Records[$_] -notmatch '^[+-]?0+$') -or
+                    ($_ -eq 'demonstrated defect' -and $Records[$_] -notmatch '^(?i:none|no)$'))
+                }).Count -gt 0
+                if ($HasFailure) { $EvidenceNote = 'INCOMPLETE (unresolved current checks)' }
+                $ContextPath = Join-Path $RunRoot 'operator-context.json'
+                if (Test-Path -LiteralPath $ContextPath -PathType Leaf) {
+                    if ((Get-Item -LiteralPath $ContextPath).Length -gt 16384) { throw 'Oversized context' }
+                    $Candidate = Get-Content -LiteralPath $ContextPath -Raw | ConvertFrom-Json -ErrorAction Stop
+                    . (Join-Path $ShipRoot 'external-validation.ps1')
+                    if ($Candidate.version -ne 1 -or $Candidate.run -cne $RunId -or $Candidate.cycle -ne $Cycle -or
+                        $Candidate.reportHash -cne (Get-ExternalHash $TestReportFile) -or
+                        $Candidate.implementationHash -cne (Get-ImplementationIdentity) -or
+                        $Candidate.category -cnotin @('human','infrastructure','mixed','unsupported') -or
+                        $Candidate.prerequisite -isnot [string] -or [string]::IsNullOrWhiteSpace($Candidate.prerequisite) -or
+                        $Candidate.action -isnot [string] -or [string]::IsNullOrWhiteSpace($Candidate.action) -or
+                        @($Candidate.outstanding).Count -lt 1 -or @($Candidate.outstanding).Count -gt 5 -or
+                        @($Candidate.outstanding | Where-Object { $_ -isnot [string] -or [string]::IsNullOrWhiteSpace($_) -or $_.Length -gt 240 }).Count -or
+                        $Candidate.prerequisite.Length -gt 240 -or $Candidate.action.Length -gt 240) { throw 'Unusable context' }
+                    if ($Candidate.category -eq 'human' -and $EvidenceNote -notlike 'PASS*') { throw 'Human-only context lacks explicit automated success' }
+                    # Infrastructure BLOCKED is expected; unresolved failures cannot be explained away by display context.
+                    if (@($Records.Values | Where-Object { $_ -match '^FAIL' }).Count -or
+                        ($Records.ContainsKey('demonstrated defect') -and $Records['demonstrated defect'] -notmatch '^(?i:none|no)$')) { throw 'Contradictory context' }
+                    $Context = $Candidate
+                }
+            } catch {
+                Write-Verbose ('Operator evidence/context unavailable: ' + (ConvertTo-OperatorText $_.Exception.Message))
+                $Context = $null; $Records = @{}
+                $EvidenceNote = 'UNKNOWN (missing, stale, conflicting or unusable evidence/context)'
+            }
+        }
+        Write-Host ''
+        Write-Host ('Operator summary: ' + (ConvertTo-OperatorText $Status))
+        if ($Rejected) {
+            $Saved = 'unavailable'
+            if (Test-Path -LiteralPath $RunStatusFile -PathType Leaf) { $Saved = Get-Content -LiteralPath $RunStatusFile -TotalCount 1 }
+            Write-Host ('Attempt rejected; saved status: ' + (ConvertTo-OperatorText $Saved))
+        }
+        Write-Host ('Reason: ' + (ConvertTo-OperatorText $Reason))
+        if ($Status -eq 'FAILED') {
+            if ($Reason -match 'after Tester failures|after manual failure') {
+                Write-Host 'Stop category: reported implementation defects; correction limit reached.'
+            } elseif ($Reason -match 'Maximum correction cycles reached after Reviewer requests') {
+                Write-Host 'Stop category: unresolved review findings; inspect the Reviewer report.'
+            } else {
+                Write-Host 'Stop category: tooling, workflow or evidence failure; this status alone does not establish a code defect.'
+            }
+        }
+        Write-Host ('Automated validation: ' + $EvidenceNote)
+        foreach ($Key in @($Records.Keys | Where-Object { $_ -match '^(Build|Automated tests|Tests|Check )' } | Sort-Object | Select-Object -First 5)) {
+            Write-Host ('  ' + (ConvertTo-OperatorText "${Key}: $($Records[$Key])"))
+        }
+        $Human = 'UNKNOWN (no current human result established by this summary)'
+        if ($Context -and $Context.category -in @('human','mixed')) { $Human = 'REQUIRED' }
+        if (Test-Path -LiteralPath (Join-Path $RunRoot 'human-current.json') -PathType Leaf) {
+            try {
+                . (Join-Path $ShipRoot 'external-validation.ps1')
+                if (Get-CurrentHumanAttestation) { $Human = 'PASS (bound full attestation retained; automated coverage still required)' }
+            } catch { Write-Verbose 'Human attestation is unavailable or stale.' }
+        }
+        Write-Host "Human validation: $Human"
+        if ($Context) {
+            Write-Host ('Blocker (' + $Context.category + '): ' + (ConvertTo-OperatorText $Context.prerequisite))
+            foreach ($Item in $Context.outstanding) { Write-Host ('  Pending: ' + (ConvertTo-OperatorText $Item)) }
+            Write-Host ('Required action: ' + (ConvertTo-OperatorText $Context.action))
+        }
+        if (-not $Action) {
+            switch ($Status) {
+                'BLOCKED' {
+                    if ($Context -and $Context.category -eq 'human') {
+                        $Action = "Perform the pending scenarios. Only if all succeed: .\ship-verify.ps1 -Run $RunId -Pass (notes are optional). Use -Fail only for a demonstrated defect."
+                    } elseif ($Context -and $Context.category -in @('infrastructure','mixed')) {
+                        $Action = "Restore the automated prerequisite first. From normal Developer PowerShell: .\ship-validate.ps1 -Run $RunId"
+                    } else {
+                        $Action = 'Obtain fresh current evidence and specific prerequisites from Tester; no supported continuation command is established by the available evidence.'
+                    }
+                }
+                'AWAITING_PLAN_APPROVAL' { $Action = "Review/edit $PlanFile; after approval: .\ship-continue.ps1 -Run $RunId" }
+                'ABORTED_BY_USER' { $Action = 'Inspect git status and partial changes before deciding how to restart. This run cannot be automatically resumed.' }
+                default { $Action = 'Inspect and repair the stated tooling, evidence or workflow problem; no supported same-run continuation is available. Start a new run after repair.' }
+            }
+        }
+        Write-Host ('Next action: ' + (ConvertTo-OperatorText $Action))
+        if ($Context -and $Context.category -in @('infrastructure','mixed')) {
+            Write-Host 'Host validation supports approved checks only. If requests are absent, this invocation prepares them and executes policy-approved unmet checks automatically. Unsupported checks need fresh evidence; manual PASS cannot bypass automated failures.'
+        }
+        if ($RunId) { Write-Host ('Run: ' + (ConvertTo-OperatorText $RunId)) }
+        if ($RunRoot) { Write-Host ('Run folder: ' + (ConvertTo-OperatorText $RunRoot)) }
+        if ($TestReportFile -and (Test-Path -LiteralPath $TestReportFile)) { Write-Host ('Test report: ' + (ConvertTo-OperatorText $TestReportFile)) }
+    } catch {
+        Write-Host 'Operator summary unavailable; original stop reason and saved status remain authoritative.'
+    }
 }
 
 function Assert-ManualTesterEvidence {
-    param([string]$Text, [bool]$RequireSuccess, [bool]$AllowFailure = $false)
+    param([string]$Text, [bool]$RequireSuccess, [bool]$AllowFailure = $false, [switch]$PassThru)
     $Lines = @($Text.TrimEnd() -split '\r?\n')
     if ($Lines[-1].Trim() -ine 'BLOCKED') { throw 'Tester report must conclude standalone BLOCKED.' }
     $Fence = ''; $FenceLength = 0; $IgnoredDepth = 0; $CurrentSection = $false
@@ -312,6 +439,7 @@ function Assert-ManualTesterEvidence {
     }
     if ($Fence -or $IgnoredDepth -or $Declarations.Count -eq 0) { throw 'Missing unquoted Tester terminal outcome.' }
     if (@($Declarations | Select-Object -Unique).Count -ne 1) { throw 'Contradictory standalone Tester outcomes.' }
+    if ($PassThru) { return $Records }
 }
 
 # Preflight runs outside the mutation and interruption handlers.
@@ -340,8 +468,21 @@ if ($IsManual -or $IsExternal) {
             }
         }
         $Evidence = Get-Content -LiteralPath $TestReportFile -Raw -ErrorAction Stop
-        if ($IsExternal) { . (Join-Path $ShipRoot 'external-validation.ps1') }
-        Assert-ManualTesterEvidence -Text $Evidence -RequireSuccess ([bool]($Pass -or $IsExternal)) -AllowFailure ([bool]$IsExternal)
+        . (Join-Path $ShipRoot 'external-validation.ps1')
+        $RetainHumanOnly = $false
+        try { Assert-ManualTesterEvidence -Text $Evidence -RequireSuccess ([bool]($Pass -or $IsExternal)) -AllowFailure ([bool]$IsExternal) }
+        catch {
+            if (-not ($IsManual -and $Pass)) { throw }
+            if (Test-Path -LiteralPath $CycleFile) { $Cycle = [int](Get-Content $CycleFile -Raw) }
+            $RequestFile = Join-Path $RunRoot 'pending-validation.json'
+            if (-not (Test-Path -LiteralPath $RequestFile)) { throw }
+            Assert-ExternalRequest (Get-Content $RequestFile -Raw | ConvertFrom-Json)
+            $RetainHumanOnly = $true
+        }
+        if ($IsManual -and $Pass) {
+            $HumanRecords = Assert-ManualTesterEvidence -Text $Evidence -RequireSuccess $true -AllowFailure $true -PassThru
+            if (@($HumanRecords.Values | Where-Object { $_ -eq 'BLOCKED' }).Count) { $RetainHumanOnly = $true }
+        }
         if ($IsManual -and $Pass -and (Test-Path (Join-Path $RunRoot 'external-current.json'))) {
             . (Join-Path $ShipRoot 'external-validation.ps1')
             $Receipt = Get-Content (Join-Path $RunRoot 'external-current.json') -Raw | ConvertFrom-Json
@@ -356,7 +497,7 @@ if ($IsManual -or $IsExternal) {
             if ($SavedCycle -notmatch '^[1-3]$') { throw 'Invalid validation-cycle metadata.' }
             $Cycle = [int]$SavedCycle
         }
-        if ($IsManual -and $Pass -and $Receipt -and $Receipt.cycle -ne $Cycle) { throw 'External receipt belongs to an older validation cycle.' }
+
         if ($IsExternal) {
             . (Join-Path $ShipRoot 'external-validation.ps1')
             $RequestFile = Join-Path $RunRoot 'pending-validation.json'
@@ -365,12 +506,14 @@ if ($IsManual -or $IsExternal) {
                 Assert-ExternalRequest $Request
             }
         } else {
-        if (-not $PSBoundParameters.ContainsKey('Scenarios')) {
+        if ($Fail -and -not $PSBoundParameters.ContainsKey('Scenarios')) {
             $Scenarios = @(Read-Host 'Enter verified scenarios/observations (FAIL must describe the demonstrated defect)')
         }
-        if (-not $Scenarios -or @($Scenarios | Where-Object { [string]::IsNullOrWhiteSpace($_) }).Count) {
+        if (($Fail -and -not $Scenarios) -or ($PSBoundParameters.ContainsKey('Scenarios') -and (-not $Scenarios -or @($Scenarios | Where-Object { [string]::IsNullOrWhiteSpace($_) }).Count))) {
             throw 'Nonblank human scenarios/observations are required.'
         }
+        if ($PSBoundParameters.ContainsKey('PassedSubset') -and
+            (-not $PassedSubset -or @($PassedSubset | Where-Object { [string]::IsNullOrWhiteSpace($_) }).Count)) { throw 'PassedSubset requires explicit nonblank criteria.' }
         $HumanEvidence = $Scenarios -join "`n"
         if ($Fail -and ($HumanEvidence -match '(?i)\bno (?:implementation )?defect\b|\bdefect\s*:\s*none\b' -or
             ($HumanEvidence -match '(?i)\b(unavailable|missing|unable|cannot)\b' -and
@@ -379,6 +522,8 @@ if ($IsManual -or $IsExternal) {
         }
         $Result = if ($Pass) { 'PASS' } else { 'FAIL' }
         $Entry = "# Manual Validation`n`nRun: $RunId`nResult: $Result`nRecorded: $([DateTimeOffset]::Now.ToString('o'))`nCycle: $Cycle`n`n## Scenarios verified / observations`n`n"
+        $Scope = if ($PassedSubset) { 'explicit-subset' } else { 'all-required-human-validation' }
+        $Entry += "Scope: $Scope`nImplementation: $(Get-ImplementationIdentity)`nPlan: $(Get-ExternalHash $PlanFile)`nSubset: $($PassedSubset -join '; ')`n`n"
         $Entry += ($Scenarios | ForEach-Object { '- ' + $_ }) -join "`n"
         $Entry += "`n`n## Notes`n`n$Notes`n"
         $Previous = ''
@@ -392,11 +537,16 @@ if ($IsManual -or $IsExternal) {
         } finally {
             if (Test-Path -LiteralPath $TempEvidence) { Remove-Item -LiteralPath $TempEvidence -Force }
         }
+        $HumanPath = Join-Path $RunRoot 'human-current.json'
+        if (Test-Path -LiteralPath $HumanPath) { Save-ReportHistory $HumanPath }
+        Write-ExternalArtifact $HumanPath @{ version=1; run=$RunId; result=$Result; scope=$Scope; subset=@($PassedSubset);
+            recorded=[DateTimeOffset]::Now.ToString('o'); implementationHash=(Get-ImplementationIdentity);
+            planHash=(Get-ExternalHash $PlanFile); auditHash=(Get-ExternalHash $ManualFile) }
         }
     } catch {
-        $Message = $_.Exception.Message
-        if (Get-Command Protect-ExternalText -ErrorAction SilentlyContinue) { $Message = Protect-ExternalText $Message }
+        $Message = ConvertTo-OperatorText $_.Exception.Message
         Write-Host "SHIP STOPPED: $Message" -ForegroundColor Red
+        Write-OperatorSummary -Status REJECTED -Reason $Message -Rejected -Action 'Correct the stated prerequisite or invocation; saved run state is unchanged. No continuation was authorized.'
         exit 1
     }
 }
@@ -595,7 +745,7 @@ $Message
 
     Write-Host ""
     Write-Host "SHIP STOPPED" -ForegroundColor Red
-    Write-Host $Message -ForegroundColor Red
+    Write-Host (ConvertTo-OperatorText $Message) -ForegroundColor Red
 
     Write-Host ""
 
@@ -605,6 +755,12 @@ $Message
         Write-Host ""
     }
 
+    $SummaryStatus = if ($PreserveStatus) { 'REJECTED' } else { 'FAILED' }
+    $SummaryAction = ''
+    if ($PreserveStatus -and (Get-ShipStatus) -eq 'AWAITING_PLAN_APPROVAL') {
+        $SummaryAction = "Restore the stated original prerequisite; review the approved plan, then .\ship-continue.ps1 -Run $RunId . Saved status is unchanged."
+    }
+    Write-OperatorSummary -Status $SummaryStatus -Reason $Message -Action $SummaryAction -Rejected:$PreserveStatus
     exit $ExitCode
 }
 
@@ -614,14 +770,11 @@ $Message
 # ------------------------------------------------------------
 
 function Stop-ShipBlocked {
+    param([string]$Reason = 'Required validation is incomplete; BLOCKED does not establish an implementation defect.')
     Save-ValidationCycle
     Set-ShipStatus "BLOCKED"
     Write-ShipStep "SHIP BLOCKED"
-    Write-Host "Tester could not complete required validation. Human intervention is required." -ForegroundColor Yellow
-    Write-Host "Run: $RunId"
-    Write-Host ("Run folder: " + (Format-ShipDisplayPath $RunRoot))
-    Write-Host "See the test report for the precise blocker and required next action:"
-    Write-Host (Format-ShipDisplayPath $TestReportFile)
+    Write-OperatorSummary -Status BLOCKED -Reason $Reason
     exit 1
 }
 
@@ -794,6 +947,20 @@ try {
     if ($IsExternal) {
         $TaskDescription = "Externally validated Ship run $RunId"
         if (-not (Test-Path -LiteralPath $RequestFile)) {
+            $CachedChecks = @(Get-ReusableExternalChecks)
+            if ($CachedChecks.Count) {
+                # Only a fresh Tester may decide whether these checks cover the entire plan.
+                $Request = [pscustomobject]@{ version=1; run=$RunId; cycle=$Cycle;
+                    reportHash=(Get-ExternalHash $TestReportFile); planHash=(Get-ExternalHash $PlanFile);
+                    implementationHash=(Get-ImplementationIdentity); checks=$CachedChecks }
+                try { Assert-ExternalRequest $Request }
+                catch { $Request = $null }
+                if ($Request) { Write-ExternalArtifact $RequestFile $Request }
+            }
+        }
+        if (-not (Test-Path -LiteralPath $RequestFile)) {
+            $PreparationIdentity = Get-ImplementationIdentity
+            $PreparationPlanHash = Get-ExternalHash $PlanFile
             $OwnsExecution = $true
             Set-ShipStatus 'TESTING'
             $OriginalReport = "$TestReportFile.history.$([guid]::NewGuid().ToString('N'))"
@@ -817,21 +984,55 @@ Map only clearly identified infrastructure failures. Leave unsupported or ambigu
             Set-ShipStatus 'BLOCKED'
             if (-not (Test-Path -LiteralPath $RequestFile -PathType Leaf)) {
                 Write-Warning 'Request preparation did not create pending-validation.json. Run remains BLOCKED; request preparation must be retried.'
+                Write-OperatorSummary -Status BLOCKED -Reason 'Request preparation did not create pending-validation.json.' -Action "Inspect preparation and supported checks; retry .\ship-validate.ps1 -Run $RunId from normal Developer PowerShell. No checks ran."
                 return
             }
-            Write-Host 'Requests prepared without execution. Invoke ship-validate again to validate and confirm them.'
-            return
+            if ($PreparationIdentity -cne (Get-ImplementationIdentity) -or $PreparationPlanHash -cne (Get-ExternalHash $PlanFile)) { Stop-ShipBlocked -Reason 'Implementation or plan changed during read-only preparation.' }
+            try { $PreparedRequest = Get-Content -LiteralPath $RequestFile -Raw -ErrorAction Stop | ConvertFrom-Json }
+            catch { Stop-ShipBlocked -Reason ('Invalid prepared request: ' + (Protect-ExternalText $_.Exception.Message)) }
+
+            if (-not @($PreparedRequest.checks).Count) {
+                $PreparedRequest.checks = @(Get-ReusableExternalChecks)
+                if ($PreparedRequest.checks.Count) {
+                    Save-ReportHistory $RequestFile
+                    Write-ExternalArtifact $RequestFile $PreparedRequest
+                }
+            }
+            if (-not @($PreparedRequest.checks).Count) {
+                Write-Host 'Request preparation found no executable host checks. Run remains BLOCKED.'
+                Write-OperatorSummary `
+                    -Status BLOCKED `
+                    -Reason 'No executable host validation checks are available.' `
+                    -Action 'No supported host-validation continuation is available. Resolve the unsupported validation requirement or obtain fresh Tester evidence; do not rerun ship-validate for this request.'
+                return
+            }
+
+            $Request = $PreparedRequest
+            try { Assert-ExternalRequest $Request }
+            catch { Stop-ShipBlocked -Reason ('Prepared request refused: ' + (Protect-ExternalText $_.Exception.Message)) }
         }
         foreach ($Check in $Request.checks) {
             Write-Host (Protect-ExternalText ("$($Check.id): $($Check.executable) $($Check.arguments -join ' ') -- $($Check.reason)"))
         }
-        $Confirmation = Read-Host 'Run ALL listed checks from this host? Enter YES to confirm'
-        if ($Confirmation -cne 'YES') { Write-Host 'No validation launched; run remains BLOCKED.'; return }
         Assert-ExternalRequest $Request
         $OwnsExecution = $true
         Set-ShipStatus 'TESTING'
+        $ValidatedRequestHash = Get-ExternalHash $RequestFile
+        $ValidatedImplementation = Get-ImplementationIdentity
+        $ValidatedPlanHash = Get-ExternalHash $PlanFile
         $CurrentAttempts = @()
-        foreach ($Check in $Request.checks) { Invoke-ExternalCheck $Check $Request }
+        $ReusedAttempts = @()
+        $ReusedResultHashes = @{}
+        foreach ($Check in $Request.checks) {
+            Assert-ExternalRequest $Request
+            $Reusable = Get-ReusableExternalAttempt $Check
+            if ($Reusable) {
+                Write-Host (Protect-ExternalText "Reusing assessed check $($Check.id) from $Reusable")
+                $CurrentAttempts += $Reusable
+                $ReusedAttempts += $Reusable
+                $ReusedResultHashes[$Reusable] = Get-ExternalHash (Join-Path $RunRoot $Reusable)
+            } else { Invoke-ExternalCheck $Check $Request }
+        }
         if ($PostResult) { $ReportingTarget = Restore-ReportingTarget }
         $ReportingEligible = $true
     }
@@ -840,6 +1041,10 @@ Map only clearly identified infrastructure failures. Leave unsupported or ambigu
         $ReportingEligible = $true
         if ($PostResult) { $ReportingTarget = Restore-ReportingTarget }
         $TaskDescription = "Manually verified Ship run $RunId"
+        if ($Pass -and ($PassedSubset -or $RetainHumanOnly)) {
+            Write-OperatorSummary -Status BLOCKED -Reason 'Human attestation retained; automated or explicitly remaining human validation is outstanding.' -Action 'Complete remaining human criteria and submit full -Pass, or continue supported automated checks.'
+            return
+        }
         $DirectReview = [bool]$Pass
         Save-ValidationCycle
         if ($Fail) {
@@ -857,6 +1062,7 @@ Map only clearly identified infrastructure failures. Leave unsupported or ambigu
 
             Write-Host "SHIP STOPPED" -ForegroundColor Red
             Write-Host ""
+            Write-OperatorSummary -Status REJECTED -Reason 'Run does not exist.' -Rejected -Action 'Supply an existing run ID; nothing was executed.'
             Write-Host "Run does not exist:"
             Write-Host (Format-ShipDisplayPath $RunRoot)
             return
@@ -922,6 +1128,7 @@ Map only clearly identified infrastructure failures. Leave unsupported or ambigu
 
             Write-Host ""
             Write-Host "Nothing was executed."
+            Write-OperatorSummary -Status $CurrentStatus -Reason 'Continuation rejected: only AWAITING_PLAN_APPROVAL may use ship-continue.' -Rejected
             Write-Host ""
 
             return
@@ -1365,6 +1572,7 @@ Do not implement the plan.
             Write-Host ""
             Write-Host "Status:"
             Write-Host "AWAITING_PLAN_APPROVAL"
+            Write-OperatorSummary -Status AWAITING_PLAN_APPROVAL -Reason 'Plan review is required before implementation.'
 
             Write-Host ""
             Write-Host "Review or edit plan.md."
@@ -1571,12 +1779,16 @@ and the human action or capability required to continue.
 "@
 
 
-        $TesterPrompt += "`nRead all $RunRoot/test-report.md.history.*, $RunRoot/external-*.json and $RunRoot/pending-validation.json and its .history.* files when present. Match run, cycle, implementation and report identities. After corrections all earlier host and human evidence is historical. Consume current host evidence without rerunning environment-dependent checks in the sandbox. Exit zero alone does not establish coverage; skipped required tests remain BLOCKED. Classify nonzero output: demonstrated defects FAIL, infrastructure/inconclusive BLOCKED. Preserve unrelated failures. Describe reconciliation by check ID and exact mapped records; preserve original evidence in history. Include remaining human and automated checks.`n"
+        $TesterPrompt += "`nRead all $RunRoot/test-report.md.history.*, $RunRoot/external-*.json and $RunRoot/pending-validation.json and its .history.* files when present. Match run, cycle, implementation and report identities. Eligibility requires matching implementation, approved plan and check identities; cycle/report churn alone does not invalidate authenticated PASS proofs. Consume current host evidence without rerunning environment-dependent checks in the sandbox. Exit zero alone does not establish coverage; skipped required tests remain BLOCKED. Classify nonzero output: demonstrated defects FAIL, infrastructure/inconclusive BLOCKED. Preserve unrelated failures. Describe reconciliation by check ID and exact mapped records; preserve original evidence in history. Include remaining human and automated checks.`n"
         if ($IsExternal) {
-            $TesterPrompt += "`nImplementation identity: $(Get-ImplementationIdentity); cycle: $Cycle; run: $RunId. Write external-assessment.json per tester.md for current attempts: $($CurrentAttempts -join ', '). Use SHA256 of the fresh report. Older cycle results are historical.`n"
+            $TesterPrompt += "`nImplementation identity: $(Get-ImplementationIdentity); cycle: $Cycle; run: $RunId. Write external-assessment.json per tester.md for current attempts: $($CurrentAttempts -join ', '). Use SHA256 of the fresh report. Reused attempts are engine-validated immutable PASS proofs; assess against current requirements without rerunning. Reused files: $($ReusedAttempts -join ', ').`n"
             $AssessmentPath = Join-Path $RunRoot 'external-assessment.json'
             if (Test-Path $AssessmentPath) { Save-ReportHistory $AssessmentPath }
         }
+        try {
+            . (Join-Path $ShipRoot 'external-validation.ps1')
+            $TesterPrompt += "`nOptional operator-context.json display context: run=$RunId; cycle=$Cycle; implementationHash=$(Get-ImplementationIdentity). Follow tester.md; hash the final report. Context never authorizes continuation.`n"
+        } catch { Write-Verbose 'Operator context identity unavailable; legacy report fallback remains supported.' }
         Invoke-CodexAgent `
             -RoleName "TESTER" `
             -Prompt $TesterPrompt
@@ -1589,14 +1801,23 @@ and the human action or capability required to continue.
 
 
         if ($IsExternal) {
-            if (Test-Path -LiteralPath $RequestFile) { Save-ReportHistory $RequestFile }
             if ($CurrentAttempts.Count) {
-                try { Assert-ExternalAssessment }
+                try {
+                    if ($ValidatedRequestHash -cne (Get-ExternalHash $RequestFile) -or
+                        $ValidatedImplementation -cne (Get-ImplementationIdentity) -or
+                        $ValidatedPlanHash -cne (Get-ExternalHash $PlanFile)) { throw 'Execution identities changed during assessment.' }
+                    foreach ($ReusedFile in $ReusedAttempts) {
+                        if ($ReusedResultHashes[$ReusedFile] -cne (Get-ExternalHash (Join-Path $RunRoot $ReusedFile))) { throw 'Reused execution changed during assessment.' }
+                    }
+                    Assert-ExternalAssessment
+                    Save-ExternalPassProofs
+                }
                 catch {
                     Write-Host (Protect-ExternalText $_.Exception.Message)
-                    Stop-ShipBlocked
+                    Stop-ShipBlocked -Reason $_.Exception.Message
                 }
             }
+            if (Test-Path -LiteralPath $RequestFile) { Save-ReportHistory $RequestFile }
             $ReceiptPath = Join-Path $RunRoot 'external-current.json'
             if (Test-Path $ReceiptPath) { Save-ReportHistory $ReceiptPath }
             Write-ExternalArtifact $ReceiptPath @{ version=1; reportHash=(Get-ExternalHash $TestReportFile); implementationHash=(Get-ImplementationIdentity); planHash=(Get-ExternalHash $PlanFile); evidenceHash=(Get-ExternalEvidenceIdentity); cycle=$Cycle; run=$RunId }
@@ -1606,7 +1827,15 @@ and the human action or capability required to continue.
                 -Path $TestReportFile
 
         if ($TestStatus -eq "BLOCKED") {
-            Stop-ShipBlocked
+            $Human = Get-CurrentHumanAttestation
+            if ($IsExternal -and $Human -and $CurrentAttempts.Count) {
+                try { Assert-ManualTesterEvidence -Text ([IO.File]::ReadAllText($TestReportFile)) -RequireSuccess $true }
+                catch { Stop-ShipBlocked -Reason $_.Exception.Message }
+                $HostAssessment = Get-Content (Join-Path $RunRoot 'external-assessment.json') -Raw | ConvertFrom-Json
+                if (@($HostAssessment.attempts | Where-Object { $_.classification -cne 'PASS' }).Count -or
+                    $HostAssessment.humanOnlyRemaining -isnot [bool] -or -not $HostAssessment.humanOnlyRemaining) { Stop-ShipBlocked -Reason 'Required automated coverage remains incomplete.' }
+                $DirectReview = $true
+            } else { Stop-ShipBlocked }
         }
 
 
@@ -1673,7 +1902,7 @@ After correction, Tester will run again.
         }
 
 
-        if ($TestStatus -ne "PASS") {
+        if ($TestStatus -ne "PASS" -and -not $DirectReview) {
 
             Stop-Ship `
                 "Tester report did not contain a recognizable PASS, FAIL, or BLOCKED result."
@@ -1723,7 +1952,7 @@ Read:
 
         $ReviewerPrompt += "`nRead original test-report.md.history.* and external-*.json and pending-validation.json.history.* when present. Assess mappings, output, freshness and complete coverage together. Earlier evidence cannot validate corrected code.`n"
         if (Test-Path -LiteralPath $ManualFile -PathType Leaf) {
-            $ReviewerPrompt += "`nRead $ManualFile. Direct manual review: $DirectReview. When true, original Tester outcome remains BLOCKED; successful automated evidence plus latest human PASS must cover every outstanding approved criterion. Require changes for coverage gaps. After any correction, older human evidence is historical and cannot replace fresh Tester validation. Do not weaken acceptance criteria.`n"
+            $ReviewerPrompt += "`nRead $ManualFile. Direct manual review: $DirectReview. When true, original Tester outcome remains BLOCKED; successful automated evidence plus latest human PASS must cover every outstanding approved criterion. Require changes for coverage gaps. A bound full human PASS attests to ALL required human criteria; optional notes/scenarios never narrow scope. An explicit subset covers only named criteria. Check human-current.json binding and audit hash; changed code or plan invalidates it. Automated gaps and real defects still prevent completion. Do not weaken acceptance criteria.`n"
         }
         $ReviewerPrompt += @"
 Inspect:
@@ -1987,7 +2216,8 @@ finally {
             Write-Host "Before starting again:"
             Write-Host "  1. Run: git status"
             Write-Host "  2. Review any partial changes."
-            Write-Host "  3. Revert unwanted partial changes."
+            Write-Host "  3. Decide how to restart after inspecting the changes."
+            Write-OperatorSummary -Status ABORTED_BY_USER -Reason 'Execution was interrupted before completion.'
             Write-Host ""
 
             Write-Host `

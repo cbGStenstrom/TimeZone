@@ -1,6 +1,6 @@
 # Disposable host-process fixtures; no real agents, SQL or GitHub writes.
 param(
-    [string[]]$Scenarios = @('pass','multiple','repair','interruptTester','remaining','infrastructure','skipped','defect','contradiction','decline','cancel','missingrequest','preparedrequest','traversal','failed','aborted','lowercase','badcycle','stale','unsafe','unrelated','conflicting','malformed','missingplan'),
+    [string[]]$Scenarios = @('reuse','reuse-no-request','reuse-mixed','retained','prepared-invalid','prepared-unsafe','prepared-change','prepared-ambiguous','pass','multiple','repair','interruptTester','remaining','infrastructure','skipped','defect','contradiction','decline','cancel','missingrequest','preparedrequest','traversal','failed','aborted','lowercase','badcycle','stale','unsafe','unrelated','conflicting','malformed','missingplan'),
     [switch]$PrepareSmoke,
     [switch]$SecretMetadata,
     [switch]$EmptyBaselines
@@ -16,7 +16,10 @@ $Runner = Join-Path $Fixture 'runner.ps1'
 param($Root,$Scenario,[int]$Posting=0)
 $ErrorActionPreference='Stop'
 if ($Scenario -like 'smoke*') { $env:SHIP_TEST_SECRET='synthetic-host-secret-84921'; $env:SHIP_SMOKE_VALUE='inherited-nonsecret-582' }
-function git { $global:LASTEXITCODE=0; ($args -join ' ') | Add-Content (Join-Path $Root 'git-calls.txt') }
+function git {
+    $global:LASTEXITCODE=0; ($args -join ' ') | Add-Content (Join-Path $Root 'git-calls.txt')
+    if ($Scenario -eq 'prepared-change' -and $args -contains 'ls-files' -and (Test-Path (Join-Path $Root 'changed.cs'))) { 'changed.cs' }
+}
 function gh {
     $global:LASTEXITCODE=0
     if ($args[0] -eq 'auth') { return }
@@ -28,7 +31,7 @@ function gh {
 }
 function Read-Host {
     if ($Scenario -like 'smoke*') { return Microsoft.PowerShell.Utility\Read-Host @args }
-    if ($Scenario -eq 'cancel') { throw 'Canceled input' }; if ($Scenario -eq 'decline') { return '' }; return 'YES'
+    throw 'Approved execution must not prompt'
 }
 function Get-Command {
     param($Name,$CommandType,$ErrorAction)
@@ -50,18 +53,26 @@ function codex {
     if ($Scenario -eq 'interruptTester') { throw 'Simulated resumed-agent interruption' }
     $RunRoot=Join-Path $Root '.ship/runs/2026-10-07_190659'
     if ($Prompt -match 'Read-only request preparation') {
-        if ($Scenario -eq 'preparedrequest') {
+        if ($Scenario -eq 'preparedrequest' -or $Scenario -like 'prepared-*') {
             Copy-Item (Join-Path $Root 'request-template.json') (Join-Path $RunRoot 'pending-validation.json')
+            if ($Scenario -eq 'prepared-invalid') { '{broken' | Set-Content (Join-Path $RunRoot 'pending-validation.json') }
+            if ($Scenario -in @('prepared-unsafe','prepared-ambiguous')) {
+                $Prepared=Get-Content (Join-Path $RunRoot 'pending-validation.json') -Raw | ConvertFrom-Json
+                if ($Scenario -eq 'prepared-unsafe') { $Prepared.checks[0].executable='arbitrary' }
+                else { $Prepared.checks[0].records=@('Command outside exit code: 1') }
+                $Prepared | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $RunRoot 'pending-validation.json')
+            }
+            if ($Scenario -eq 'prepared-change') { 'changed implementation' | Set-Content (Join-Path $Root 'changed.cs') }
         }
         return
     }
     if ($Role -eq 'Tester') {
         $script:Tests++
-        $Outcome=if ($Scenario -like 'receipt-*' -or $Scenario -in @('remaining','deployment','infrastructure','skipped','retry','retryUnrelated')) { 'BLOCKED' } elseif ($Scenario -eq 'defect' -or ($Scenario -eq 'repair' -and $script:Tests -eq 1)) { 'FAIL' } else { 'PASS' }
+        $Outcome=if ($Scenario -eq 'reuse' -or $Scenario -like 'reuse-*' -or $Scenario -like 'receipt-*' -or $Scenario -in @('retained','remaining','deployment','infrastructure','skipped','retry','retryUnrelated')) { 'BLOCKED' } elseif ($Scenario -eq 'defect' -or ($Scenario -eq 'repair' -and $script:Tests -eq 1)) { 'FAIL' } else { 'PASS' }
         $Current=@()
         if (Test-Path (Join-Path $RunRoot 'pending-validation.json')) {
             $ManifestHash=(Get-FileHash (Join-Path $RunRoot 'pending-validation.json')).Hash
-            $Current=@(Get-ChildItem $RunRoot -Filter 'external-*.result.json' | Where-Object { (Get-Content $_.FullName -Raw | ConvertFrom-Json).requestHash -ceq $ManifestHash })
+            $Current=@(Get-ChildItem $RunRoot -Filter 'external-*.result.json' | Where-Object { (Get-Content $_.FullName -Raw | ConvertFrom-Json).requestHash -ceq $ManifestHash -or @($ReusedAttempts) -contains $_.Name })
         }
         if ($Scenario -in @('skipped','skippedPass')) {
             $Captured=Get-Content $Current[0].FullName -Raw | ConvertFrom-Json
@@ -90,13 +101,15 @@ function codex {
             $Class=if ($Scenario -in @('retry','retryUnrelated')) { if ($Captured.exitCode -eq 0) { 'PASS' } else { 'BLOCKED' } } else { $Classification }
             @{file=$_.Name;classification=$Class;reason='Fixture output inspected';coverageComplete=($Class -eq 'PASS' -and $Scenario -ne 'skippedPass');demonstratedDefect=($Class -eq 'FAIL')}
         })
-        @{version=1;run=$Request.run;cycle=$Request.cycle;reportHash=(Get-FileHash (Join-Path $RunRoot 'test-report.md')).Hash;implementationHash=$Request.implementationHash;attempts=$Attempts} | ConvertTo-Json -Depth 6 | Set-Content (Join-Path $RunRoot 'external-assessment.json')
+        @{version=1;run=$Request.run;cycle=$Request.cycle;reportHash=(Get-FileHash (Join-Path $RunRoot 'test-report.md')).Hash;implementationHash=$Request.implementationHash;attempts=$Attempts;humanOnlyRemaining=($Scenario -eq 'retained')} | ConvertTo-Json -Depth 6 | Set-Content (Join-Path $RunRoot 'external-assessment.json')
     }
     if ($Role -eq 'Reviewer') { 'PASS' | Set-Content (Join-Path $RunRoot 'review-report.md') }
 }
 $PostArgs=@{}
 if ($Posting) { $PostArgs.PostResult=$true }
-if ($Scenario -eq 'manual') {
+if ($Scenario -eq 'human') {
+    & (Join-Path $Root 'ship-verify.ps1') -Run '2026-10-07_190659' -Pass
+} elseif ($Scenario -eq 'manual') {
     & (Join-Path $Root 'ship-verify.ps1') -Run '2026-10-07_190659' -Pass -Scenarios 'Human verified remaining browser criterion'
 } else {
     & (Join-Path $Root 'ship-validate.ps1') -Run $(if ($Scenario -eq 'traversal') { '../bad' } else { '2026-10-07_190659' }) @PostArgs
@@ -215,7 +228,7 @@ Start-Sleep -Seconds 600
             if ($Scenario -like 'missing-*') { Remove-Item -LiteralPath $Target } else { [IO.File]::WriteAllText($Target,'') }
             $Preserved.Remove((Split-Path $Target -Leaf))
         }
-        if ($Scenario -in @('missingrequest','preparedrequest')) {
+        if ($Scenario -in @('missingrequest','preparedrequest') -or $Scenario -like 'prepared-*') {
             Copy-Item (Join-Path $RunRoot 'pending-validation.json') (Join-Path $Root 'request-template.json')
             Remove-Item (Join-Path $RunRoot 'pending-validation.json')
         }
@@ -233,6 +246,13 @@ Start-Sleep -Seconds 600
         }
         $SavedSecret=$env:SHIP_TEST_SECRET
         $env:SHIP_TEST_SECRET='synthetic-host-secret-84921'
+        if ($Scenario -eq 'retained') {
+            $HumanOutput=& powershell -NoProfile -File $Runner $Root 'human' 0 2>&1 | Out-String
+            Assert ($LASTEXITCODE -eq 0 -and (Get-Content (Join-Path $RunRoot 'run-status.txt') -Raw).Trim() -eq 'BLOCKED') "Human PASS bypassed automation: $HumanOutput"
+            $Human=Get-Content (Join-Path $RunRoot 'human-current.json') -Raw | ConvertFrom-Json
+            Assert ($Human.scope -ceq 'all-required-human-validation') 'Omitted text narrowed human scope'
+            $Preserved['manual-validation.md']=(Get-FileHash (Join-Path $RunRoot 'manual-validation.md')).Hash
+        }
         $Before=@{}; Get-ChildItem $RunRoot -File | ForEach-Object { $Before[$_.Name]=(Get-FileHash $_.FullName).Hash }
         $Posting=[int]($Scenario -in @('postSecretError','retry','retryUnrelated','secretPaths','secretError','persist-started','persist-result','persist-external-current','postpass','postfail','defect','remaining','deployment','decline','interruptTester','missingrequest','sql'))
         $ErrorActionPreference='Continue'
@@ -241,7 +261,31 @@ Start-Sleep -Seconds 600
         $ErrorActionPreference='Stop'
         $Status=if (Test-Path (Join-Path $RunRoot 'run-status.txt')) { ([IO.File]::ReadAllText((Join-Path $RunRoot 'run-status.txt'))).Split([char]10)[0].Trim() } else { '' }
         $Results=@(Get-ChildItem $RunRoot -Filter 'external-*.result.json')
-        if ($Scenario -like 'receipt-*') {
+        if ($Scenario -like 'prepared-*') {
+            Assert ($Status -eq 'BLOCKED' -and $Results.Count -eq 0 -and -not (Test-Path (Join-Path $Root 'launches.txt'))) "Invalid preparation launched: $Output"
+            Assert ((Get-FileHash (Join-Path $RunRoot 'test-report.md')).Hash -ceq $Before['test-report.md']) 'Preparation replaced source report'
+            Assert (((Get-Content (Join-Path $Root 'roles.txt')) -join ',') -eq 'Tester') 'Invalid preparation advanced stages'
+        } elseif ($Scenario -like 'reuse*') {
+            Assert ($Status -eq 'BLOCKED' -and $Results.Count -eq 1) "Reuse setup failed: $Output"
+            $OriginalHash=(Get-FileHash $Results[0].FullName).Hash
+            $Retry=$Request.Clone(); $Retry.cycle=2
+            $Retry.reportHash=(Get-FileHash (Join-Path $RunRoot 'test-report.md')).Hash
+            $Retry.checks=@($Request.checks[0].Clone()); $Retry.checks[0].records=@(); $Retry.checks[0].reportReference='Host fixture assessed'
+            if ($Scenario -eq 'reuse-mixed') {
+                $Extra=$Retry.checks[0].Clone(); $Extra.id='extra'; $Extra.requirement='fixture validation'
+                $Retry.checks+=@($Extra)
+            }
+            '2' | Set-Content (Join-Path $RunRoot 'validation-cycle.txt')
+            $Retry | ConvertTo-Json -Depth 8 | Set-Content (Join-Path $RunRoot 'pending-validation.json')
+            if ($Scenario -eq 'reuse-no-request') { Remove-Item -LiteralPath (Join-Path $RunRoot 'pending-validation.json') }
+            $RetryOutput=& powershell -NoProfile -File $Runner $Root 'reused' 0 2>&1 | Out-String
+            Assert ($LASTEXITCODE -eq 0 -and (Get-Content (Join-Path $RunRoot 'run-status.txt') -Raw).Trim() -eq 'PASS') "Reuse continuation failed: $RetryOutput"
+            Assert (@(Get-Content (Join-Path $Root 'launches.txt')).Count -eq $(if ($Scenario -eq 'reuse-mixed') { 2 } else { 1 })) 'Unchanged cross-cycle check relaunched or unmet check skipped'
+            Assert ((Get-FileHash $Results[0].FullName).Hash -ceq $OriginalHash) 'Reuse modified original execution'
+        } elseif ($Scenario -eq 'retained') {
+            Assert ($Status -eq 'PASS' -and $Results.Count -eq 1) "Retained human PASS not consumed: $Output"
+            Assert (((Get-Content (Join-Path $Root 'roles.txt')) -join ',') -eq 'Tester,Reviewer') 'Retained PASS routed incorrectly'
+        } elseif ($Scenario -like 'receipt-*') {
             Assert ($Status -eq 'BLOCKED' -and $Results.Count -eq 1) "Receipt fixture failed: $Output"
             $ReceiptFile=Join-Path $RunRoot 'external-current.json'
             $Receipt=Get-Content $ReceiptFile -Raw | ConvertFrom-Json
@@ -253,9 +297,14 @@ Start-Sleep -Seconds 600
             $ManualOutput=& powershell -NoProfile -File $Runner $Root 'manual' 0 2>&1 | Out-String
             $ManualExit=$LASTEXITCODE
             $ErrorActionPreference='Stop'
+            if ($Field -eq 'cycle') {
+                Assert ($ManualExit -eq 0 -and (Get-Content (Join-Path $RunRoot 'run-status.txt') -Raw).Trim() -eq 'PASS') 'Cycle alone invalidated unchanged evidence'
+                $Preserved['manual-validation.md']=(Get-FileHash (Join-Path $RunRoot 'manual-validation.md')).Hash
+            } else {
             Assert ($ManualExit -ne 0 -and (Get-Content (Join-Path $RunRoot 'run-status.txt') -Raw).Trim() -eq 'BLOCKED') 'Stale receipt permitted human PASS'
             foreach ($Name in $Snapshot.Keys) { Assert ((Get-FileHash (Join-Path $RunRoot $Name)).Hash -ceq $Snapshot[$Name]) 'Stale receipt refusal mutated evidence' }
             Assert ((Get-Content (Join-Path $Root 'roles.txt')) -join ',' -eq 'Tester') 'Stale receipt reached Reviewer'
+            }
         } elseif ($Scenario -like 'persist-*' -or $Scenario -eq 'secretError') {
             Assert ($Status -ne 'PASS' -and -not (Test-Path (Join-Path $Root 'post-count.txt'))) "$Scenario advanced on missing evidence"
             $Roles=if (Test-Path (Join-Path $Root 'roles.txt')) { Get-Content (Join-Path $Root 'roles.txt') } else { @() }
@@ -299,7 +348,7 @@ Start-Sleep -Seconds 600
                 }
             }
             foreach ($Name in $OldHashes.Keys) { Assert ((Get-FileHash (Join-Path $RunRoot $Name)).Hash -ceq $OldHashes[$Name]) 'Retry changed prior attempt' }
-        } elseif ($Scenario -in @('postSecretError','secretPaths','pass','postpass','postfail','multiple','repair','interruptTester','remaining','deployment','infrastructure','skipped','skippedPass','defect','contradiction')) {
+        } elseif ($Scenario -in @('decline','cancel','preparedrequest','postSecretError','secretPaths','pass','postpass','postfail','multiple','repair','interruptTester','remaining','deployment','infrastructure','skipped','skippedPass','defect','contradiction')) {
             Assert ($Results.Count -eq $(if ($Scenario -eq 'multiple') { 2 } else { 1 })) "$Scenario missing attempt: $Output"
             $Result=Get-Content $Results[0].FullName -Raw | ConvertFrom-Json
             Assert ($Result.exitCode -eq $(if ($Scenario -in @('infrastructure','defect','repair')) { 7 } else { 0 }) -and $Result.stdout.Contains('host fixture') -and $Result.stderr.Contains('stderr fixture')) "$Scenario capture failed"
@@ -311,9 +360,10 @@ Start-Sleep -Seconds 600
                 Assert (-not $Output.Contains('synthetic-host-secret-84921')) ('Secret in console: ' + (($Output -split '\r?\n' | Where-Object { $_.Contains('synthetic-host-secret-84921') }) -join ' ').Replace('synthetic-host-secret-84921','[LEAKED SYNTHETIC]'))
             }
             Assert ($Status -eq $(if ($Scenario -in @('remaining','deployment','infrastructure','skipped','skippedPass','contradiction')) { 'BLOCKED' } elseif ($Scenario -eq 'defect') { 'FAILED' } elseif ($Scenario -eq 'interruptTester') { 'ABORTED_BY_USER' } else { 'PASS' })) "$Scenario status $Status : $Output"
-            Assert (((Get-Content (Join-Path $Root 'roles.txt')) -join ',') -eq $(if ($Scenario -in @('postSecretError','secretPaths','pass','postpass','postfail','multiple')) { 'Tester,Reviewer' } elseif ($Scenario -eq 'repair') { 'Tester,Coder,Tester,Reviewer' } else { 'Tester' })) 'Incorrect stage routing'
+            Assert (((Get-Content (Join-Path $Root 'roles.txt')) -join ',') -eq $(if ($Scenario -in @('decline','cancel','postSecretError','secretPaths','pass','postpass','postfail','multiple')) { 'Tester,Reviewer' } elseif ($Scenario -eq 'preparedrequest') { 'Tester,Tester,Reviewer' } elseif ($Scenario -eq 'repair') { 'Tester,Coder,Tester,Reviewer' } else { 'Tester' })) 'Incorrect stage routing'
         } else {
             Assert ($Results.Count -eq 0 -and -not (Test-Path (Join-Path $Root 'launches.txt'))) "$Scenario unexpectedly executed"
+            Assert ($Output.Contains('Operator summary:') -and $Output.Contains('Next action:')) "$Scenario missing stop summary: $Output"
             if ($Scenario -in @('missingrequest','preparedrequest')) {
                 Assert ($Status -eq 'BLOCKED' -and $Exit -eq 0) 'Preparation did not remain BLOCKED'
                 Assert (((Get-Content (Join-Path $Root 'roles.txt')) -join ',') -eq 'Tester') 'Preparation invoked another role'
@@ -334,10 +384,10 @@ Start-Sleep -Seconds 600
             }
         }
         $Posts=if (Test-Path (Join-Path $Root 'post-count.txt')) { @(Get-Content (Join-Path $Root 'post-count.txt')).Count } else { 0 }
-        Assert ($Posts -eq $(if ($Scenario -in @('postSecretError','secretPaths','postpass','postfail','defect')) { 1 } else { 0 })) "$Scenario incorrect final posting count"
+        Assert ($Posts -eq $(if ($Scenario -in @('decline','postSecretError','secretPaths','postpass','postfail','defect')) { 1 } else { 0 })) "$Scenario incorrect final posting count"
         if ($Scenario -in @('postfail','postSecretError')) { Assert ($Status -eq 'PASS' -and $Output.Contains('workflow status is unchanged') -and -not (Test-Path (Join-Path $RunRoot 'github-result-posted.txt'))) 'Posting failure changed workflow or retried' }
         if ($Preserved.ContainsKey('git-diff-before-code.patch') -and -not $EmptyBaselines) { Assert ((Get-Content (Join-Path $RunRoot 'git-diff-before-code.patch') -Raw) -ceq 'baseline fixture') 'Baseline changed' }
-        if ($Scenario -ne 'badcycle') { Assert ((Get-Content (Join-Path $RunRoot 'validation-cycle.txt') -Raw).Trim() -eq $(if ($Scenario -eq 'repair') { '2' } else { '3' })) 'Incorrect cycle accounting' }
+        if ($Scenario -ne 'badcycle') { Assert ((Get-Content (Join-Path $RunRoot 'validation-cycle.txt') -Raw).Trim() -eq $(if ($Scenario -eq 'repair' -or $Scenario -like 'reuse*') { '2' } else { '3' })) 'Incorrect cycle accounting' }
         Assert (-not $Output.Contains($env:SHIP_TEST_SECRET)) 'Secret in console'
         foreach ($Name in $Preserved.Keys) {
             if ($Scenario -eq 'missingplan' -and $Name -eq 'plan.md') { continue }

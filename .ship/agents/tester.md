@@ -15,6 +15,7 @@ Run:
 ```text
 msbuild TimeKeeper.sln
 dotnet test TimeKeeper.Domain.Tests/TimeKeeper.Domain.Tests.csproj
+dotnet test TimeKeeper.App.Tests/TimeKeeper.App.Tests.csproj
 ```
 
 Report:
@@ -25,6 +26,31 @@ Report:
 - acceptance criteria verified
 - commands executed and exit codes
 - warnings and files modified by Tester
+
+## Component coverage
+
+Read `docs/Testing.md`. Accept current executed passing bUnit tests for the exact
+behaviors they fully establish. Report test names and claimed coverage, discovered,
+passed, failed and skipped counts, and command exit codes. Required skipped or
+unexecuted cases remain uncovered. Inspect real component/DOM interaction and
+Radzen composition; stubs cannot prove behavior they replace. Component callback
+tests do not establish parent workflows or persistence.
+
+Do not request duplicate manual scenarios for established automated behavior.
+For example, passing selected-resume DOM click and empty-state tests establish
+their callback and empty-state behavior without a human repeat. A criterion about
+actual layout/readability or browser JS still needs appropriate browser/human
+evidence. A UI-related change alone is not a mandatory browser pass. Preserve
+PASS/FAIL/BLOCKED semantics for uncovered requirements.
+
+For blocked component execution, use the existing version 1 request with executable
+`powershell`, arguments `["-NoProfile", "-File", ".ship/validation/component-tests.ps1"]`,
+workingDirectory `.` and the existing identity/record-mapping fields. The reviewed
+script is hash-pinned in validation-policy.json and needs no SQL fixture or browser.
+Direct arbitrary dotnet commands remain unsupported. Only the user invokes host
+continuation. Assess matching attempt streams, names/counts/skips, exit code and
+coverage in the fresh report and external-assessment.json under the unchanged
+evidence contract; zero exit alone does not prove complete coverage.
 
 Conclude with exactly one primary outcome on the final standalone line:
 - PASS: All required validation completed successfully.
@@ -111,8 +137,13 @@ coverage including skipped tests. Exit zero alone does not prove required covera
 Consume fresh matching host results rather than rerunning checks in the sandbox.
 Preserve original failed records in report history and explain their exact
 reconciliation. Unrelated failures remain current. Incomplete or stale attempts
-cannot satisfy requirements. After code correction all prior external and human
-observations are historical. Remaining required browser coverage keeps BLOCKED. 
+cannot satisfy requirements. Changed implementation or approved plan invalidates
+prior execution and human evidence. Cycle/report changes alone do not invalidate
+engine-verified PASS proofs. Assess every engine-listed reused attempt against
+current requirements, preserving its original provenance. Never infer success
+from an unassessed, failed, skipped, incomplete or contradictory result.
+Remaining required browser coverage keeps BLOCKED unless a matching full human
+attestation supplies that coverage.
 Deployment validation is not a routine Ship requirement and must not block normal 
 feature work unless the approved issue or plan explicitly requires deployment or 
 release validation.
@@ -127,7 +158,52 @@ coverage is BLOCKED. FAIL requires demonstrated incorrect behavior and explanati
 Do not include stale attempts as current. Remaining human criteria may leave the
 report BLOCKED even when every assessed automated check passes.
 
+Set `humanOnlyRemaining: true` on the assessment only when all automated
+requirements are satisfied and only human criteria keep the report BLOCKED.
+This explicit coverage assertion allows the engine to consume an already bound
+human PASS. Missing/false assertions cannot authorize that continuation.
+Read `human-current.json` and `manual-validation.md` when supplied. A full,
+identity-bound PASS attests to all required human validation; optional text is
+context and never narrows coverage. `explicit-subset` covers only named criteria.
+Unknown, legacy, stale, or contradictory human evidence cannot supply coverage.
+
 If the engine has not supplied an implementation identity, describe pending
 checks in the BLOCKED report and defer manifest creation to the wrapper's read-only
 request-preparation stage. Do not guess identities. Reviewed fixture scripts and
 policy entries are prerequisites; request preparation never creates them.
+
+## Optional operator display context
+
+For BLOCKED, optionally write `operator-context.json` beside the final report.
+This is presentation context only; it never authorizes continuation or replaces
+any detailed report requirement. Legacy reports remain supported without it.
+Use only engine-supplied run, cycle and implementation identity. Do not guess.
+Write after finalizing the report, using its SHA256 hash:
+
+```json
+{
+  "version": 1,
+  "run": "2026-10-16_123040",
+  "cycle": 1,
+  "reportHash": "SHA256 of final test-report.md",
+  "implementationHash": "engine-supplied identity",
+  "category": "human",
+  "prerequisite": "Browser interaction required",
+  "action": "Perform the pending browser scenarios",
+  "outstanding": ["Resume Work resumes the active work item"]
+}
+```
+
+Categories are human, infrastructure, mixed, or unsupported. Use infrastructure
+or mixed only for checks supported by the external validation contract; use
+unsupported when host continuation cannot supply the missing capability.
+Prerequisite, action, and each outstanding scenario must be nonblank strings of
+at most 240 characters. Supply one to five scenarios/checks, without credentials
+or terminal controls. Maximum JSON size is 16 KiB. Human-only context requires an
+explicit current `Validation: PASS` record meaning all required automated
+validation completed successfully. Do not infer that record from zero exit codes
+or partial checks. BLOCKED remains the final outcome when human checks remain.
+Do not include arbitrary commands in the action; describe the required work.
+Engine-rendered commands supply the supported continuation. Stale, malformed,
+contradictory, or missing context causes conservative display fallback. Report
+replacement, implementation changes, and correction cycles invalidate context.

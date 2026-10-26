@@ -24,6 +24,15 @@ Run all .NET tests with:
 dotnet test TimeKeeper.Domain.Tests/TimeKeeper.Domain.Tests.csproj
 ```
 
+Run the separate required Blazor component suite with:
+
+```text
+dotnet test TimeKeeper.App.Tests/TimeKeeper.App.Tests.csproj
+```
+
+See `docs/Testing.md` for prerequisites and coverage responsibilities. The domain
+command does not execute the component suite.
+
 ## General Rules
 
 - Preserve the existing architecture unless a task explicitly requires a change.

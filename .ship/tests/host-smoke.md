@@ -18,14 +18,15 @@ powershell -NoProfile -File "$fixture/runner.ps1" "$fixture/smokeNormal" smokeNo
 powershell -NoProfile -File "$fixture/runner.ps1" "$fixture/smokeInterrupt" smokeInterrupt
 ```
 
-For decline enter a blank response. Inspect that no launches.txt or external attempt
-exists and run-status.txt remains BLOCKED. For normal enter YES. Inspect the result
+All three fixtures now authorize policy-approved checks by explicit invocation;
+there is no decline/YES prompt. The legacy smokeDecline fixture also executes.
+For normal execution inspect the result
 JSON under `.ship/runs/2026-10-07_190659`: stdout must contain stdout-smoke-marker
 and inherited-nonsecret-582, stderr must contain stderr-smoke-marker, and neither
 stream may contain the other's marker. Both synthetic secrets must be [REDACTED].
 Record the actual Tester/Reviewer routing and final status.
 
-For interruption enter YES, wait until smokeInterrupt/owned-processes.json exists,
+For interruption wait until smokeInterrupt/owned-processes.json exists,
 then press real Ctrl+C while the child runs. In another normal host shell check each
 recorded PID and UTC start time against Get-Process. A missing PID, or a different
 start time, proves that recorded process identity is no longer running. Check both

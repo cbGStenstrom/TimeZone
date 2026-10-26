@@ -9,8 +9,10 @@ report can be verified. Plan continuation (`ship-continue.ps1` or bare engine
 Manual PASS checks the final unquoted standalone Tester outcome and current
 structured execution evidence separately. Distinct standalone outcomes,
 malformed/conflicting current records, failed checks, nonzero command exits,
-nonzero failed-test totals, and demonstrated defects refuse continuation before
-human evidence is written. Use the current-results contract in agents/tester.md.
+nonzero failed-test totals, and demonstrated defects refuse successful
+continuation. A valid pending request may map known infrastructure failures so
+human PASS can be retained while automation remains blocked. Unmapped failures,
+defects and ambiguous evidence still refuse recording. Use tester.md's contract.
 Legacy anchored records remain supported without migrating saved reports.
 Quoted/fenced examples and explicitly historical or simulated sections are not
 current execution evidence. Narrative words such as unknown, ambiguous, pass,
@@ -25,9 +27,9 @@ Reviewer must still assess coverage using automated and human evidence together.
 .\ship-verify.ps1 -Run 2026-10-02_023513 -Fail -Scenarios 'Clicking Resume Work threw an exception; expected active work to resume'
 ```
 
-Exactly one affirmative result is required. Without `-Scenarios`, the engine
-prompts for human observations. For noninteractive use supply nonblank scenarios;
-blank, canceled, or unavailable input never implies success. FAIL observations
+Exactly one affirmative result is required. Explicit -Pass needs no optional text
+and attests to all required human validation. Scenarios and notes are context only.
+Use -PassedSubset with explicit criteria to record partial completion. FAIL observations
 must describe a demonstrated implementation defect, not merely missing tooling.
 No observations are generated from requirements or reports. Automated failure
 or ambiguous evidence cannot be overridden by manual PASS.
@@ -35,11 +37,12 @@ or ambiguous evidence cannot be overridden by manual PASS.
 The engine writes `manual-validation.md` atomically before invoking agents. Each
 entry records run ID, result, timestamp with timezone, cycle, observations and
 optional notes. The last entry is current; earlier entries remain historical.
-PASS enters Reviewer directly with automated and human evidence, and only review
+PASS enters Reviewer when automated coverage is ready; otherwise it is retained
+for identity-matched reconciliation. Only review
 can complete the run. FAIL enters scoped Coder correction, fresh Tester, then
 Reviewer. Review changes after manual PASS also require fresh testing; earlier
-human PASS cannot validate changed code. A new BLOCKED episode requires new
-human observations.
+human PASS cannot validate changed code. An unchanged implementation and plan
+retain eligible attestations across BLOCKED episodes.
 
 Task, issue snapshot, approved plan and all original/pre-Coder Git baselines are
 preserved. Before a report is replaced it is copied to a unique
@@ -231,9 +234,9 @@ Run `./ship-validate.ps1 -Run <timestamp-id> [-PostResult]` explicitly from norm
 Developer PowerShell. Exact BLOCKED and preserved prerequisites are required.
 Never invoke this wrapper from an agent or another automatic Ship stage.
 If pending-validation.json is absent, Ship preserves the report and asks Tester
-for read-only request preparation, then stops BLOCKED without running commands.
-Invoke again to validate requests and enter exactly YES to run all displayed
-checks. Blank/declined input runs nothing. Commands inherit the host environment.
+for read-only request preparation, then validates and executes unmet policy-approved
+checks in the same invocation. Explicit invocation authorizes approved checks;
+there is no YES prompt. Commands inherit the host environment.
 
 Requests follow the version 1 contract in agents/tester.md, bound to run, cycle,
 plan, report and implementation hashes. Built-in commands are the exact AGENTS.md
@@ -256,3 +259,72 @@ Human criteria still use ship-verify; resolved infrastructure history must be
 explicitly reconciled in the fresh report, and unrelated failures still refuse
 manual PASS. Corrections require fresh evidence. Final-only reporting retains
 invocation-specific opt-in. Interruption marks owned active work ABORTED_BY_USER.
+
+## Operator stop summaries
+
+Deliberate stops and pauses print a bounded operator summary with the reason,
+current automated checks when usable, outstanding human work, and the next
+supported action. Full reports remain unchanged audit records. UNKNOWN means
+current evidence or optional display context is absent or unusable, never PASS.
+BLOCKED means incomplete validation and does not establish a code defect.
+
+With current explicit automated success and bound human-only Tester context,
+perform the listed scenarios before using the displayed run-specific
+`ship-verify.ps1 -Run <id> -Pass`; observations will be requested. Use -Fail only
+for a demonstrated defect. Manual PASS cannot bypass automated failures.
+For supported infrastructure checks, restore the named prerequisite first and
+run the displayed `ship-validate.ps1 -Run <id>` from normal Developer PowerShell.
+Absent requests are prepared and policy-approved unmet checks execute in the same invocation. Mixed gaps require automated repair
+first. Unsupported or unusable evidence requires fresh Tester evidence; no
+continuation command is invented.
+
+Plan pauses show the exact plan and ship-continue command. Failed runs require
+inspection/repair and a new run; no same-run continuation is supported. Aborted
+runs require inspecting git status and partial changes before deciding how to
+restart; they cannot be automatically resumed. Rejected operations preserve the
+saved status and distinguish it from the attempted operation.
+
+## Validation continuation and evidence identity (TECH-109)
+
+One explicit `ship-validate.ps1 -Run <id>` invocation prepares a missing request,
+validates it, reuses authenticated successes, executes only unmet approved checks,
+and continues through Tester and review as coverage permits. Missing approvals,
+SQL fixtures, credentials or unsupported checks still block. No YES prompt or
+new approval is implied; scripts must already satisfy the reviewed policy.
+
+Successful execution proofs bind run, implementation, approved plan, requirement,
+executable, ordered arguments, working directory and applicable script/policy
+hashes. Original attempts and assessment/request/report snapshots remain immutable.
+Fresh reconciliation binds the current report/cycle. Report/history churn and
+cycle changes alone do not require a rerun. Code/test edits, additions/deletions,
+plan/check/policy changes, tampering, incomplete or contradictory results prevent
+reuse. Legacy evidence without provable identity requires fresh execution.
+
+`ship-verify.ps1 -Run <id> -Pass` needs no scenarios or notes. It attests to ALL
+required human validation; optional text is context. Use `-PassedSubset 'criterion'`
+for explicit partial coverage, which cannot complete remaining human criteria.
+Human evidence is atomically recorded in the Markdown audit trail and bound in
+human-current.json. Valid PASS can be retained during mapped infrastructure
+blockers, then consumed after Tester confirms complete automated coverage and
+human-only remaining requirements. It never overrides defects or automated gaps.
+Code/plan changes invalidate it. Human continuation and reassessment consume no
+correction cycle; actual Coder corrections retain the three-cycle budget.
+
+## Automated component coverage (TECH-110)
+
+Run `dotnet test TimeKeeper.App.Tests/TimeKeeper.App.Tests.csproj` separately from
+ domain tests. See `docs/Testing.md` for test responsibilities and authoring.
+Planner maps criteria to meaningful automated or residual browser checks; Tester
+reports executed bUnit names, coverage, counts/skips and exits; Reviewer accepts
+that exact coverage without duplicate human scenarios. Actual layout, visual
+polish and browser/JS requirements still need appropriate evidence. UI changes
+alone do not mandate a browser pass. PASS/FAIL/BLOCKED and evidence freshness
+contracts remain unchanged.
+
+Blocked component execution uses the reviewed, hash-pinned no-argument script:
+executable `powershell`, arguments
+`["-NoProfile", "-File", ".ship/validation/component-tests.ps1"]`, workingDirectory `.`.
+Only the user invokes host continuation. This adds no arbitrary command permission
+and changes no SQL fixture or identity safeguards. Tester must assess actual test
+coverage; an exit zero alone is insufficient. Playwright is deferred until a
+specific browser/end-to-end requirement warrants it.
