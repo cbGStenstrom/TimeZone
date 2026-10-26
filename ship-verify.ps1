@@ -7,6 +7,8 @@ param(
     [Parameter(Mandatory = $true, ParameterSetName = 'Fail')]
     [switch]$Fail,
     [string[]]$Scenarios,
+    [Parameter(ParameterSetName = 'Pass')]
+    [string[]]$PassedSubset,
     [string]$Notes,
     [switch]$PostResult
 )

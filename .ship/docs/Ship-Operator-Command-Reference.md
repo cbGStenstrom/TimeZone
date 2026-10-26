@@ -525,8 +525,7 @@ perform the listed scenarios before using the displayed run-specific
 for a demonstrated defect. Manual PASS cannot bypass automated failures.
 For supported infrastructure checks, restore the named prerequisite first and
 run the displayed `ship-validate.ps1 -Run <id>` from normal Developer PowerShell.
-Absent requests are prepared on the first invocation; invoke again to inspect
-and explicitly confirm execution with YES. Mixed gaps require automated repair
+Absent requests are prepared and policy-approved unmet checks execute in the same invocation. Mixed gaps require automated repair
 first. Unsupported or unusable evidence requires fresh Tester evidence; no
 continuation command is invented.
 
@@ -535,3 +534,29 @@ inspection/repair and a new run; no same-run continuation is supported. Aborted
 runs require inspecting git status and partial changes before deciding how to
 restart; they cannot be automatically resumed. Rejected operations preserve the
 saved status and distinguish it from the attempted operation.
+
+## Validation continuation and evidence identity (TECH-109)
+
+One explicit `ship-validate.ps1 -Run <id>` invocation prepares a missing request,
+validates it, reuses authenticated successes, executes only unmet approved checks,
+and continues through Tester and review as coverage permits. Missing approvals,
+SQL fixtures, credentials or unsupported checks still block. No YES prompt or
+new approval is implied; scripts must already satisfy the reviewed policy.
+
+Successful execution proofs bind run, implementation, approved plan, requirement,
+executable, ordered arguments, working directory and applicable script/policy
+hashes. Original attempts and assessment/request/report snapshots remain immutable.
+Fresh reconciliation binds the current report/cycle. Report/history churn and
+cycle changes alone do not require a rerun. Code/test edits, additions/deletions,
+plan/check/policy changes, tampering, incomplete or contradictory results prevent
+reuse. Legacy evidence without provable identity requires fresh execution.
+
+`ship-verify.ps1 -Run <id> -Pass` needs no scenarios or notes. It attests to ALL
+required human validation; optional text is context. Use `-PassedSubset 'criterion'`
+for explicit partial coverage, which cannot complete remaining human criteria.
+Human evidence is atomically recorded in the Markdown audit trail and bound in
+human-current.json. Valid PASS can be retained during mapped infrastructure
+blockers, then consumed after Tester confirms complete automated coverage and
+human-only remaining requirements. It never overrides defects or automated gaps.
+Code/plan changes invalidate it. Human continuation and reassessment consume no
+correction cycle; actual Coder corrections retain the three-cycle budget.

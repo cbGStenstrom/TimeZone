@@ -111,8 +111,13 @@ coverage including skipped tests. Exit zero alone does not prove required covera
 Consume fresh matching host results rather than rerunning checks in the sandbox.
 Preserve original failed records in report history and explain their exact
 reconciliation. Unrelated failures remain current. Incomplete or stale attempts
-cannot satisfy requirements. After code correction all prior external and human
-observations are historical. Remaining required browser coverage keeps BLOCKED. 
+cannot satisfy requirements. Changed implementation or approved plan invalidates
+prior execution and human evidence. Cycle/report changes alone do not invalidate
+engine-verified PASS proofs. Assess every engine-listed reused attempt against
+current requirements, preserving its original provenance. Never infer success
+from an unassessed, failed, skipped, incomplete or contradictory result.
+Remaining required browser coverage keeps BLOCKED unless a matching full human
+attestation supplies that coverage.
 Deployment validation is not a routine Ship requirement and must not block normal 
 feature work unless the approved issue or plan explicitly requires deployment or 
 release validation.
@@ -126,6 +131,15 @@ PASS requires exit zero and complete coverage for that check; skipped required
 coverage is BLOCKED. FAIL requires demonstrated incorrect behavior and explanation.
 Do not include stale attempts as current. Remaining human criteria may leave the
 report BLOCKED even when every assessed automated check passes.
+
+Set `humanOnlyRemaining: true` on the assessment only when all automated
+requirements are satisfied and only human criteria keep the report BLOCKED.
+This explicit coverage assertion allows the engine to consume an already bound
+human PASS. Missing/false assertions cannot authorize that continuation.
+Read `human-current.json` and `manual-validation.md` when supplied. A full,
+identity-bound PASS attests to all required human validation; optional text is
+context and never narrows coverage. `explicit-subset` covers only named criteria.
+Unknown, legacy, stale, or contradictory human evidence cannot supply coverage.
 
 If the engine has not supplied an implementation identity, describe pending
 checks in the BLOCKED report and defer manifest creation to the wrapper's read-only

@@ -11,9 +11,7 @@ function git { throw 'Unexpected baseline capture or Git operation' }
 function gh { throw 'Unexpected GitHub call' }
 $script:Reviews = 0
 function Read-Host {
-    if ($Scenario -eq 'cancel') { throw 'Input canceled' }
-    if ($Scenario -eq 'prompt') { return 'Human verified the required browser scenario' }
-    return ''
+    throw 'Explicit PASS must not prompt'
 }
 function codex {
     $Prompt = $args[-1]
@@ -39,6 +37,7 @@ function codex {
 }
 # Completion snapshots are allowed, baseline captures are not.
 function git {
+    if ($args -contains 'ls-files') { $global:LASTEXITCODE=0; return }
     if ((Get-Content (Join-Path $Root '.ship/runs/2026-10-02_143015/run-status.txt') -Raw).Trim() -ne 'REVIEWING') {
         throw 'Unexpected baseline capture'
     }
@@ -55,6 +54,8 @@ if ($Scenario -eq 'false') { $Options.Pass = $false }
 if ($Scenario -eq 'blank') { $Options.Scenarios = @(' ') }
 if ($Scenario -eq 'capability') { $Options.Scenarios = @('Browser unavailable; no defect demonstrated') }
 if ($Scenario -in @('prompt','cancel','unavailable')) { $Options.Remove('Scenarios') }
+if ($Scenario -eq 'notext') { $Options.Remove('Scenarios'); $Options.Remove('Notes') }
+if ($Scenario -eq 'subset') { $Options.PassedSubset=@('Only the first browser criterion') }
 & (Join-Path $Root 'ship-verify.ps1') @Options
 exit $LASTEXITCODE
 '@ | Set-Content $Runner
@@ -134,11 +135,15 @@ try {
         @('laterblocked','BLOCKED','BLOCKED','Coder,Tester',3),
         @('zeroFailures','BLOCKED','PASS','Reviewer',1),
         @('prompt','BLOCKED','PASS','Reviewer',1),
+        @('notext','BLOCKED','PASS','Reviewer',1),
+        @('subset','BLOCKED','BLOCKED','',1),
+        @('cancel','BLOCKED','PASS','Reviewer',1),
+        @('unavailable','BLOCKED','PASS','Reviewer',1),
         @('interruptCoder','BLOCKED','ABORTED_BY_USER','Coder',2),
         @('interruptTester','BLOCKED','ABORTED_BY_USER','Coder,Tester',2),
         @('interruptReviewer','BLOCKED','ABORTED_BY_USER','Reviewer',1)
     )
-    foreach ($Scenario in @('invalid','absent','both','neither','false','blank','cancel','unavailable','writefail','missing','badcycle','failure','contradictory','ambiguous','capability')) {
+    foreach ($Scenario in @('invalid','absent','both','neither','false','blank','writefail','missing','badcycle','failure','contradictory','ambiguous','capability')) {
         $Cases += ,@($Scenario,'BLOCKED','BLOCKED','',1)
     }
     foreach ($Name in $ReportCases.Keys) {
@@ -159,6 +164,7 @@ try {
         New-Item -ItemType Directory $Saved -Force | Out-Null
         New-Item -ItemType Directory (Join-Path $Root '.ship/agents') -Force | Out-Null
         foreach ($File in @('ship.ps1','ship-verify.ps1','AGENTS.md','TimeKeeper.sln')) { Copy-Item (Join-Path $SourceRoot $File) $Root }
+        Copy-Item (Join-Path $SourceRoot '.ship/external-validation.ps1') (Join-Path $Root '.ship')
         Copy-Item (Join-Path $SourceRoot '.ship/SHIP.md') (Join-Path $Root '.ship')
         Copy-Item (Join-Path $SourceRoot '.ship/agents/*.md') (Join-Path $Root '.ship/agents')
         $Case[1] | Set-Content (Join-Path $Saved 'run-status.txt')
@@ -210,11 +216,15 @@ try {
                 Assert ((Get-FileHash (Join-Path $Saved $Name)).Hash -eq $Hashes[$Name]) "Case $Count altered $Name"
             }
         }
-        if ($Roles -or $Case[0] -eq 'exhausted') {
+        if ($Roles -or $Case[0] -in @('exhausted','subset')) {
             $Manual = Get-Content (Join-Path $Saved 'manual-validation.md') -Raw
-            foreach ($Text in @('Run: 2026-10-02_143015','Result:','Recorded:','Human fixture notes')) { Assert ($Manual.Contains($Text)) "Case $Count missing $Text" }
+            $RequiredText=@('Run: 2026-10-02_143015','Result:','Recorded:')
+            if ($Case[0] -ne 'notext') { $RequiredText+='Human fixture notes' }
+            foreach ($Text in $RequiredText) { Assert ($Manual.Contains($Text)) "Case $Count missing $Text" }
+            $Human=Get-Content (Join-Path $Saved 'human-current.json') -Raw | ConvertFrom-Json
+            Assert ($Human.scope -ceq $(if ($Case[0] -eq 'subset') { 'explicit-subset' } else { 'all-required-human-validation' })) 'Human scope inferred from contextual text'
             Assert ($Manual -match 'Recorded: .*[-+]\d\d:\d\d') "Case $Count timezone"
-            Assert ((Get-Content (Join-Path $Saved 'validation-cycle.txt') -Raw).Trim() -eq [string]$Case[4]) "Case $Count cycle"
+            if ($Case[0] -ne 'subset') { Assert ((Get-Content (Join-Path $Saved 'validation-cycle.txt') -Raw).Trim() -eq [string]$Case[4]) "Case $Count cycle" }
             if ($Roles -match 'Reviewer') {
                 $Prompts = Get-Content (Join-Path $Root 'prompts.txt') -Raw
                 Assert ($Prompts.Contains('manual-validation.md') -and $Prompts.Contains('issue.md') -and $Prompts.Contains('every outstanding approved criterion')) "Case $Count review evidence"

@@ -15,6 +15,111 @@ function Get-ExternalHash {
     param([string]$Path)
     return (Get-FileHash -LiteralPath $Path -Algorithm SHA256 -ErrorAction Stop).Hash
 }
+function Get-ExternalCheckIdentity {
+    param($Check)
+    $Approval = ''
+    if ($Check.executable -ceq 'powershell') {
+        $Approval = (Get-ExternalHash (Join-Path $ShipRoot 'validation-policy.json')) + ':' +
+            (Get-ExternalHash (Join-Path $RepoRoot $Check.arguments[2]))
+    }
+    $Value = @($Check.requirement, $Check.executable, @($Check.arguments), $Check.workingDirectory, $Approval) | ConvertTo-Json -Depth 10 -Compress
+    $Sha = [Security.Cryptography.SHA256]::Create()
+    try { return [BitConverter]::ToString($Sha.ComputeHash([Text.Encoding]::UTF8.GetBytes($Value))).Replace('-', '') }
+    finally { $Sha.Dispose() }
+}
+function Get-ReusableExternalAttempt {
+    param($Check)
+    $Identity = Get-ExternalCheckIdentity $Check
+    $Candidates = @(Get-ChildItem -LiteralPath $RunRoot -Filter 'external-*.result.json' | ForEach-Object {
+        $Attempt = Get-Content -LiteralPath $_.FullName -Raw | ConvertFrom-Json
+        if ($Attempt.checkIdentity -ceq $Identity -and $Attempt.run -ceq $RunId -and
+            $Attempt.implementationHash -ceq (Get-ImplementationIdentity) -and
+            $Attempt.planHash -ceq (Get-ExternalHash $PlanFile)) {
+            $StartedAt = [DateTimeOffset]::MinValue
+            if (-not [DateTimeOffset]::TryParse([string]$Attempt.started, [ref]$StartedAt)) { throw 'Reusable execution lacks a valid start time.' }
+            [pscustomobject]@{ File=$_.Name; Attempt=$Attempt }
+        }
+    } | Sort-Object { [DateTimeOffset]::Parse($_.Attempt.started) } -Descending)
+    if (-not $Candidates.Count) { return }
+    # A newer failed or incomplete execution must never be hidden by an older success.
+    $Candidate = $Candidates[0]
+    foreach ($StartedFile in @(Get-ChildItem -LiteralPath $RunRoot -Filter 'external-*.started.json')) {
+        $Started = Get-Content $StartedFile.FullName -Raw | ConvertFrom-Json
+        if ($Started.checkIdentity -ceq $Identity -and $Started.implementationHash -ceq $Candidate.Attempt.implementationHash -and
+            $Started.planHash -ceq $Candidate.Attempt.planHash -and
+            [DateTimeOffset]::Parse($Started.started) -gt [DateTimeOffset]::Parse($Candidate.Attempt.started)) { return }
+    }
+    foreach ($AssessmentFile in @(Get-ChildItem -LiteralPath $RunRoot -File | Where-Object { $_.Name -like 'external-assessment.json*' })) {
+        $Prior = Get-Content $AssessmentFile.FullName -Raw | ConvertFrom-Json
+        if (@($Prior.attempts | Where-Object { $_.file -ceq $Candidate.File -and
+            ($_.classification -cne 'PASS' -or $_.coverageComplete -ne $true -or $_.demonstratedDefect -ne $false) }).Count) { return }
+    }
+    $ProofPath = Join-Path $RunRoot ($Candidate.File + '.pass.json')
+    if (-not (Test-Path -LiteralPath $ProofPath)) { return }
+    $Proof = Get-Content -LiteralPath $ProofPath -Raw | ConvertFrom-Json
+    if ($Proof.version -ne 1 -or $Proof.resultHash -cne (Get-ExternalHash (Join-Path $RunRoot $Candidate.File))) { throw 'Reusable result integrity mismatch.' }
+    foreach ($Part in @('assessment','request','report')) {
+        if ($Proof.$Part -cnotmatch '^external-[a-f0-9]{32}\.proof\.(assessment|request|report)$' -or
+            $Proof.($Part + 'Hash') -cne (Get-ExternalHash (Join-Path $RunRoot $Proof.$Part))) { throw 'Reusable provenance integrity mismatch.' }
+    }
+    $Assessment = Get-Content (Join-Path $RunRoot $Proof.assessment) -Raw | ConvertFrom-Json
+    $SourceRequest = Get-Content (Join-Path $RunRoot $Proof.request) -Raw | ConvertFrom-Json
+    $Item = @($Assessment.attempts | Where-Object { $_.file -ceq $Candidate.File })
+    $Attempt = $Candidate.Attempt
+    if ($Item.Count -ne 1 -or $Item[0].classification -cne 'PASS' -or
+        $Item[0].coverageComplete -ne $true -or $Item[0].demonstratedDefect -ne $false -or
+        $Attempt.exitCode -ne 0 -or -not $Attempt.completed -or
+        $Attempt.classification -cne 'REQUIRES_TESTER_ASSESSMENT' -or
+        $Attempt.requestHash -cne $Proof.requestHash -or
+        $Assessment.reportHash -cne $Proof.reportHash -or
+        $Assessment.run -cne $RunId -or $Assessment.cycle -ne $Attempt.cycle -or
+        $Assessment.implementationHash -cne $Attempt.implementationHash -or
+        $SourceRequest.planHash -cne $Attempt.planHash -or
+        @($SourceRequest.checks | Where-Object { (Get-ExternalCheckIdentity $_) -ceq $Identity }).Count -eq 0) { throw 'Reusable PASS provenance is invalid.' }
+    return $Candidate.File
+}
+function Get-ReusableExternalChecks {
+    $Seen = @{}
+    foreach ($ProofFile in @(Get-ChildItem -LiteralPath $RunRoot -Filter 'external-*.result.json.pass.json')) {
+        $Proof = Get-Content $ProofFile.FullName -Raw | ConvertFrom-Json
+        if ($Proof.request -cnotmatch '^external-[a-f0-9]{32}\.proof\.request$') { throw 'Invalid reusable request provenance.' }
+        $Source = Get-Content (Join-Path $RunRoot $Proof.request) -Raw | ConvertFrom-Json
+        foreach ($Check in $Source.checks) {
+            $Key = Get-ExternalCheckIdentity $Check
+            if (-not $Seen.ContainsKey($Key) -and (Get-ReusableExternalAttempt $Check)) {
+                $Seen[$Key] = $true
+                $Check.records = @()
+                $Check.reportReference = 'BLOCKED'
+                $Check
+            }
+        }
+    }
+}
+function Save-ExternalPassProofs {
+    $Assessment = Get-Content (Join-Path $RunRoot 'external-assessment.json') -Raw | ConvertFrom-Json
+    foreach ($Item in @($Assessment.attempts | Where-Object { $_.classification -ceq 'PASS' })) {
+        if (@($ReusedAttempts) -ccontains $Item.file) { continue }
+        $Base = 'external-' + [guid]::NewGuid().ToString('N') + '.proof.'
+        $Proof = @{version=1;resultHash=(Get-ExternalHash (Join-Path $RunRoot $Item.file))}
+        foreach ($Part in @('assessment','request','report')) {
+            $Source = switch ($Part) { assessment { Join-Path $RunRoot 'external-assessment.json' } request { $RequestFile } report { $TestReportFile } }
+            $Proof[$Part] = $Base + $Part
+            Copy-Item -LiteralPath $Source -Destination (Join-Path $RunRoot $Proof[$Part]) -ErrorAction Stop
+            $Proof[$Part + 'Hash'] = Get-ExternalHash (Join-Path $RunRoot $Proof[$Part])
+        }
+        Write-ExternalArtifact (Join-Path $RunRoot ($Item.file + '.pass.json')) $Proof
+    }
+}
+function Get-CurrentHumanAttestation {
+    $Path = Join-Path $RunRoot 'human-current.json'
+    if (-not (Test-Path -LiteralPath $Path)) { return }
+    $Human = Get-Content -LiteralPath $Path -Raw | ConvertFrom-Json
+    if ($Human.version -eq 1 -and $Human.run -ceq $RunId -and $Human.result -ceq 'PASS' -and
+        $Human.scope -ceq 'all-required-human-validation' -and
+        $Human.implementationHash -ceq (Get-ImplementationIdentity) -and
+        $Human.planHash -ceq (Get-ExternalHash $PlanFile) -and
+        $Human.auditHash -ceq (Get-ExternalHash $ManualFile)) { return $Human }
+}
 function Get-ExternalEvidenceIdentity {
     $Parts = @(Get-ChildItem -LiteralPath $RunRoot -File | Where-Object {
         ($_.Name -match '^external-' -and $_.Name -notmatch '^external-current\.json') -or $_.Name -match '^pending-validation\.json'
@@ -57,7 +162,7 @@ function Assert-ExternalAssessment {
         if (@($CurrentAttempts) -cnotcontains $Item.file) { throw 'Assessment includes an attempt outside this continuation.' }
         $Seen[$Item.file] = $true
         $Attempt = Get-Content -LiteralPath (Join-Path $RunRoot $Item.file) -Raw | ConvertFrom-Json
-        if ($Attempt.run -cne $RunId -or $Attempt.cycle -ne $Cycle -or
+        if ($Attempt.run -cne $RunId -or ($Attempt.cycle -ne $Cycle -and @($ReusedAttempts) -cnotcontains $Item.file) -or
             $Attempt.implementationHash -cne $Assessment.implementationHash -or
             $Attempt.classification -cne 'REQUIRES_TESTER_ASSESSMENT' -or
             $null -eq $Attempt.exitCode -or -not $Attempt.completed) { throw 'Incomplete or stale attempt cannot be assessed as current.' }
@@ -167,7 +272,7 @@ function Invoke-ExternalCheck {
     $Id = [guid]::NewGuid().ToString('N')
     $Base = Join-Path $RunRoot "external-$Id"
     $Result = [ordered]@{ version=1; run=$RunId; cycle=$Cycle; check=(Protect-ExternalText $Check.id); requestHash=(Get-ExternalHash $RequestFile);
-        reportHash=$Request.reportHash; implementationHash=$Request.implementationHash; planHash=$Request.planHash;
+        checkIdentity=(Get-ExternalCheckIdentity $Check); reportHash=$Request.reportHash; implementationHash=$Request.implementationHash; planHash=$Request.planHash;
         command=(Protect-ExternalText ($Check.executable + ' ' + ($Check.arguments -join ' '))); workingDirectory=(Protect-ExternalText $RepoRoot);
         started=[DateTimeOffset]::Now.ToString('o'); completed=$null; exitCode=$null; stdout=''; stderr=''; classification='INCOMPLETE' }
     Write-ExternalArtifact "$Base.started.json" $Result
