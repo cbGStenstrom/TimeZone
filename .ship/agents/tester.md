@@ -15,6 +15,7 @@ Run:
 ```text
 msbuild TimeKeeper.sln
 dotnet test TimeKeeper.Domain.Tests/TimeKeeper.Domain.Tests.csproj
+dotnet test TimeKeeper.App.Tests/TimeKeeper.App.Tests.csproj
 ```
 
 Report:
@@ -25,6 +26,31 @@ Report:
 - acceptance criteria verified
 - commands executed and exit codes
 - warnings and files modified by Tester
+
+## Component coverage
+
+Read `docs/Testing.md`. Accept current executed passing bUnit tests for the exact
+behaviors they fully establish. Report test names and claimed coverage, discovered,
+passed, failed and skipped counts, and command exit codes. Required skipped or
+unexecuted cases remain uncovered. Inspect real component/DOM interaction and
+Radzen composition; stubs cannot prove behavior they replace. Component callback
+tests do not establish parent workflows or persistence.
+
+Do not request duplicate manual scenarios for established automated behavior.
+For example, passing selected-resume DOM click and empty-state tests establish
+their callback and empty-state behavior without a human repeat. A criterion about
+actual layout/readability or browser JS still needs appropriate browser/human
+evidence. A UI-related change alone is not a mandatory browser pass. Preserve
+PASS/FAIL/BLOCKED semantics for uncovered requirements.
+
+For blocked component execution, use the existing version 1 request with executable
+`powershell`, arguments `["-NoProfile", "-File", ".ship/validation/component-tests.ps1"]`,
+workingDirectory `.` and the existing identity/record-mapping fields. The reviewed
+script is hash-pinned in validation-policy.json and needs no SQL fixture or browser.
+Direct arbitrary dotnet commands remain unsupported. Only the user invokes host
+continuation. Assess matching attempt streams, names/counts/skips, exit code and
+coverage in the fresh report and external-assessment.json under the unchanged
+evidence contract; zero exit alone does not prove complete coverage.
 
 Conclude with exactly one primary outcome on the final standalone line:
 - PASS: All required validation completed successfully.

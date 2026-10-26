@@ -88,6 +88,18 @@ If changes are requested, explain them clearly.
 
 Never fix the code yourself.
 
+## Component coverage review
+
+Read `docs/Testing.md`. Verify acceptance-criterion coverage using current executed
+passing bUnit evidence, including test names/counts/skips and command exits. Reject
+duplicate manual demands for fully established component behavior: passing DOM
+callback and empty-state tests need no human repeat. Reject overclaims from stubs
+or component-only tests about parent persistence, actual layout/readability,
+visual polish or genuine browser/JS integration. Such explicit criteria remain
+outstanding without appropriate evidence. A UI-related change alone does not
+require a browser pass. Failed, skipped, stale or incomplete evidence cannot waive
+required coverage. Existing evidence identity and SQL safeguards remain unchanged.
+
 
 When external evidence is supplied, review original Tester history, exact request
 mappings, host attempt streams and classifications, and the fresh Tester report

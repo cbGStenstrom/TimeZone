@@ -56,3 +56,22 @@ blockers, then consumed after Tester confirms complete automated coverage and
 human-only remaining requirements. It never overrides defects or automated gaps.
 Code/plan changes invalidate it. Human continuation and reassessment consume no
 correction cycle; actual Coder corrections retain the three-cycle budget.
+
+## Automated component coverage (TECH-110)
+
+Run `dotnet test TimeKeeper.App.Tests/TimeKeeper.App.Tests.csproj` separately from
+ domain tests. See `docs/Testing.md` for test responsibilities and authoring.
+Planner maps criteria to meaningful automated or residual browser checks; Tester
+reports executed bUnit names, coverage, counts/skips and exits; Reviewer accepts
+that exact coverage without duplicate human scenarios. Actual layout, visual
+polish and browser/JS requirements still need appropriate evidence. UI changes
+alone do not mandate a browser pass. PASS/FAIL/BLOCKED and evidence freshness
+contracts remain unchanged.
+
+Blocked component execution uses the reviewed, hash-pinned no-argument script:
+executable `powershell`, arguments
+`["-NoProfile", "-File", ".ship/validation/component-tests.ps1"]`, workingDirectory `.`.
+Only the user invokes host continuation. This adds no arbitrary command permission
+and changes no SQL fixture or identity safeguards. Tester must assess actual test
+coverage; an exit zero alone is insufficient. Playwright is deferred until a
+specific browser/end-to-end requirement warrants it.

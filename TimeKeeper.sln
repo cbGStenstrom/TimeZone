@@ -130,6 +130,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "BlazorComponent", "BlazorCo
 		docs\Templates\BlazorComponent\Component.razor.cs = docs\Templates\BlazorComponent\Component.razor.cs
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimeKeeper.App.Tests", "TimeKeeper.App.Tests\TimeKeeper.App.Tests.csproj", "{8B71659F-98FF-4E81-9A35-73514C865F64}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -158,6 +160,10 @@ Global
 		{2A309C87-97B7-4501-A651-0770F7686B44}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2A309C87-97B7-4501-A651-0770F7686B44}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2A309C87-97B7-4501-A651-0770F7686B44}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8B71659F-98FF-4E81-9A35-73514C865F64}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8B71659F-98FF-4E81-9A35-73514C865F64}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8B71659F-98FF-4E81-9A35-73514C865F64}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8B71659F-98FF-4E81-9A35-73514C865F64}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
