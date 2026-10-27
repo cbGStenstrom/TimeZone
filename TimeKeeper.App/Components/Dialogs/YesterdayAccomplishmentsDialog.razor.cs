@@ -40,4 +40,38 @@ public partial class YesterdayAccomplishmentsDialog : ComponentBase
     }
 
     #endregion event handlers
+
+    #region private methods
+
+    private string GetDurationDisplay(MyDayActivityEntry entry)
+    {
+        string result = string.Empty;
+
+        TimeSpan? duration = (entry.EndWork - entry.StartWork);
+        if (duration.HasValue)
+        {
+            if (duration.Value.TotalHours < 1)
+            {
+                result = $"{duration.Value.Minutes}m";
+            }
+            else
+            {
+                result = $"{duration.Value.Hours}h {duration.Value.Minutes}m";
+            }
+        }
+
+        return result;
+    }
+
+    private string GetTimeSpanDisplay(MyDayActivityEntry entry)
+    {
+        string result = string.Empty;
+
+        result = $"{entry.StartWork:h:mm tt} - {entry.EndWork:h:mm tt}";
+
+
+        return result;
+    }
+
+    #endregion private methods
 }

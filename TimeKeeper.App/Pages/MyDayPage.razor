@@ -26,15 +26,16 @@
                 OnResumeWorkClicked="ResumeWork_Click">
             </ContinueWorkingComponent>
 
+            <YesterdayAccomplishmentsCardComponent 
+                Activities="@this.YesterdayActivities"
+                Workday="@this.YesterdayWorkday"
+                OnResumeWorkClicked="@this.ResumeWork_Click">
+            </YesterdayAccomplishmentsCardComponent>
+
             <ActivitiesInReviewComponent
                 Activities="@ReviewActivities"
                 OnResumeWorkClicked="ResumeWork_Click"
                 OnViewHistoryClicked="ViewHistory_Click" />
-
-            <YesterdayAccomplishmentsCardComponent Activities="@this.YesterdayActivities"
-                                                   Workday="@this.YesterdayWorkday"
-                                                   OnResumeWorkClicked="@this.ResumeWork_Click">
-            </YesterdayAccomplishmentsCardComponent>
         </RadzenStack>
 
     </RadzenBody>

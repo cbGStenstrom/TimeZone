@@ -51,12 +51,13 @@ public partial class YesterdayAccomplishmentsCardComponent : ComponentBase
     /// <returns>The dialog completion task.</returns>
     private async Task Activity_OnSelected(MyDayActivitySummary summary)
     {
-        await this.DialogSvc.OpenAsync<YesterdayAccomplishmentsDialog>(
-            $"{summary.ActivityIdentifier} — {this.Workday:dddd, MMM dd, yyyy}",
-            new Dictionary<string, object>
-            {
-                [nameof(YesterdayAccomplishmentsDialog.Entries)] = summary.Entries
-            });
+        string title    = $"{summary.ActivityIdentifier} — {this.Workday:dddd, MMM dd, yyyy}";
+        var parameters  = new Dictionary<string, object?>();
+            parameters.Add(nameof(YesterdayAccomplishmentsDialog.Entries), summary.Entries);
+        var options = new DialogOptions();
+            options.Draggable = true;
+
+        await this.DialogSvc.OpenAsync<YesterdayAccomplishmentsDialog>(title, parameters, options);
     }
 
     #endregion event handlers

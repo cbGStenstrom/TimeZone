@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Components;
+using TimeKeeper.App.Api.Enums;
 using TimeKeeper.App.Api.Services;
 using TimeKeeper.Domain.Models;
 using TimeKeeper.Domain.Services.Interfaces;
@@ -104,7 +105,7 @@ namespace TimeKeeper.App.Pages
                         if (SessionService != null && NavigationManager != null)
                         {
                             SessionService.User = user;
-                            NavigationManager.NavigateTo("/");
+                            NavigationManager.NavigateTo(PageUrls.MyDayPage);
                         }
                     }
                 }

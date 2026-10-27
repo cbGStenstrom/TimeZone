@@ -20,7 +20,7 @@
                         ButtonStyle="@ButtonStyle.Success"
                         Size="@ButtonSize.Small"
                         Click="@(() => this.OnResumeWorkClicked.InvokeAsync(activity))"></RadzenButton>
-                    <RadzenIcon Icon="@(activity.WorkItem.Type?.Icon ?? string.Empty)" title="@(activity.WorkItem?.Type?.Name)"></RadzenIcon>
+                    <RadzenIcon Icon="@(activity.WorkItem.Type?.Icon ?? string.Empty)" title="@(activity.WorkItem?.Type?.Name)" Style="cursor:default;"></RadzenIcon>
                     <RadzenButton 
                         Text="@this.GetDisplayName(activity)"
                         Variant="@Variant.Text"
