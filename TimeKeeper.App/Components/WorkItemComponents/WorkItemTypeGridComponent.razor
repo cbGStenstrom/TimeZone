@@ -52,7 +52,10 @@
             TextAlign="@TextAlign.Center"
             TItem="WorkItemType" 
             Property="@nameof(WorkItemType.Icon)" 
-            Width="50px">
+            Width="100px">
+            <EditTemplate Context="workItemType">
+                <RadzenTextBox @bind-Value="workItemType.Icon" Style="width:100%;" />
+            </EditTemplate>
         </RadzenDataGridColumn>
 
         @* Name*@
