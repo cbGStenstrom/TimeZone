@@ -19,20 +19,23 @@ does not execute the component suite.
 | bUnit in App.Tests | Rendered values, parameters, state transitions, callbacks, conditional/empty states and real Radzen composition | Restored packages and .NET SDK; no SQL, secrets, running server or browser installation |
 | Manual or real-browser tests | Actual CSS/layout/readability, browser rendering, visual polish and genuine JS/browser integration | Explicit scenarios and suitable browser/host environment |
 
-The initial component tests render YesterdayAccomplishmentsCardComponent and
-ContinueWorkingComponent directly. Each test owns and disposes its BunitContext.
-They use real Radzen children, fixed in-memory data and strict default JS interop.
-No extra services or JS setups are needed for these render paths. They never start
-Program or load application configuration. The application reference compiles the
-application but does not start it.
+The MyDay component suite renders real Radzen children with fixed in-memory data.
+Previous-workday helper tests cover weekdays, month/year transitions, local-to-UTC
+half-open boundaries (including DST dates), laborer isolation, work-item identity,
+rounded duration aggregation, missing navigation and deterministic ordering.
+Yesterday's Accomplishments component tests cover metadata, empty/updated parameters,
+independent resume and selection DOM clicks, dialog arguments, newest-first rich
+notes, blank notes and read-only dismissal. A real Radzen dialog host is used;
+only Radzen.openDialog and Radzen.closeDialog interop are simulated.
 
-Yesterday coverage includes default/explicit empty input, nested cards and distinct
-identity/title/accomplishment values, parameter updates back to empty, and null
-work-item navigation. Continue Working covers labels, resume button parameters,
-DOM clicks delivering exactly the selected callback argument, absent callback
-safety and updated activities/controls. This does not prove the parent page's
-resume/save workflow or persistence. Neither component implements sorting or
-filtering; do not add production behavior to manufacture such coverage.
+MyDay integration coverage renders the actual page with in-memory service doubles,
+applies its entity predicates, checks selected date/user isolation and replacement
+of the old loop, and verifies the existing launcher/editor/user/dialog/save callback
+wiring and refresh. Unexpected service writes fail the test. A minimal layout
+subclass supplies the existing refresh behavior without unrelated layout markup.
+Tests do not start Program, load secrets, connect to SQL or require a browser.
+Continue Working retains its independent callback and parameter coverage.
+These tests do not establish actual CSS/readability or browser JavaScript behavior.
 
 ## Authoring component tests
 
@@ -44,11 +47,11 @@ parameters, act through rendered controls and assert observable results:
 using (var context = new BunitContext())
 {
     var component = context.Render<YesterdayAccomplishmentsCardComponent>();
-    Assert.Contains("No work recorded yesterday.", component.Markup);
-    component.Render(parameters => parameters.Add(item => item.TimeEntries,
-        [new TimeEntry { WorkItem = null, Accomplishment = "Completed analysis" }]));
-    Assert.Contains("Completed analysis", component.Markup);
-    Assert.DoesNotContain("No work recorded yesterday.", component.Markup);
+    Assert.Contains("No accomplishments recorded for the previous workday.", component.Markup);
+    component.Render(parameters => parameters.Add(item => item.Activities,
+        [new MyDayActivitySummary { WorkItem = new WorkItem { Id = 1 } }]));
+    Assert.Contains("##", component.Markup);
+    Assert.DoesNotContain("No accomplishments recorded for the previous workday.", component.Markup);
 }
 ```
 

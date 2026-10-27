@@ -1,5 +1,5 @@
-﻿using Microsoft.AspNetCore.Components;
 using System.Linq.Expressions;
+using Microsoft.AspNetCore.Components;
 using TimeKeeper.App.Api.Enums;
 using TimeKeeper.App.Components.Dialogs;
 using TimeKeeper.App.Components.Pages;
@@ -12,7 +12,29 @@ namespace TimeKeeper.App.Pages;
 
 public partial class MyDayPage : CbPageBase
 {
-    #region injected services
+    #region constants
+
+    /// <summary>
+    ///  Describes the missing identity prerequisite for the scoped accomplishments query.
+    /// </summary>
+    private const string MissingLaborerMessage = "Cannot load yesterday accomplishments without a current laborer.";
+
+    #endregion constants
+
+    #region parameters
+
+    [CascadingParameter(Name ="Layout")]
+    private AppLayout AppLayout { get; set; } = default!;
+
+    #endregion parameters
+
+    #region dependencies
+
+    /// <summary>
+    ///  Gets or sets the logger for unavailable session identity.
+    /// </summary>
+    [Inject]
+    private ILogger<MyDayPage> Logger { get; set; } = default!;
 
     /// <summary>
     ///  Gets or sets the service used to launch work items.
@@ -22,14 +44,34 @@ public partial class MyDayPage : CbPageBase
     [Inject]
     public IWorkLauncherService WorkLauncherSvc { get; set; } = default!;
 
-    #endregion injected services
+    #endregion dependencies
 
-    #region parameters
+    #region data
 
-    [CascadingParameter(Name ="Layout")]
-    private AppLayout AppLayout { get; set; } = default!;
+    /// <summary>
+    ///  Loads the current laborer's previous-workday entries and prepares ordered summaries.
+    /// </summary>
+    /// <remarks>
+    ///  Uses a half-open UTC interval derived from separate local midnights.</remarks>
+    /// <returns>
+    ///  A task that represents the asynchronous operation.</returns>
+    private async Task LoadYesterdayEntries()
+    {
+        this.YesterdayWorkday = YesterdayAccomplishmentsSummaryBuilder.GetPreviousWorkday(DateTime.Today);
+        var user = base.SessionService.User;
+        if (user == null)
+        {
+            this.Logger.LogWarning(MissingLaborerMessage);
+            this.YesterdayActivities = [];
+            return;
+        }
 
-    #endregion parameters
+        var filter = YesterdayAccomplishmentsSummaryBuilder.CreateFilter(this.YesterdayWorkday, user.Id);
+        var entries = await base.TimeEntrySvc.GetFilteredTimeEntries([filter]);
+        this.YesterdayActivities = YesterdayAccomplishmentsSummaryBuilder.Build(entries ?? []);
+    }
+
+    #endregion data
 
     #region properties
 
@@ -53,11 +95,6 @@ public partial class MyDayPage : CbPageBase
     TimeEntryEditorDialog? dlgTimeEntryEditor { get; set; }
 
     /// <summary>
-    ///  Gets or sets the activity summary that is currently expanded.
-    /// </summary>
-    private MyDayActivitySummary? ExpandedActivity { get; set; }
-
-    /// <summary>
     ///  Gets or sets the collection of recent activity summaries.
     /// </summary>
     List<MyDayActivitySummary> RecentActivities { get; set; } = [];
@@ -69,14 +106,24 @@ public partial class MyDayPage : CbPageBase
     /// </summary>
     List<MyDayActivitySummary> YesterdayActivities { get; set; } = [];
 
+    /// <summary>
+    ///  Gets or sets the selected local workday.
+    /// </summary>
+    private DateTime YesterdayWorkday { get; set; }
+
     #endregion properties
 
     #region lifecycle
 
+    /// <summary>
+    ///  Initializes the session contract and loads the MyDay modules.
+    /// </summary>
+    /// <returns>The initialization task.</returns>
     protected override async Task OnInitializedAsync()
     {
-        this.ActiveTimeEntry = await base.TimeEntrySvc!.GetActiveTimeEntry();
-        await LoadYesterdayEntries();
+        await base.OnInitializedAsync();
+        this.ActiveTimeEntry = await base.TimeEntrySvc.GetActiveTimeEntry();
+        await this.LoadYesterdayEntries();
         await LoadRecentActivities();
         await LoadReviewActivities();
     }
@@ -150,30 +197,6 @@ public partial class MyDayPage : CbPageBase
         NavigationMgr?.NavigateTo($"/WorkItemHistory/{summary.WorkItemId}");
     }
 
-    /// <summary>
-    ///  Expands or collapses the selected yesterday activity summary and refreshes the component 
-    ///  state.
-    /// </summary>
-    /// <param name="summary">
-    ///  The activity summary to expand or collapse.</param>
-    /// <returns>
-    ///  A completed task.</returns>
-    private Task YesterdayActivity_ExpandClicked(MyDayActivitySummary summary)
-    {
-        if (ExpandedActivity == summary)
-        {
-            ExpandedActivity = null;
-        }
-        else
-        {
-            ExpandedActivity = summary;
-        }
-
-        StateHasChanged();
-
-        return Task.CompletedTask;
-    }
-
     #endregion event handlers
 
     #region methods
@@ -233,53 +256,6 @@ public partial class MyDayPage : CbPageBase
                 })
                 .OrderByDescending(a => a.LastWorked)
                 .Take(5)];
-    }
-
-    /// <summary>
-    ///  Loads yesterday's time entries, groups them by work item, and updates the activity summaries 
-    ///  ordered by most recent work time.
-    /// </summary>
-    /// <remarks>
-    ///  Uses yesterday's local date range from 12:00 AM through 11:59:59 PM.</remarks>
-    /// <returns>
-    ///  A task that represents the asynchronous operation.</returns>
-    private async Task LoadYesterdayEntries()
-    {
-        DateTime yesterday = DateTime.Today.AddDays(-1);
-        DateTime start = yesterday.Date;
-        DateTime end = yesterday.Date.AddDays(1).AddSeconds(-1);
-
-        var filter = new List<Expression<Func<DataAccess.Entities.TimeEntry, bool>>>{
-                        e => e.CreatedDate >= start &&
-                             e.CreatedDate <= end
-                    };
-
-        IEnumerable<TimeEntry> entries = await base.TimeEntrySvc!.GetFilteredTimeEntries(filter) ?? [];
-
-        YesterdayActivities = [.. entries
-                .Where(e => e.WorkItem != null)
-                .GroupBy(e => e.WorkItemId)
-                .Select(g =>
-                {
-                    WorkItem workItem = g.First().WorkItem!;
-
-                    return new MyDayActivitySummary
-                    {
-                        WorkItem         = workItem,
-                        TotalHoursWorked = g.Sum(t => t.HoursWorked ?? 0),
-                        FirstWorked      = g.Min(t => t.StartWork) ?? DateTime.MinValue,
-                        LastWorked       = g.Max(t => t.EndWork) ?? DateTime.MinValue,
-                        Entries          = [.. g.OrderBy(t => t.StartWork)
-                                            .Select(t => new MyDayActivityEntry {
-                                                TimeEntryId = t.Id,
-                                                StartWork = t.StartWork,
-                                                EndWork = t.EndWork,
-                                                HoursWorked = t.HoursWorked,
-                                                Accomplishment = t.Accomplishment ?? string.Empty
-                                            })]
-                    };
-                })
-                .OrderByDescending(a => a.LastWorked)];
     }
 
     /// <summary>

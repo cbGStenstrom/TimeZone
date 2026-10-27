@@ -1,4 +1,4 @@
-﻿@attribute [Route(PageUrls.MyDayPage)]
+@attribute [Route(PageUrls.MyDayPage)]
 @using TimeKeeper.App.Components.MyDay
 @inherits CbPageBase
 @layout AppLayout
@@ -31,19 +31,10 @@
                 OnResumeWorkClicked="ResumeWork_Click"
                 OnViewHistoryClicked="ViewHistory_Click" />
 
-            <RadzenStack Orientation="Orientation.Vertical" Gap="1rem">
-
-                @foreach (var activity in YesterdayActivities)
-                {
-                    <YesterdayActivitySummaryComponent 
-                        Summary="@activity"
-                        IsExpanded="@(ExpandedActivity == activity)"
-                        OnExpandClicked="YesterdayActivity_ExpandClicked"
-                        OnResumeWorkClicked="ResumeWork_Click"
-                        OnViewHistoryClicked="ViewHistory_Click">
-                    </YesterdayActivitySummaryComponent>
-                }
-            </RadzenStack>
+            <YesterdayAccomplishmentsCardComponent Activities="@this.YesterdayActivities"
+                                                   Workday="@this.YesterdayWorkday"
+                                                   OnResumeWorkClicked="@this.ResumeWork_Click">
+            </YesterdayAccomplishmentsCardComponent>
         </RadzenStack>
 
     </RadzenBody>

@@ -1,0 +1,21 @@
+@using TimeKeeper.App.Models
+
+@if (this.Entries.Any(entry => !string.IsNullOrWhiteSpace(entry.Accomplishment)))
+{
+    <ul>
+        @foreach (var entry in this.Entries.OrderByDescending(entry => entry.StartWork).ThenBy(entry => entry.TimeEntryId))
+        {
+            @if (!string.IsNullOrWhiteSpace(entry.Accomplishment))
+            {
+                <li>@((MarkupString)entry.Accomplishment)</li>
+            }
+        }
+    </ul>
+}
+else
+{
+    <div>No accomplishments recorded for this work item.</div>
+}
+
+<RadzenButton Text="Close"
+              Click="@this.Close_OnClick"></RadzenButton>
