@@ -1,31 +1,74 @@
-﻿@using TimeKeeper.App.Models
+﻿@using Radzen.Blazor.Spreadsheet.Tools
+@using TimeKeeper.App.Models
 
 <RadzenCard>
 
     <RadzenText TextStyle="TextStyle.H5" Style="margin-bottom:2rem;">
-        Continue Working
+        Recent Activity
     </RadzenText>
     <RadzenStack Orientation="Orientation.Vertical" Gap=".15rem">
 
         @foreach (var activity in Activities)
         {
-            <RadzenStack Orientation="@Orientation.Horizontal" Gap="1rem" AlignItems="@AlignItems.Center" JustifyContent="@JustifyContent.SpaceBetween">
+            <RadzenStack 
+                Orientation="@Orientation.Horizontal" 
+                Gap="1rem" 
+                AlignItems="@AlignItems.Center" 
+                JustifyContent="@JustifyContent.SpaceBetween"
+                style="padding:.5rem 0;border-bottom:1px solid #e0e0e0;">
 
-                <RadzenStack Orientation="@Orientation.Horizontal" Gap=".3rem" AlignItems="@AlignItems.Center">
-                    <RadzenButton Icon="play_arrow"
-                        Variant="Variant.Text"
-                        ButtonStyle="ButtonStyle.Success"
-                        Size="ButtonSize.Small"
-                        Click="@(() => ResumeWork_Click(activity))" />
+                <RadzenStack Orientation="@Orientation.Horizontal" Gap=".3rem" AlignItems="@AlignItems.Center" >
 
-                    <div>@($"{activity.ActivityIdentifier} {activity.ActivityTitle}")</div>
+                    <RadzenMenu class="tz-popup-menu">
+                        <RadzenMenuItem Icon="more_vert" class="tz-popup-menu-button">
+
+                            <RadzenMenuItem Text="Resume Work" 
+                                Value="1" 
+                                Icon="play_arrow" 
+                                Click="@(args => ResumeWork_OnClick(activity))">
+                            </RadzenMenuItem>
+                            
+                            <RadzenMenuItem Text="Submit As PR"   
+                                Value="2" 
+                                Icon="fact_check" 
+                                Visible="@this.ShowSubmitPrMenuItem(activity)">
+                            </RadzenMenuItem>
+
+                            <RadzenMenuItem Text="Reactivate Work Item" 
+                                Value="3" 
+                                Icon="undo" 
+                                Visible="@this.ShowReactivateMenuItem(activity)">
+                            </RadzenMenuItem>
+
+                        </RadzenMenuItem>
+                    </RadzenMenu>
+
+
+
+                    <RadzenIcon Icon="@activity.WorkItem?.Type?.Icon" style="margin-right:.5rem;"></RadzenIcon>
+
+                    <RadzenStack Orientation="@Orientation.Vertical" Gap="0">
+                        <div style="font-weight:600;line-height:1rem;">@activity.ActivityTitle</div>
+                        <div style="font-size:.8rem;line-height:1rem;">@($"{activity.ActivityIdentifier} / {activity.WorkItem?.Project.ShortName}")</div>
+                    </RadzenStack>
+
+
                 </RadzenStack>
 
-                <RadzenStack Orientation="@Orientation.Horizontal" Gap="1rem" AlignItems="@AlignItems.Center" JustifyContent="JustifyContent.Start">
-                    <label>Last: </label>
-                    <div style="font-size:.85rem; color:var(--rz-text-secondary-color); white-space:nowrap;min-width:6rem;">
-                        @activity.LastWorkedDisplay
+                <RadzenStack Orientation="@Orientation.Horizontal" 
+                    Gap="1rem" 
+                    AlignItems="@AlignItems.Center" 
+                    JustifyContent="JustifyContent.End"
+                    Style="width:30%;">
+
+                    <div style="text-align:left;width:50%;font-size:.85rem; color:var(--rz-text-secondary-color); white-space:nowrap;min-width:6rem;">
+                        @CalculateHowLongAgoDisplay(activity)
                     </div>
+
+                    <div style="text-align:right;width:50%;font-weight:700;">
+                        @CalculateDurationDisplay(activity)
+                    </div>
+
                 </RadzenStack>
 
             </RadzenStack>
