@@ -1,5 +1,6 @@
-using System.Linq.Expressions;
 using Microsoft.AspNetCore.Components;
+using Radzen;
+using System.Linq.Expressions;
 using TimeKeeper.App.Api.Enums;
 using TimeKeeper.App.Components.Dialogs;
 using TimeKeeper.App.Components.Pages;
@@ -29,6 +30,10 @@ public partial class MyDayPage : CbPageBase
     #endregion parameters
 
     #region dependencies
+
+    [Inject]
+    private ContextMenuService ContextMenuSvc { get; set; } = default!;
+
 
     /// <summary>
     ///  Gets or sets the logger for unavailable session identity.

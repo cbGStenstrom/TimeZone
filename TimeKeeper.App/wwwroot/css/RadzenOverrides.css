@@ -1,1 +1,9 @@
-﻿
+﻿.rz-body .rz-menu.tz-popup-menu .rz-navigation-item.tz-popup-menu-button > .rz-navigation-item-wrapper .rz-navigation-item-link .rz-navigation-item-icon {
+  margin-inline: 0 !important;
+}
+.rz-body .rz-menu.tz-popup-menu .rz-navigation-item.tz-popup-menu-button > .rz-navigation-item-wrapper .rz-navigation-item-link .rz-navigation-item-text {
+  display: none;
+}
+.rz-body .rz-menu.tz-popup-menu .rz-navigation-item.tz-popup-menu-button > .rz-navigation-item-wrapper .rz-navigation-item-link .rz-navigation-item-icon-children {
+  display: none;
+}
