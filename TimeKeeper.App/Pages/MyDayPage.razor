@@ -19,19 +19,30 @@
     <RadzenBody Style="padding:1rem;">
 
         <RadzenStack Orientation="Orientation.Vertical" Gap="1rem">
-            <CurrentActivityCardComponent ActiveTimeEntry="@ActiveTimeEntry" />
 
-            <ContinueWorkingComponent 
-                Activities="@RecentActivities" 
-                OnResumeWorkClicked="ResumeWork_Click">
-            </ContinueWorkingComponent>
+            <CurrentActivityCardComponent 
+                ActiveTimeEntry="@ActiveTimeEntry" 
+                Width="33%"
+                OnStopActivityClick="@CurrentActivity_OnStop">
+            </CurrentActivityCardComponent>
 
-            <YesterdayAccomplishmentsCardComponent 
-                Activities="@this.YesterdayActivities"
-                Workday="@this.YesterdayWorkday"
-                OnResumeWorkClicked="@this.ResumeWork_Click">
-            </YesterdayAccomplishmentsCardComponent>
+            <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" JustifyContent="JustifyContent.SpaceBetween">
 
+                <ContinueWorkingComponent 
+                    Activities="@RecentActivities"
+                    Width="60%"
+                    OnResumeWorkClicked="ResumeWork_Click">
+                </ContinueWorkingComponent>
+
+
+                <YesterdayAccomplishmentsCardComponent 
+                    Activities="@this.YesterdayActivities"
+                    Workday="@this.YesterdayWorkday"
+                    Width="50%"
+                    OnResumeWorkClicked="@this.ResumeWork_Click">
+                </YesterdayAccomplishmentsCardComponent>
+
+            </RadzenStack>
             <ActivitiesInReviewComponent
                 Activities="@ReviewActivities"
                 OnResumeWorkClicked="ResumeWork_Click"

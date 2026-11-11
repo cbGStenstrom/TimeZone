@@ -23,6 +23,12 @@ public enum ActivityTypeCategories
     Code = 2,
 
     /// <summary>
+    ///  Indicates that the associated Activity/WorkItem is an Infrastructure related activity 
+    ///  (Deployment, Maintenance, etc.)
+    /// </summary>
+    Infrastructure = 6,
+
+    /// <summary>
     ///  Indicates that the associated Activity/WorkItem is a Meeting activity (Daily Stand Up, 
     ///  Weekly Sync, etc.)
     /// </summary>

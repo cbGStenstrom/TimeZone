@@ -77,3 +77,101 @@
         margin: .5rem 0;
     }
 }
+
+.tz-button {
+
+    border-radius: .25rem;
+
+    &.tz-icon {
+        .rz-button {
+            font-size: 2rem;
+        }
+    }
+}
+
+.tz-card {
+    border-radius: .6rem;
+
+    &.tz-highlight {
+        background: var(--tz-colors-primary);
+        background: linear-gradient(360deg,var(--tz-colors-primary) 0%, var(--tz-colors-primary-highlight) 100%);
+        color: var(--tz-colors-on-primary);
+    }
+}
+
+
+/* CurrentActivityCardComponent.razor */
+.tz-current-activity {
+    &.tz-card {
+
+        &.tz-highlight {
+
+            .tz-button {
+                font-size: 1rem;
+
+                &.tz-primary {
+                    border: 1px solid var(--tz-button-bg-primary-on-highlight);
+                    background: var(--tz-button-bg-primary-on-highlight);
+
+                    &:hover {
+                        box-shadow: unset;
+                        opacity: .7;
+                    }
+                }
+
+                &.tz-secondary {
+                    border: 1px solid var(--tz-colors-on-primary);
+                    color: var(--tz-colors-on-primary);
+                    opacity: .8;
+
+                    &:hover {
+                        opacity: .5;
+                    }
+                }
+
+                &.tz-icon {
+
+                    .rz-button-box {
+
+                        .rzi {
+                            font-variation-settings: var(--tz-font-material-symbols-solid);
+                            font-size: 1.35em;
+                        }
+                    }
+                }
+            }
+
+            .tz-workitem-details {
+
+                .tz-workitem-icon {
+                    border: 1px solid var(--tz-colors-on-primary);
+                    border-radius: .5rem;
+                    font-size: 3.5em;
+                    opacity:.85;
+                    padding: 1.8rem;
+                }
+
+                .tz-workitem-meta {
+
+                    .tz-project-fineprint {
+                        position: relative;
+
+                        .tz-shortname {
+                            margin-left: 0;
+
+                            &:before {
+                                position: relative;
+                                top: -.2rem;
+                                content: ".";
+                                margin: 0 .5rem;
+                                font-weight: 800;
+                                font-size: 1.5em;
+                                line-height: 1em;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

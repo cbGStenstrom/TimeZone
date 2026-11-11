@@ -1,12 +1,44 @@
 ﻿@if (ActiveTimeEntry != null)
 {
-    <RadzenCard>
+    <RadzenCard style="@($"width:{this.Width}")" class="tz-current-activity tz-card tz-highlight">
 
         <RadzenStack Orientation="Orientation.Vertical" Gap=".5rem">
 
-            <h4> Currently Working On </h4>
-            <h2> @($"{ActiveTimeEntry.WorkItem?.DisplayIdentifier} {ActiveTimeEntry.WorkItem?.Title}") </h2>
-            <div> Started: @ActiveTimeEntry.StartWork?.ToString("g") </div>
+            <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+
+                <h5> Current Activity </h5>
+                <div> Started: @ActiveTimeEntry.StartWork?.ToString("g") </div>
+
+            </RadzenStack>
+            <RadzenStack Orientation="Orientation.Horizontal" class="tz-workitem-details">
+
+                <RadzenIcon Icon="@ActiveTimeEntry.WorkItem?.Type?.Icon" class="tz-workitem-icon"></RadzenIcon>
+
+                <RadzenStack Orientation="Orientation.Vertical" 
+                    Gap="0" 
+                    JustifyContent="JustifyContent.Center"
+                    class="tz-workitem-meta">
+                    <h5 style="padding:0;"> @($"{ActiveTimeEntry.WorkItem?.Title}") </h5>
+                    <div class="tz-project-fineprint">
+                        <span>@ActiveTimeEntry.WorkItem?.DisplayIdentifier</span>
+                        <span class="tz-shortname">@ActiveTimeEntry.WorkItem?.Project.ShortName</span>
+                    </div>
+                </RadzenStack>
+            </RadzenStack>
+
+            <RadzenStack Orientation="Orientation.Horizontal"
+                Gap="1rem"
+                JustifyContent="JustifyContent.End"
+                AlignItems="AlignItems.Center">
+                <RadzenButton id="btnStop" class="tz-button tz-icon tz-primary" 
+                    Icon="@GoogleIcons.Stop" Text="Stop Activity" Size="ButtonSize.Medium"
+                    Click="@(() => this.btnStop_OnClick(ActiveTimeEntry))">
+                </RadzenButton>
+                <RadzenButton id="btnSwitch" class="tz-button tz-icon tz-secondary"
+                    Variant="Variant.Outlined"
+                    Icon="@GoogleIcons.SwapHorizontal" Text="Switch"/>
+            </RadzenStack>
+
 
         </RadzenStack>
 

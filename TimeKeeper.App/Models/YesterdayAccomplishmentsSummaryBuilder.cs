@@ -24,6 +24,7 @@ public static class YesterdayAccomplishmentsSummaryBuilder
             .Select(group => new MyDayActivitySummary
             {
                 WorkItem = group.Select(entry => entry.WorkItem).OfType<WorkItem>().First(),
+                ExcludeFromRollup = group.Select(entry => entry.WorkItem).OfType<WorkItem>().First().ExcludeFromRollup,
                 TotalHoursWorked = group.Sum(entry => entry.HoursWorked ?? 0),
                 FirstWorked = group.Min(entry => entry.StartWork) ?? DateTime.MinValue,
                 LastWorked = group.Max(entry => entry.StartWork) ?? DateTime.MinValue,

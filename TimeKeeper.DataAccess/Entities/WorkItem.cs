@@ -9,6 +9,8 @@ public partial class WorkItem
 
     public string? Description { get; set; }
 
+    public bool ExcludeFromRollup { get; set; }
+
     public int Id { get; set; }
 
     public bool IsBillable { get; set; }

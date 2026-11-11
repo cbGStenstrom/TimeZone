@@ -14,23 +14,22 @@
             Style="@(LeftSidebarExpanded? "width: 250px;" : "width: max-content;")"
             ShowArrow="false">
             <RadzenPanelMenuItem 
-                Text="Timekeeper" 
-                Icon="calendar_clock" 
+                Text="timezone" 
                 Click="@(() => LeftSidebarExpanded = !LeftSidebarExpanded)"
                 IconColor="var(--rz-base-50)"
                 class="cb-brand">
             </RadzenPanelMenuItem>
 
-            <RadzenPanelMenuItem Text="Home"            Icon="@GoogleIcons.Home"        class="cb-font-button" Click="@((args) => { this.btnHome_OnClick(); })"/>
-            <RadzenPanelMenuItem Text="Dashboard"       Icon="@GoogleIcons.Dashboard"   class="cb-font-button" Click="@((args) => { this.btnDashboard_OnClick(); })" />
-            <RadzenPanelMenuItem Text="Project Mgr"     Icon="@GoogleIcons.Cases"       class="cb-font-button" Click="@((args) => { this.lnkProjectMgr_OnClick(); })" />
-            <RadzenPanelMenuItem Text="Activity Type Mgr" Icon="category" class="cb-font-button" Click="@(() => NavigationMgr?.NavigateTo("/ActivityTypeManager"))" />
-            <RadzenPanelMenuItem Text="Workitem Mgr"    Icon="@GoogleIcons.Assignment"  class="cb-font-button" Click="@((args) => { this.lnkWorkItems_OnClick(true); })" />
-            <RadzenPanelMenuItem Text="Time Entries"    Icon="@GoogleIcons.Schedule"    class="cb-font-button" Click="@((args) => { this.lnkTimeEntries_OnClick(); })" />
-            <RadzenPanelMenuItem Text="Log Out"         Icon="@GoogleIcons.Logout"      class="cb-font-button" Click="@((args) => { this.lnkLogOut_OnClick(); })" />
-            <RadzenPanelMenuItem Text="Test Page"       Icon="@GoogleIcons.Logout"      class="cb-font-button" Click="@((args) => { this.lnkTestPage_OnClick(); })" />
             
-            <RadzenPanelMenuItem Text="My Day"          Icon="@GoogleIcons.Home"        class="cb-font-button" Click="@((args) => { this.lnkMyDay_OnClick(); })" />
+            <RadzenPanelMenuItem Text="My Day"          Icon="home"         class="cb-font-button" Click="@((args) => { this.lnkMyDay_OnClick(); })" />
+            <RadzenPanelMenuItem Text="Dashboard"       Icon="dashboard"    class="cb-font-button" Click="@((args) => { this.btnDashboard_OnClick(); })" />
+            <RadzenPanelMenuItem Text="Workitem Mgr"    Icon="assignment"   class="cb-font-button" Click="@((args) => { this.lnkWorkItems_OnClick(true); })" />
+            <RadzenPanelMenuItem Text="Time Entries"    Icon="schedule"     class="cb-font-button" Click="@((args) => { this.lnkTimeEntries_OnClick(); })" />
+            <RadzenPanelMenuItem Text="Log Out"         Icon="logout"       class="cb-font-button" Click="@((args) => { this.lnkLogOut_OnClick(); })" />
+            <RadzenPanelMenuItem Text="Settings"        Icon="settings"     class="cb-font-button" >
+                <RadzenPanelMenuItem Text="Project Mgr"         Icon="cases"    class="cb-font-button" Click="@((args) => { this.lnkProjectMgr_OnClick(); })" />
+                <RadzenPanelMenuItem Text="Activity Type Mgr"   Icon="category" class="cb-font-button" Click="@(() => NavigationMgr?.NavigateTo("/ActivityTypeManager"))" />
+            </RadzenPanelMenuItem>
 
         </RadzenPanelMenu>
     </RadzenSidebar>

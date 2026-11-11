@@ -22,5 +22,8 @@ public class GoogleIcons
     public const string Home                = "home";
     public const string Logout              = "logout";
     public const string Schedule            = "schedule";
+    public const string Stop                = "stop";
+    public const string Sunny               = "sunny";
+    public const string SwapHorizontal      = "swap_horiz";
     public const string ThreeD_Rotation     = "3d_rotation";
 }

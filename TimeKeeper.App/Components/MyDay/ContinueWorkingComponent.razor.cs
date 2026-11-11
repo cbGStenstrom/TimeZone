@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Components.Web;
 using Radzen;
 using Radzen.Blazor;
 using Radzen.Documents.Spreadsheet;
+using TimeKeeper.App.Components.Dialogs;
 using TimeKeeper.App.Models;
 using TimeKeeper.Domain.Models;
 
@@ -15,6 +16,12 @@ public partial class ContinueWorkingComponent : ComponentBase
 
     [Inject]
     private ContextMenuService ContextMenuSvc { get; set; } = default!;
+
+    /// <summary>
+    ///  Gets or sets the shared Radzen dialog service.
+    /// </summary>
+    [Inject]
+    private DialogService DialogSvc { get; set; } = default!;
 
     #endregion injected services
 
@@ -34,10 +41,19 @@ public partial class ContinueWorkingComponent : ComponentBase
     [Parameter]
     public EventCallback<MyDayActivitySummary> OnResumeWorkClicked { get; set; }
 
+    [Parameter]
+    public string Width { get; set; } = "100%";
+
     #endregion parameters
 
     #region properties
     #endregion properties
+
+    #region fields
+
+    private string CardCssStyle = string.Empty;
+
+    #endregion fields
 
     #region events
     #endregion events
@@ -46,6 +62,13 @@ public partial class ContinueWorkingComponent : ComponentBase
     #endregion data
 
     #region lifecycle
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        this.InitializeCardCssStyle();
+    }
+
     #endregion lifecycle
 
     #region event handlers
@@ -64,6 +87,21 @@ public partial class ContinueWorkingComponent : ComponentBase
         {
             await OnResumeWorkClicked.InvokeAsync(summary);
         }
+    }
+
+    private async Task ShowNotes_OnClick(MyDayActivitySummary summary)
+    {
+
+        DateTime? startDate = summary.Entries.OrderBy(e => e.StartWork).FirstOrDefault()?.StartWork;
+        DateTime  endDate = summary.Entries.OrderByDescending(e => e.StartWork).FirstOrDefault()?.StartWork ?? DateTime.Now;
+
+        string title = $"{summary.ActivityIdentifier} — {startDate:dddd, MMM dd, yyyy} - {endDate:dddd, MMM dd, yyyy}";
+        var parameters = new Dictionary<string, object?>();
+            parameters.Add(nameof(YesterdayAccomplishmentsDialog.Entries), summary.Entries);
+        var options = new DialogOptions();
+        options.Draggable = true;
+
+        await this.DialogSvc.OpenAsync<YesterdayAccomplishmentsDialog>(title, parameters, options);
     }
 
     #endregion event handlers
@@ -112,6 +150,11 @@ public partial class ContinueWorkingComponent : ComponentBase
         }
 
         return result;
+    }
+
+    private void InitializeCardCssStyle()
+    {
+        this.CardCssStyle = $"width:{this.Width};";
     }
 
     private bool IsCodeActivity(MyDayActivitySummary summary)

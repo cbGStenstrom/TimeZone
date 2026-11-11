@@ -11,32 +11,7 @@ namespace TimeKeeper.App.Models;
 ///  the summarized work item.</remarks>
 public class MyDayActivitySummary
 {
-    /// <summary>
-    ///  The WorkItem being summarized.
-    /// </summary>
-    public WorkItem WorkItem { get; set; } = null!;
-
-    /// <summary>
-    ///  Total hours worked on the WorkItem during the selected period.
-    /// </summary>
-    public double TotalHoursWorked { get; set; }
-
-    /// <summary>
-    ///  First time worked during the period.
-    /// </summary>
-    public DateTime FirstWorked { get; set; }
-
-    /// <summary>
-    ///  Most recent activity during the period.
-    /// </summary>
-    public DateTime LastWorked { get; set; }
-
-    /// <summary>
-    ///  Individual TimeEntries contributing to the summary.
-    /// </summary>
-    public List<MyDayActivityEntry> Entries { get; set; } = [];
-
-    #region Convenience Properties
+    #region Properties
 
     /// <summary>
     ///  Gets the display identifier of the associated work item activity.
@@ -47,11 +22,23 @@ public class MyDayActivitySummary
     ///  Gets the title of the associated work item activity.
     /// </summary>
     public string ActivityTitle => WorkItem.Title ?? string.Empty;
+
+    /// <summary>
+    ///  Individual TimeEntries contributing to the summary.
+    /// </summary>
+    public List<MyDayActivityEntry> Entries { get; set; } = [];
     
     /// <summary>
     ///  Gets the number of individual time entries contributing to the summary.
     /// </summary>
     public int EntryCount => Entries.Count;
+
+    public bool ExcludeFromRollup { get; set; } = false;
+
+    /// <summary>
+    ///  First time worked during the period.
+    /// </summary>
+    public DateTime FirstWorked { get; set; }
     
     /// <summary>
     ///  Gets a value indicating whether the associated work item is billable.
@@ -62,6 +49,11 @@ public class MyDayActivitySummary
     ///  Gets a value indicating whether the associated work item is in review.
     /// </summary>
     public bool IsInReview => WorkItem.IsInReview;
+
+    /// <summary>
+    ///  Most recent activity during the period.
+    /// </summary>
+    public DateTime LastWorked { get; set; }
 
     /// <summary>
     ///  Gets a user-friendly display string for the date in <c>LastWorked</c> based on how recent it is.
@@ -100,7 +92,17 @@ public class MyDayActivitySummary
     ///  Gets the name of the associated project.
     /// </summary>
     public string ProjectName => WorkItem.Project?.ShortName ?? string.Empty;
-    
+
+    /// <summary>
+    ///  Total hours worked on the WorkItem during the selected period.
+    /// </summary>
+    public double TotalHoursWorked { get; set; }
+
+    /// <summary>
+    ///  The WorkItem being summarized.
+    /// </summary>
+    public WorkItem WorkItem { get; set; } = null!;
+
     /// <summary>
     ///  Gets the identifier of the associated work item.
     /// </summary>

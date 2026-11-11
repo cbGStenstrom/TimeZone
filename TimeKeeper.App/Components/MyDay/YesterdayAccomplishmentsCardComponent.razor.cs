@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Components;
+using Microsoft.IdentityModel.Tokens;
 using Radzen;
 using TimeKeeper.App.Components.Dialogs;
 using TimeKeeper.App.Models;
@@ -10,6 +11,17 @@ namespace TimeKeeper.App.Components.MyDay;
 /// </summary>
 public partial class YesterdayAccomplishmentsCardComponent : ComponentBase
 {
+
+    #region dependencies
+
+    /// <summary>
+    ///  Gets or sets the shared Radzen dialog service.
+    /// </summary>
+    [Inject]
+    private DialogService DialogSvc { get; set; } = default!;
+
+    #endregion dependencies
+
     #region parameters
 
     /// <summary>
@@ -24,6 +36,9 @@ public partial class YesterdayAccomplishmentsCardComponent : ComponentBase
     [Parameter]
     public EventCallback<MyDayActivitySummary> OnResumeWorkClicked { get; set; }
 
+    [Parameter]
+    public string Width { get; set; } = "100%";
+
     /// <summary>
     ///  Gets or sets the selected local workday.
     /// </summary>
@@ -32,15 +47,21 @@ public partial class YesterdayAccomplishmentsCardComponent : ComponentBase
 
     #endregion parameters
 
-    #region dependencies
+    #region fields
 
-    /// <summary>
-    ///  Gets or sets the shared Radzen dialog service.
-    /// </summary>
-    [Inject]
-    private DialogService DialogSvc { get; set; } = default!;
+    private string CardCssStyle = string.Empty;
 
-    #endregion dependencies
+    #endregion fields
+
+    #region lifecycle
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        this.InitializeCardCssStyle();
+    }
+
+    #endregion lifecycle
 
     #region event handlers
 
@@ -64,9 +85,20 @@ public partial class YesterdayAccomplishmentsCardComponent : ComponentBase
 
     #region private
 
+    private double CalculateTotalTime()
+    {
+        double time = this.Activities?.Where(summary=> !summary.ExcludeFromRollup).Sum(summary => summary.TotalHoursWorked) ?? 0;
+        return time;
+    }
+
     private string GetDisplayName(MyDayActivitySummary activity)
     {
         return $"{activity.ActivityIdentifier} {activity.ActivityTitle}";
+    }
+
+    private void InitializeCardCssStyle()
+    {
+        this.CardCssStyle = $"width:{this.Width};";
     }
 
     #endregion private

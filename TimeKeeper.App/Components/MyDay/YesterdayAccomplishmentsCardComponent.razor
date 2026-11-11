@@ -1,5 +1,10 @@
-<RadzenCard>
-    <h4>Yesterday's Accomplishments</h4>
+<RadzenCard Style="@this.CardCssStyle" class="tz-card">
+    
+    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween">
+
+        <h5>Yesterday's Accomplishments</h5>
+        <div>@($"{this.CalculateTotalTime()} hours")</div>
+    </RadzenStack>
 
     @if (!this.Activities.Any())
     {
@@ -21,14 +26,14 @@
                         Size="@ButtonSize.Small"
                         Click="@(() => this.OnResumeWorkClicked.InvokeAsync(activity))"></RadzenButton>
                     <RadzenIcon Icon="@(activity.WorkItem.Type?.Icon ?? string.Empty)" title="@(activity.WorkItem?.Type?.Name)" Style="cursor:default;"></RadzenIcon>
-                    <RadzenButton 
+                    <RadzenButton Style="text-align:start;"
                         Text="@this.GetDisplayName(activity)"
                         Variant="@Variant.Text"
                         Click="@(() => this.Activity_OnSelected(activity))">
                     </RadzenButton>
                 </RadzenStack>
-                <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" Gap="2rem">
-                    <span>@activity.ProjectName</span>
+                <RadzenStack Orientation="@Orientation.Horizontal" AlignItems="@AlignItems.Center" Gap="1rem">
+                    <div style="white-space:nowrap;">@activity.ProjectName</div>
                     <div style="width:75px;">@activity.TotalHoursWorked.ToString("0.##") hours</div>
                 </RadzenStack>
             </RadzenStack>
