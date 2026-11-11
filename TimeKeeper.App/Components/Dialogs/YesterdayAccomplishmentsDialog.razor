@@ -4,9 +4,9 @@
     @foreach (var entry in this.Entries.OrderByDescending(entry => entry.StartWork).ThenBy(entry => entry.TimeEntryId))
     {
         <div style="margin-bottom:1rem;">
-            <div style="font-weight:500;">@this.GetTimeSpanDisplay(entry)</div>
+            <div style="font-weight:600;">@($"{entry.StartWork:dddd MM/dd/yyyy} - {this.GetTimeSpanDisplay(entry)}")</div>
             <div style="font-size:.8rem;">@this.GetDurationDisplay(entry)</div>
-            <div style="margin-top:.5rem;">
+            <div style="margin-TOP:.5rem;padding-bottom:.5rem;border-bottom: 1px solid #E0E0E0;">
                 @if (this.Entries.Any(entry => !string.IsNullOrWhiteSpace(entry.Accomplishment)))
                 {
                     @((MarkupString)entry.Accomplishment)

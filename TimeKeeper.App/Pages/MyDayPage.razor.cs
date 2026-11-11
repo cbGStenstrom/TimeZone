@@ -137,6 +137,12 @@ public partial class MyDayPage : CbPageBase
 
     #region event handlers
 
+    async Task CurrentActivity_OnStop(TimeEntry? timeEntry)
+    {
+        if (timeEntry == null) return;
+
+    }
+
     /// <summary>
     ///  Resumes work for the specified activity summary by starting the work flow for its work item.
     /// </summary>
@@ -253,10 +259,15 @@ public partial class MyDayPage : CbPageBase
                     WorkItem workItem = g.First().WorkItem!;
                     return new MyDayActivitySummary {
                         WorkItem = workItem,
-                        TotalHoursWorked = g.Sum(t => t.HoursWorked ?? 0),
+                        TotalHoursWorked = g.LastOrDefault()?.HoursWorked ?? 0,
                         FirstWorked = g.Min(t => t.StartWork) ?? DateTime.MinValue,
                         LastWorked = g.Max(t => t.EndWork) ?? DateTime.MinValue,
-                        Entries = []
+                        Entries = g.Select(t => new MyDayActivityEntry {
+                            Accomplishment = t.Accomplishment ?? "No notes recorded for this range.",
+                            HoursWorked = t.HoursWorked,
+                            StartWork = t.StartWork,
+                            EndWork = t.EndWork
+                        }).ToList()
                     };
                 })
                 .OrderByDescending(a => a.LastWorked)

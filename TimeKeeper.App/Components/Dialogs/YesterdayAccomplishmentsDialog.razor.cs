@@ -67,7 +67,7 @@ public partial class YesterdayAccomplishmentsDialog : ComponentBase
     {
         string result = string.Empty;
 
-        result = $"{entry.StartWork:h:mm tt} - {entry.EndWork:h:mm tt}";
+        result = $"{entry.StartWork:h:mm tt} to {entry.EndWork:h:mm tt}";
 
 
         return result;

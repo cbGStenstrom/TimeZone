@@ -98,6 +98,16 @@
 			</RadzenColumn>
 		</RadzenRow>
 
+		@* Exclude From Rollup *@
+		<RadzenRow AlignItems="AlignItems.Center">
+			<RadzenColumn Size="2">
+				<RadzenLabel Text="Exclude From Rollup" Component="chkExcludeFromRollup"></RadzenLabel>
+			</RadzenColumn>
+			<RadzenColumn Size="10">
+				<RadzenSwitch @bind-Value="@this.WorkItem.ExcludeFromRollup" Name="chkExcludeFromRollup" Change="@Form_OnChange"></RadzenSwitch>
+			</RadzenColumn>
+		</RadzenRow>
+
 		@* Complete/Incomplete *@
 		<RadzenRow AlignItems="AlignItems.Center">
 			<RadzenColumn Size="2">

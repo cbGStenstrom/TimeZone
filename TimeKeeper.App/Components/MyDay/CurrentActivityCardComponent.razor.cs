@@ -9,6 +9,9 @@ namespace TimeKeeper.App.Components.MyDay;
 public partial class CurrentActivityCardComponent : ComponentBase
 {
 
+    #region dependencies
+    #endregion dependencies
+
     #region parameters
 
     /// <summary>
@@ -17,6 +20,28 @@ public partial class CurrentActivityCardComponent : ComponentBase
     [Parameter]
     public TimeEntry? ActiveTimeEntry { get; set; }
 
+    /// <summary>
+    /// Gets or sets the width of the component.
+    /// </summary>
+    [Parameter]
+    public string Width { get; set; } = "100%";
+
     #endregion parameters
+
+    #region events
+
+    [Parameter]
+    public EventCallback<TimeEntry?> OnStopActivityClick { get; set; }
+
+    #endregion events
+
+    #region event handlers
+
+    private async Task btnStop_OnClick(TimeEntry? timeEntry)
+    {
+        await OnStopActivityClick.InvokeAsync(timeEntry);
+    }
+
+    #endregion event handlers
 
 }

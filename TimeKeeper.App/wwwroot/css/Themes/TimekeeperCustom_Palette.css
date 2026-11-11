@@ -1,9 +1,28 @@
 ﻿:root {
-  --cb-sidepanel-main-navigation-panel-bg: var(--rz-base-800);
-  /*#1c2530;*/
+  /* Colors */
+  --tz-color-chocolate: #2E2B28;
+  --tz-color-olive: #5D7353;
+  --tz-color-pale-sage: #F2F4F0;
+  --tz-color-roasted-chestnut: #664b3c;
+  --tz-color-sage: #91A372;
+  --tz-color-terracotta: #A35133;
+  /* Palette */
+  --tz-colors-primary: var(--tz-color-olive);
+  --tz-colors-primary-highlight: var(--tz-color-sage);
+  --tz-colors-on-primary: var(--tz-color-pale-sage);
+  --tz-colors-secondary: var(--tz-color-terracotta);
+  /* Button Styles */
+  --tz-button-bg-primary-on-highlight: var(--tz-colors-secondary);
+  /* Component colors */
+  --cb-sidepanel-main-navigation-panel-bg: var(--tz-color-chocolate);
   --cb-sidepanel-main-navigation-item-color: var(--rz-on-base-dark);
   --cb-sidepanel-main-navigation-item-bg: transparent;
-  --cb-sidepanel-main-navigation-item-bg-hover: var(--rz-base-600);
-  --cb-sidepanel-main-navigation-item-bg-active: var(--rz-base-600);
+  --cb-sidepanel-main-navigation-item-bg-hover: var(--tz-color-roasted-chestnut);
+  --cb-sidepanel-main-navigation-item-bg-active: #825C49;
   --cb-sidepanel-main-navigation-item-bottom-border: 1px solid transparent;
+  --tz-sidepanel-main-navigation-second-level-item-bg: #423e39;
+  /* Fonts */
+  --tz-font-material-symbols: ;
+  --tz-font-material-symbols-outline: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  --tz-font-material-symbols-solid: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
 }

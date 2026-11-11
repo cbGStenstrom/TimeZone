@@ -36,6 +36,8 @@ public partial class WorkItem : ModelBase<WorkItem>
         }
     }
 
+    public bool ExcludeFromRollup { get; set; } = false;
+
 
     public bool IsBillable { get; set; }
 

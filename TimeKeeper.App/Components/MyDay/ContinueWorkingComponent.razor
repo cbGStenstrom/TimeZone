@@ -1,11 +1,10 @@
 ﻿@using Radzen.Blazor.Spreadsheet.Tools
 @using TimeKeeper.App.Models
 
-<RadzenCard>
+<RadzenCard Style="@this.CardCssStyle" class="tz-card">
 
-    <RadzenText TextStyle="TextStyle.H5" Style="margin-bottom:2rem;">
-        Recent Activity
-    </RadzenText>
+    <h5>Recent Activity</h5>
+
     <RadzenStack Orientation="Orientation.Vertical" Gap=".15rem">
 
         @foreach (var activity in Activities)
@@ -17,15 +16,24 @@
                 JustifyContent="@JustifyContent.SpaceBetween"
                 style="padding:.5rem 0;border-bottom:1px solid #e0e0e0;">
 
-                <RadzenStack Orientation="@Orientation.Horizontal" Gap=".3rem" AlignItems="@AlignItems.Center" >
+                <RadzenStack Orientation="@Orientation.Horizontal" 
+                    Gap=".3rem" 
+                    AlignItems="@AlignItems.Center"
+                    Style="max-width:60%;">
 
                     <RadzenMenu class="tz-popup-menu">
                         <RadzenMenuItem Icon="more_vert" class="tz-popup-menu-button">
 
-                            <RadzenMenuItem Text="Resume Work" 
+                            <RadzenMenuItem Text="Resume Actvity" 
                                 Value="1" 
                                 Icon="play_arrow" 
                                 Click="@(args => ResumeWork_OnClick(activity))">
+                            </RadzenMenuItem>
+
+                            <RadzenMenuItem Text="Show Notes"
+                                Value="4"
+                                Icon="notes"
+                                Click="@(args => ShowNotes_OnClick(activity))">
                             </RadzenMenuItem>
                             
                             <RadzenMenuItem Text="Submit As PR"   
@@ -43,12 +51,10 @@
                         </RadzenMenuItem>
                     </RadzenMenu>
 
-
-
                     <RadzenIcon Icon="@activity.WorkItem?.Type?.Icon" style="margin-right:.5rem;"></RadzenIcon>
 
-                    <RadzenStack Orientation="@Orientation.Vertical" Gap="0">
-                        <div style="font-weight:600;line-height:1rem;">@activity.ActivityTitle</div>
+                    <RadzenStack Orientation="@Orientation.Vertical" Gap="0" Style="max-width:100%;">
+                        <div style="font-weight:600;line-height:1rem;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;cursor:default;" title="@activity.ActivityTitle">@activity.ActivityTitle</div>
                         <div style="font-size:.8rem;line-height:1rem;">@($"{activity.ActivityIdentifier} / {activity.WorkItem?.Project.ShortName}")</div>
                     </RadzenStack>
 
@@ -59,7 +65,7 @@
                     Gap="1rem" 
                     AlignItems="@AlignItems.Center" 
                     JustifyContent="JustifyContent.End"
-                    Style="width:30%;">
+                    Style="width:25%;">
 
                     <div style="text-align:left;width:50%;font-size:.85rem; color:var(--rz-text-secondary-color); white-space:nowrap;min-width:6rem;">
                         @CalculateHowLongAgoDisplay(activity)

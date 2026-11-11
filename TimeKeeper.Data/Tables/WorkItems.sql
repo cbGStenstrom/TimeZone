@@ -9,6 +9,7 @@
 	IsInReview BIT NOT NULL DEFAULT 0,
 	IsComplete BIT NOT NULL DEFAULT 0,
 	IsDeployed BIT NOT NULL DEFAULT 0,
+	ExcludeFromRollup BIT NOT NULL DEFAULT 0,
 	ProductionVersion NVARCHAR(20) NULL,
 	ReviewDate DATETIME NULL,
 	WorkitemType INT NOT NULL,

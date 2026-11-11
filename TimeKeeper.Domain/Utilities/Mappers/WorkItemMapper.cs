@@ -19,6 +19,7 @@ namespace TimeKeeper.Domain.Utilities.Mappers
                 Id = model.Id,
                 UpdatedBy = model.UpdatedBy,
                 UpdatedDate = model.UpdatedDate.ConvertLocalToUtc(),
+                ExcludeFromRollup = model.ExcludeFromRollup,
                 IsOpen = model.IsOpen,
                 IsInReview = model.IsInReview,
                 ProjectId = model.ProjectId,
@@ -52,6 +53,7 @@ namespace TimeKeeper.Domain.Utilities.Mappers
             entity.CreatedDate = model.CreatedDate.ConvertLocalToUtc();
             entity.UpdatedBy = model.UpdatedBy;
             entity.UpdatedDate = model.UpdatedDate.ConvertLocalToUtc();
+            entity.ExcludeFromRollup = model.ExcludeFromRollup;
             entity.IsOpen = model.IsOpen;
             entity.IsInReview = model.IsInReview;
             entity.ProjectId = model.ProjectId;
@@ -104,6 +106,7 @@ namespace TimeKeeper.Domain.Utilities.Mappers
                 Id = entity.Id,
                 UpdatedBy = entity.UpdatedBy,
                 UpdatedDate = entity.UpdatedDate.ConvertUtcToLocal(),
+                ExcludeFromRollup = entity.ExcludeFromRollup,
                 IsOpen = entity.IsOpen,
                 IsInReview = entity.IsInReview,
                 ProjectId = entity.ProjectId,
